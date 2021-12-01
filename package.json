@@ -1,0 +1,25 @@
+{
+  "name": "aws-semaphore-agent",
+  "version": "0.1.0",
+  "bin": {
+    "aws-semaphore-agent": "bin/aws-semaphore-agent.js"
+  },
+  "scripts": {
+    "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
+    "cdk": "cdk",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "1.130.0",
+    "aws-cdk": "1.130.0",
+    "jest": "^26.4.2"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-autoscaling": "^1.130.0",
+    "@aws-cdk/aws-events": "^1.130.0",
+    "@aws-cdk/aws-events-targets": "^1.130.0",
+    "@aws-cdk/aws-iam": "^1.130.0",
+    "@aws-cdk/aws-lambda": "^1.130.0",
+    "@aws-cdk/core": "1.130.0"
+  }
+}
