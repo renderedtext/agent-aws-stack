@@ -1,3 +1,5 @@
+#!/bin/bash
+
 [[ -z "${AGENT_VERSION}" ]] && echo "AGENT_VERSION is not set" && exit 1
 [[ -z "${SEMAPHORE_ORGANIZATION}" ]] && echo "SEMAPHORE_ORGANIZATION is not set" && exit 1
 [[ -z "${SEMAPHORE_REGISTRATION_TOKEN}" ]] && echo "SEMAPHORE_REGISTRATION_TOKEN is not set" && exit 1
@@ -11,11 +13,9 @@ sudo rm /opt/semaphore/agent/agent.tar.gz
 sudo chown $USER:$USER -R /opt/semaphore/agent/
 cd /opt/semaphore/agent/
 
-# Installs agent, but keeps it stopped for now
-# It will be started when the instance goes into rotation
+# Install and start agent
 mkdir hooks
-mv /tmp/terminate-instance.sh /opt/semaphore/agent/hooks/shutdown
+mv /opt/semaphore/terminate-instance.sh /opt/semaphore/agent/hooks/shutdown
 export SEMAPHORE_AGENT_SHUTDOWN_HOOK=/opt/semaphore/agent/hooks/shutdown
 export SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB=true
-export SEMAPHORE_AGENT_DO_NOT_START=true
 sudo -E ./install.sh

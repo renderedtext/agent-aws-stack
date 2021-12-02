@@ -69,4 +69,12 @@ build {
       "scripts/terminate-instance.sh"
     ]
   }
+
+  provisioner "shell" {
+    inline = [
+      "sudo mkdir -p /opt/semaphore/",
+      "sudo mv /tmp/install-agent.sh /opt/semaphore/install-agent.sh",
+      "sudo mv /tmp/terminate-instance.sh /opt/semaphore/terminate-instance.sh"
+    ]
+  }
 }
