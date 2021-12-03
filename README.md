@@ -46,7 +46,7 @@ Other optional arguments are available:
 
 ```bash
 cdk deploy \
-  --parameters imageId=ami-05a4364b75e912f89 \
+  --parameters imageId=ami-044a4f8505e681532 \
   --parameters semaphoreOrganization=semaphore \
   --parameters semaphoreToken=YOUR_VERY_SENSITIVE_TOKEN
 ```

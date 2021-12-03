@@ -63,10 +63,11 @@ build {
   provisioner "file" {
     destination = "/tmp/"
     sources = [
-      # Required for the asg launch configuration
+      # Required by the lambda function that processes the asg lifecycle hooks
       "scripts/install-agent.sh",
+
       # Required by the agent
-      "scripts/terminate-instance.sh"
+      "scripts/terminate-instance.sh",
     ]
   }
 
