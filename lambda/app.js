@@ -66,8 +66,8 @@ function startAgentOnInstance(instanceId) {
       InstanceIds: [instanceId],
       DocumentName: 'AWS-RunShellScript',
       Parameters: {
-        commands: ['sudo systemctl start semaphore-agent'],
-        executionTimeout: ['10']
+        commands: ['/opt/semaphore/install-agent.sh'],
+        executionTimeout: ['20']
       },
     };
 
