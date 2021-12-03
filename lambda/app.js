@@ -58,30 +58,7 @@ function getInstanceStatus(instanceId) {
   });
 }
 
-function getAgentParameters() {
-  var ssm = new aws.SSM();
-
-  return new Promise(function(resolve, reject) {
-    var params = {
-      Name: "semaphore-agent-params"
-    };
-
-    ssm.getParameter(params, function(err, data) {
-      if (err) {
-        reject(err);
-      } else {
-        agentParams = JSON.parse(data.Parameter.Value);
-
-        // TODO: this shouldn't be logged
-        console.log("Agent params: ", agentParams);
-
-        resolve(agentParams);
-      }
-    });
-  });
-}
-
-function startAgentOnInstance(instanceId, agentParameters) {
+function startAgentOnInstance(instanceId) {
   var ssm = new aws.SSM();
 
   return new Promise(function(resolve, reject) {
@@ -89,13 +66,7 @@ function startAgentOnInstance(instanceId, agentParameters) {
       InstanceIds: [instanceId],
       DocumentName: 'AWS-RunShellScript',
       Parameters: {
-        commands: [
-          `export AGENT_VERSION=${agentParameters.agentVersion}`,
-          `export SEMAPHORE_ORGANIZATION=${agentParameters.organization}`,
-          `export SEMAPHORE_REGISTRATION_TOKEN=${agentParameters.token}`,
-          `export SEMAPHORE_AGENT_INSTALLATION_USER=${agentParameters.vmUser}`,
-          '/opt/semaphore/install-agent.sh'
-        ],
+        commands: ['/opt/semaphore/install-agent.sh'],
         executionTimeout: ['10']
       },
     };
@@ -170,11 +141,8 @@ exports.handler = async (event, context, callback) => {
         }
 
         // Instance is online, let's execute the command to start the agent
-        console.log("Instance '" + instanceId + "' is '" + instanceStatus + "'. Grabbing agent parameters...");
-        var agentParameters = await getAgentParameters();
-
-        console.log("Sending command to start agent...")
-        var commandId = await startAgentOnInstance(instanceId, agentParameters);
+        console.log("Instance '" + instanceId + "' is '" + instanceStatus + "'. Sending command to start agent...");
+        var commandId = await startAgentOnInstance(instanceId);
         var commandStatus = 'Pending';
 
         // Poll the command status

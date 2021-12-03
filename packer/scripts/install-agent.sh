@@ -1,9 +1,13 @@
 #!/bin/bash
 
-[[ -z "${AGENT_VERSION}" ]] && echo "AGENT_VERSION is not set" && exit 1
-[[ -z "${SEMAPHORE_ORGANIZATION}" ]] && echo "SEMAPHORE_ORGANIZATION is not set" && exit 1
-[[ -z "${SEMAPHORE_REGISTRATION_TOKEN}" ]] && echo "SEMAPHORE_REGISTRATION_TOKEN is not set" && exit 1
-[[ -z "${SEMAPHORE_AGENT_INSTALLATION_USER}" ]] && echo "SEMAPHORE_AGENT_INSTALLATION_USER is not set" && exit 1
+token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
+region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/placement/region")
+agent_params=$(aws ssm get-parameter --region "$region" --name "semaphore-agent-params" --query Parameter.Value --output text)
+
+AGENT_VERSION=$(echo $agent_params | jq '.agentVersion' | tr -d \")
+SEMAPHORE_ORGANIZATION=$(echo $agent_params | jq '.organization' | tr -d \")
+SEMAPHORE_REGISTRATION_TOKEN=$(echo $agent_params | jq '.token' | tr -d \")
+SEMAPHORE_AGENT_INSTALLATION_USER=$(echo $agent_params | jq '.vmUser' | tr -d \")
 
 # Download agent
 sudo mkdir -p /opt/semaphore/agent
