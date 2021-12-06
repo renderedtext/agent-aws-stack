@@ -58,7 +58,7 @@ function getInstanceStatus(instanceId) {
   });
 }
 
-function startAgentOnInstance(instanceId) {
+function startAgentOnInstance(agentConfigParameterName, instanceId) {
   var ssm = new aws.SSM();
 
   return new Promise(function(resolve, reject) {
@@ -66,7 +66,7 @@ function startAgentOnInstance(instanceId) {
       InstanceIds: [instanceId],
       DocumentName: 'AWS-RunShellScript',
       Parameters: {
-        commands: ['/opt/semaphore/install-agent.sh'],
+        commands: [`/opt/semaphore/install-agent.sh ${agentConfigParameterName}`],
         executionTimeout: ['20']
       },
     };
@@ -109,6 +109,7 @@ function isFinalCommandStatus(status) {
 exports.handler = async (event, context, callback) => {
   console.log('Received event: ', JSON.stringify(event, null, 2));
 
+  var agentConfigParameterName = process.env.AGENT_CONFIG_PARAMETER_NAME;
   var lifecycleActionResult = 'CONTINUE';
   var eventDetail = event.detail;
   var instanceId = eventDetail.EC2InstanceId;
@@ -142,7 +143,7 @@ exports.handler = async (event, context, callback) => {
 
         // Instance is online, let's execute the command to start the agent
         console.log("Instance '" + instanceId + "' is '" + instanceStatus + "'. Sending command to start agent...");
-        var commandId = await startAgentOnInstance(instanceId);
+        var commandId = await startAgentOnInstance(agentConfigParameterName, instanceId);
         var commandStatus = 'Pending';
 
         // Poll the command status

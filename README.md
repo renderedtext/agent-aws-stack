@@ -32,24 +32,43 @@ cdk synth
 
 ## Deploying the stack
 
-In order to deploy it, you are required to pass a few parameters:
-- `imageId`: this is the AMI you created with `make packer.build` above.
-- `semaphoreOrganization`: this is your Semaphore organization.
-- `semaphoreToken`: this is the registration token for your agent type.
+Before anything, you need to [create an encrypted AWS SSM parameter](#create-encrypted-aws-ssm-parameter) to store your semaphore agent token. This is required because that token is a sensitive piece of information and there is no way to create an encrypted AWS SSM parameter in an AWS CDK application without exposing it as plaintext.
 
-Other optional arguments are available:
-- `instanceType`: this is the instance type the stack will use for your agents. By default, this is `t2.micro`.
-- `minSize`: the minimum size for your agent auto scaling group. By default, this is 0.
-- `maxSize`: the maximum size for your agent auto scaling group. By default, this is 1.
-- `desiredCapacity`: the initial desired capacity for your agent auto scaling group. By default, this is 1
-- `semaphoreAgentVersion`: the version of the agent to deploy. By default, the latest one.
-- `warmPoolState`: the state to leave instances in the warm pool. By default, `Stopped`. Possible values are `Running` and `Stopped`.
+After that, you need to set a few required environment variables:
+- `SEMAPHORE_ORGANIZATION`: this is your Semaphore organization.
+- `SEMAPHORE_AGENT_AMI`: this is the AMI you created with `make packer.build` above.
+- `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME`: this is the name of the encrypted SSM parameter for the agent token you created above.
+
+Then, we can deploy our stack:
 
 ```bash
-cdk deploy \
-  --parameters imageId=ami-099f98f5c31d8ba1e \
-  --parameters semaphoreOrganization=semaphore \
-  --parameters semaphoreToken=YOUR_VERY_SENSITIVE_TOKEN
+export SEMAPHORE_ORGANIZATION=semaphore
+export SEMAPHORE_AGENT_AMI=ami-054628b1a56d29090
+export SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME=semaphore-agent-token
+cdk deploy
+```
+
+Other optional arguments are also available:
+
+| Environment variable name           | Description                                                | Default    |
+|-------------------------------------|------------------------------------------------------------|------------|
+| SEMAPHORE_AGENT_INSTANCE_TYPE       | Instance type used for the agents                          | t2.micro   |
+| SEMAPHORE_AGENT_ASG_MIN_SIZE        | Minimum size for the asg                                   | 0          |
+| SEMAPHORE_AGENT_ASG_MAX_SIZE        | Maximum size for the asg                                   | 1          |
+| SEMAPHORE_AGENT_ASG_DESIRED         | Desired capacity for the asg                               | 1          |
+| SEMAPHORE_AGENT_VERSION             | Agent version to use                                       | v2.0.17    |
+| SEMAPHORE_AGENT_ASG_WARM_POOL_STATE | Final state of warm pool instances: `Stopped` or `Running` | Stopped    |
+| SEMAPHORE_AGENT_VM_USER             | VM user used to run the agent                              | ubuntu     |
+
+## Create encrypted AWS SSM parameter
+
+Using the AWS CLI, you can create an AWS SSM parameter, encrypted with the default AWS KMS key for SSM, with the following command:
+
+```
+aws ssm put-parameter \
+  --name semaphore-agent-token \
+  --value "VERY_SENSITIVE_TOKEN" \
+  --type SecureString
 ```
 
 ## Destroying the stack
