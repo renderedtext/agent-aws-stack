@@ -43,6 +43,7 @@ Other optional arguments are available:
 - `maxSize`: the maximum size for your agent auto scaling group. By default, this is 1.
 - `desiredCapacity`: the initial desired capacity for your agent auto scaling group. By default, this is 1
 - `semaphoreAgentVersion`: the version of the agent to deploy. By default, the latest one.
+- `warmPoolState`: the state to leave instances in the warm pool. By default, `Stopped`. Possible values are `Running` and `Stopped`.
 
 ```bash
 cdk deploy \
