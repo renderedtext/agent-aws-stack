@@ -69,6 +69,28 @@ function describeAsg(asgName) {
   });
 }
 
+function setAsgDesiredCapacity(asgName, desiredCapacity) {
+  var autoscaling = new aws.AutoScaling();
+  console.log(`Scaling '${asgName}' up to ${desiredCapacity}...`);
+
+  return new Promise(function(resolve, reject) {
+    var params = {
+      AutoScalingGroupName: asgName,
+      DesiredCapacity: desiredCapacity,
+      HonorCooldown: false
+    };
+
+    autoscaling.setDesiredCapacity(params, function(err, data) {
+      if (err) {
+        console.log("Error scaling asg: ", err);
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+}
+
 function executeRequest(token, nextPageToken) {
   const url = "/api/v1alpha/jobs?states=QUEUED&states=RUNNING";
   const options = {
@@ -123,7 +145,7 @@ function countByState(jobs, machineType) {
     }, initialMap);
 }
 
-function scaleUpIfNeeded(metrics, asg) {
+const scaleUpIfNeeded = async (asgName, metrics, asg) => {
   const totalJobs = Object.keys(metrics).reduce((count, state) => count + metrics[state], 0);
 
   console.log(`Job metrics: `, metrics);
@@ -132,8 +154,8 @@ function scaleUpIfNeeded(metrics, asg) {
 
   if (totalJobs > asg.desiredCapacity) {
     const desired = totalJobs > asg.maxSize ? asg.maxSize : totalJobs;
-    console.log(`Scaling up '${asg.name}' to ${desired} agents...`);
-    // TODO: actually scale asg
+    await setAsgDesiredCapacity(asgName, desired);
+    console.log(`Successfully scaled up '${asg.name}'.`);
   } else {
     console.log(`No need to scale up.`);
   }
@@ -152,7 +174,7 @@ const tick = async (apiTokenParameterName, agentType, asgName) => {
     const semaphoreApiToken = await getSemaphoreApiToken(apiTokenParameterName);
     const metrics = await getJobMetrics(semaphoreApiToken, agentType);
     const asg = await describeAsg(asgName);
-    scaleUpIfNeeded(metrics, asg);
+    await scaleUpIfNeeded(asgName, metrics, asg);
   } catch (e) {
     console.error(`Error fetching metrics for '${agentType}': `, e);
   }
