@@ -5,6 +5,8 @@ const getJobMetrics = async (token, agentType) => {
   let nextPageToken = null;
   let jobs = [];
 
+  console.log(`Fetching jobs for ${agentType}...`);
+
   do {
     let response = await executeRequest(token, nextPageToken);
     jobs = jobs.concat(response.jobs);
@@ -16,6 +18,8 @@ const getJobMetrics = async (token, agentType) => {
 
 function getSemaphoreApiToken(apiTokenParameterName) {
   var ssm = new aws.SSM();
+
+  console.log("Fetching semaphore api token...");
 
   return new Promise(function(resolve, reject) {
     var params = {
@@ -36,6 +40,8 @@ function getSemaphoreApiToken(apiTokenParameterName) {
 
 function describeAsg(asgName) {
   var autoscaling = new aws.AutoScaling();
+
+  console.log(`Describing '${asgName}'...`);
 
   return new Promise(function(resolve, reject) {
     var params = {
@@ -133,6 +139,25 @@ function scaleUpIfNeeded(metrics, asg) {
   }
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function epochSeconds() {
+  return Math.round(Date.now() / 1000);
+}
+
+const tick = async (apiTokenParameterName, agentType, asgName) => {
+  try {
+    const semaphoreApiToken = await getSemaphoreApiToken(apiTokenParameterName);
+    const metrics = await getJobMetrics(semaphoreApiToken, agentType);
+    const asg = await describeAsg(asgName);
+    scaleUpIfNeeded(metrics, asg);
+  } catch (e) {
+    console.error(`Error fetching metrics for '${agentType}': `, e);
+  }
+}
+
 exports.handler = async (event, context, callback) => {
   const apiTokenParameterName = process.env.SEMAPHORE_API_TOKEN_PARAMETER_NAME;
   if (!apiTokenParameterName) {
@@ -162,22 +187,24 @@ exports.handler = async (event, context, callback) => {
     };
   }
 
-  try {
-    const semaphoreApiToken = await getSemaphoreApiToken(apiTokenParameterName);
-    const metrics = await getJobMetrics(semaphoreApiToken, agentType);
-    const asg = await describeAsg(asgName);
+  /**
+   * The interval between ticks.
+   * This is required because the smallest unit for a scheduled lambda is 1 minute.
+   * So, we run a tick every 10s, timing out after 50s
+   */
+  const interval = 10000;
+  const timeout = epochSeconds() + 50;
 
-    scaleUpIfNeeded(metrics, asg);
+  let now = epochSeconds();
+  while (now < timeout) {
+    await tick(apiTokenParameterName, agentType, asgName);
+    console.log(`Sleeping ${interval}ms...`);
+    await sleep(interval);
+    now = epochSeconds();
+  }
 
-    return {
-      statusCode: 200,
-      message: "success",
-    }
-  } catch (e) {
-    console.error(`Error fetching metrics for '${agentType}': `, e);
-    return {
-      statusCode: 500,
-      message: "error",
-    }
+  return {
+    statusCode: 200,
+    message: "success",
   }
 };
