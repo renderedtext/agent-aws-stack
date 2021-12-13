@@ -38,4 +38,5 @@ export SEMAPHORE_ORGANIZATION=$(echo $agent_params | jq '.organization' | tr -d 
 export SEMAPHORE_AGENT_INSTALLATION_USER=$(echo $agent_params | jq '.vmUser' | tr -d \")
 export SEMAPHORE_AGENT_SHUTDOWN_HOOK=/opt/semaphore/agent/hooks/shutdown
 export SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB=true
+export SEMAPHORE_AGENT_DISCONNECT_AFTER_IDLE_TIMEOUT=60
 sudo -E ./install.sh
