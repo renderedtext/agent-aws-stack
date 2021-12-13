@@ -150,10 +150,9 @@ const scaleUpIfNeeded = async (asgName, metrics, asg) => {
 
   console.log(`Job metrics: `, metrics);
   console.log(`Current asg state: `, asg);
-  console.log(`Total jobs: ${totalJobs}, current capacity: ${asg.desiredCapacity}`);
 
-  if (totalJobs > asg.desiredCapacity) {
-    const desired = totalJobs > asg.maxSize ? asg.maxSize : totalJobs;
+  const desired = totalJobs > asg.maxSize ? asg.maxSize : totalJobs;
+  if (desired > asg.desiredCapacity) {
     await setAsgDesiredCapacity(asgName, desired);
     console.log(`Successfully scaled up '${asg.name}'.`);
   } else {
