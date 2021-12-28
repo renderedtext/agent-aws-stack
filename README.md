@@ -24,7 +24,7 @@ cdk bootstrap aws://<YOUR_AWS_ACCOUNT_ID>/<YOUR_AWS_REGION>
 
 ## Deploying the stack
 
-Before anything, you need to [create two encrypted AWS SSM parameters](#create-encrypted-aws-ssm-parameters) to store your Semaphore agent token and your Semaphore API token.
+Before anything, you need to [create an encrypted AWS SSM parameter](#create-encrypted-aws-ssm-parameter) to store your Semaphore agent token.
 
 This is required because those tokens are sensitive pieces of information and there is no way to create an encrypted AWS SSM parameter in an AWS CDK application without exposing it as plaintext.
 
@@ -32,8 +32,6 @@ After that, you need to set a few required environment variables:
 - `SEMAPHORE_ORGANIZATION`: this is your Semaphore organization.
 - `SEMAPHORE_AGENT_AMI`: this is the AMI you created with `make packer.build` above.
 - `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME`: this is the name of the encrypted SSM parameter for the agent token you created above.
-- `SEMAPHORE_API_TOKEN_PARAMETER_NAME`: this is the name of the encrypted SSM parameter for the semaphore api token.
-- `SEMAPHORE_AGENT_TYPE_NAME`: this is the name of the agent type you want to deploy
 
 Then, we can deploy our stack:
 
@@ -41,8 +39,6 @@ Then, we can deploy our stack:
 export SEMAPHORE_ORGANIZATION=semaphore
 export SEMAPHORE_AGENT_AMI=ami-08eb4326402daffe3
 export SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME=semaphore-agent-token
-export SEMAPHORE_API_TOKEN_PARAMETER_NAME=semaphore-api-token
-export SEMAPHORE_AGENT_TYPE_NAME=s1-aws-rotating
 cdk deploy
 ```
 
@@ -64,18 +60,13 @@ Other optional arguments are also available:
 
 The stack is deployed in your default VPC, on one of the default subnets.
 
-## Create encrypted AWS SSM parameters
+## Create encrypted AWS SSM parameter
 
-Using the AWS CLI, you can create the required AWS SSM parameters, encrypted with the default AWS KMS key for SSM, with the following commands:
+Using the AWS CLI, you can create the required AWS SSM parameters, encrypted with the default AWS KMS key for SSM, with the following command:
 
 ```
 aws ssm put-parameter \
   --name semaphore-agent-token \
-  --value "VERY_SENSITIVE_TOKEN" \
-  --type SecureString
-
-aws ssm put-parameter \
-  --name semaphore-api-token \
   --value "VERY_SENSITIVE_TOKEN" \
   --type SecureString
 ```
