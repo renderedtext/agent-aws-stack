@@ -1,35 +1,20 @@
 const aws = require("aws-sdk");
 const https = require('https');
 
-const getJobMetrics = async (token, agentType) => {
-  let nextPageToken = null;
-  let jobs = [];
-
-  console.log(`Fetching jobs for ${agentType}...`);
-
-  do {
-    let response = await executeRequest(token, nextPageToken);
-    jobs = jobs.concat(response.jobs);
-    nextPageToken = response.next_page_token;
-  } while (nextPageToken);
-
-  return countByState(jobs, agentType);
-}
-
-function getSemaphoreApiToken(apiTokenParameterName) {
+function getAgentTypeToken(tokenParameterName) {
   var ssm = new aws.SSM();
 
-  console.log("Fetching semaphore api token...");
+  console.log("Fetching agent type token...");
 
   return new Promise(function(resolve, reject) {
     var params = {
-      Name: apiTokenParameterName,
+      Name: tokenParameterName,
       WithDecryption: true
     };
 
     ssm.getParameter(params, function(err, data) {
       if (err) {
-        console.log("Error getting semaphore api token parameter: ", err);
+        console.log("Error getting agent type registration token parameter: ", err);
         reject(err);
       } else {
         resolve(data.Parameter.Value);
@@ -91,11 +76,10 @@ function setAsgDesiredCapacity(asgName, desiredCapacity) {
   });
 }
 
-function executeRequest(token, nextPageToken) {
-  const url = "/api/v1alpha/jobs?states=QUEUED&states=RUNNING";
+function getAgentTypeOccupancy(token) {
   const options = {
     hostname: 'semaphore.semaphoreci.com',
-    path: nextPageToken ? `${url}&pageToken=${nextPageToken}` : url,
+    path: "/api/v1/self_hosted_agents/occupancy",
     method: 'GET',
     headers: {
       "Content-Type": "application/json",
@@ -108,7 +92,7 @@ function executeRequest(token, nextPageToken) {
     let data = '';
     https.request(options, response => {
       if (response.statusCode !== 200) {
-        reject(`Request to get job metrics got ${response.statusCode}`);
+        reject(`Request to get occupancy got ${response.statusCode}`);
         return;
       }
 
@@ -125,30 +109,10 @@ function executeRequest(token, nextPageToken) {
   })
 }
 
-function countByState(jobs, machineType) {
-  const initialMap = {
-    "RUNNING": 0,
-    "QUEUED": 0
-  };
+const scaleUpIfNeeded = async (asgName, occupancy, asg) => {
+  const totalJobs = Object.keys(occupancy).reduce((count, state) => count + occupancy[state], 0);
 
-  return jobs
-    .filter(job => job.spec.agent.machine.type === machineType)
-    .reduce((state_map, job) => {
-      const state = job.status.state;
-      if (state_map[state]) {
-        state_map[state] = state_map[state]+1
-      } else {
-        state_map[state] = 1
-      }
-
-      return state_map;
-    }, initialMap);
-}
-
-const scaleUpIfNeeded = async (asgName, metrics, asg) => {
-  const totalJobs = Object.keys(metrics).reduce((count, state) => count + metrics[state], 0);
-
-  console.log(`Job metrics: `, metrics);
+  console.log(`Agent type occupancy: `, occupancy);
   console.log(`Current asg state: `, asg);
 
   const desired = totalJobs > asg.maxSize ? asg.maxSize : totalJobs;
@@ -168,31 +132,21 @@ function epochSeconds() {
   return Math.round(Date.now() / 1000);
 }
 
-const tick = async (apiTokenParameterName, agentType, asgName) => {
+const tick = async (agentTokenParameterName, asgName) => {
   try {
-    const semaphoreApiToken = await getSemaphoreApiToken(apiTokenParameterName);
-    const metrics = await getJobMetrics(semaphoreApiToken, agentType);
+    const agentTypeToken = await getAgentTypeToken(agentTokenParameterName);
+    const occupancy = await getAgentTypeOccupancy(agentTypeToken);
     const asg = await describeAsg(asgName);
-    await scaleUpIfNeeded(asgName, metrics, asg);
+    await scaleUpIfNeeded(asgName, occupancy, asg);
   } catch (e) {
-    console.error(`Error fetching metrics for '${agentType}': `, e);
+    console.error("Error fetching occupancy", e);
   }
 }
 
 exports.handler = async (event, context, callback) => {
-  const apiTokenParameterName = process.env.SEMAPHORE_API_TOKEN_PARAMETER_NAME;
-  if (!apiTokenParameterName) {
-    console.error("No SEMAPHORE_API_TOKEN_PARAMETER_NAME specified.")
-    return {
-      statusCode: 500,
-      message: "error",
-    };
-  }
-
-  // TODO: this is not ideal, since it requires customers to specify agent type token and name.
-  const agentType = process.env.SEMAPHORE_AGENT_TYPE_NAME;
-  if (!agentType) {
-    console.error("No SEMAPHORE_AGENT_TYPE_NAME specified.")
+  const agentTokenParameterName = process.env.SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME;
+  if (!agentTokenParameterName) {
+    console.error("No SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME specified.")
     return {
       statusCode: 500,
       message: "error",
@@ -218,7 +172,7 @@ exports.handler = async (event, context, callback) => {
 
   let now = epochSeconds();
   while (now < timeout) {
-    await tick(apiTokenParameterName, agentType, asgName);
+    await tick(agentTokenParameterName, asgName);
     console.log(`Sleeping ${interval}ms...`);
     await sleep(interval);
     now = epochSeconds();
