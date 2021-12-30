@@ -5,11 +5,12 @@ const { AwsSemaphoreAgentStack } = require('../lib/aws-semaphore-agent-stack');
 const { ArgumentStore } = require('../lib/argument-store');
 
 const app = new cdk.App();
+const argumentStore = buildArgumentStore();
 
 new AwsSemaphoreAgentStack(app, 'AwsSemaphoreAgentStack', {
-  argumentStore: buildArgumentStore(),
+  stackName: argumentStore.get("SEMAPHORE_AGENT_STACK_NAME"),
   description: "Semaphore agent autoscaling stack",
-  stackName: "aws-semaphore-agent-stack",
+  argumentStore: argumentStore,
   tags: {},
   env: {
     account: process.env.CDK_DEPLOY_ACCOUNT || process.env.CDK_DEFAULT_ACCOUNT,

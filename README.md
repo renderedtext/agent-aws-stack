@@ -29,6 +29,7 @@ Before anything, you need to [create an encrypted AWS SSM parameter](#create-enc
 This is required because those tokens are sensitive pieces of information and there is no way to create an encrypted AWS SSM parameter in an AWS CDK application without exposing it as plaintext.
 
 After that, you need to set a few required environment variables:
+- `SEMAPHORE_AGENT_STACK_NAME`: this is the name of your stack. If you want to deploy multiple instances of this stack, you'll need to use a different name for each one.
 - `SEMAPHORE_ORGANIZATION`: this is your Semaphore organization.
 - `SEMAPHORE_AGENT_AMI`: this is the AMI you created with `make packer.build` above.
 - `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME`: this is the name of the encrypted SSM parameter for the agent token you created above.
@@ -36,9 +37,10 @@ After that, you need to set a few required environment variables:
 Then, we can deploy our stack:
 
 ```bash
-export SEMAPHORE_ORGANIZATION=semaphore
+export SEMAPHORE_AGENT_STACK_NAME=YOUR_STACK_NAME
+export SEMAPHORE_ORGANIZATION=YOUR_ORGANIZATION
 export SEMAPHORE_AGENT_AMI=ami-08eb4326402daffe3
-export SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME=semaphore-agent-token
+export SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME=YOUR_SSM_PARAMETER_TOKEN_NAME
 cdk deploy
 ```
 
@@ -66,13 +68,13 @@ Using the AWS CLI, you can create the required AWS SSM parameters, encrypted wit
 
 ```
 aws ssm put-parameter \
-  --name semaphore-agent-token \
+  --name YOUR_PARAMETER_NAME \
   --value "VERY_SENSITIVE_TOKEN" \
   --type SecureString
 ```
 
-## Destroying the stack
+Note: when resetting the agent token, you'll need to update this parameter with the new token.
 
-```bash
-cdk destroy
-```
+## Delete the stack
+
+You can delete the stack using the AWS CDK CLI with `cdk destroy` or using the AWS Cloudformation UI.
