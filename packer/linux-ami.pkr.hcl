@@ -71,6 +71,7 @@ build {
     destination = "/tmp/"
     sources = [
       "scripts/install-agent.sh",
+      "scripts/start-agent.sh",
       "scripts/terminate-instance.sh",
     ]
   }
@@ -78,6 +79,7 @@ build {
   provisioner "shell" {
     inline = [
       "sudo /tmp/install-agent.sh ${var.agent_version}"
+      "sudo mv /tmp/start-agent.sh /opt/semaphore/agent/start.sh
     ]
   }
 }

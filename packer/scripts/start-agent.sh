@@ -14,7 +14,6 @@ region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error
 
 echo "Fetching agent params..."
 agent_params=$(aws ssm get-parameter --region "$region" --name "$agent_config_param_name" --query Parameter.Value --output text)
-agent_version=$(echo $agent_params | jq '.agentVersion' | tr -d \")
 
 echo "Fetching agent token..."
 agent_token_param_name=$(echo $agent_params | jq '.agentTokenParameterName' | tr -d \")

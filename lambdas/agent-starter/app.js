@@ -66,7 +66,7 @@ function startAgentOnInstance(agentConfigParameterName, instanceId) {
       InstanceIds: [instanceId],
       DocumentName: 'AWS-RunShellScript',
       Parameters: {
-        commands: [`/opt/semaphore/install-agent.sh ${agentConfigParameterName}`],
+        commands: [`/opt/semaphore/agent/start.sh ${agentConfigParameterName}`],
         executionTimeout: ['20']
       },
     };
