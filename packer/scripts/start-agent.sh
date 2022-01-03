@@ -27,7 +27,10 @@ yq e -i ".endpoint = \"$organization.semaphoreci.com\"" /opt/semaphore/agent/con
 yq e -i ".token = \"$agent_token\"" /opt/semaphore/agent/config.yaml
 yq e -i ".disconnect-after-job = $disconnect_after_job" /opt/semaphore/agent/config.yaml
 yq e -i ".disconnect-after-idle-timeout = $disconnect_after_idle_timeout" /opt/semaphore/agent/config.yaml
+<<<<<<< HEAD
 echo $agent_params | jq '.envVars' | xargs -I {} yq e -P -i '.env-vars = .env-vars + "{}"'
+=======
+>>>>>>> master
 
 echo "Starting agent..."
 sudo systemctl start semaphore-agent
