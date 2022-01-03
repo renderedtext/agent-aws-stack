@@ -1,4 +1,4 @@
-AGENT_VERSION=v2.0.18
+AGENT_VERSION=v2.0.19
 
 packer.fmt:
 	cd packer && packer fmt . && cd -

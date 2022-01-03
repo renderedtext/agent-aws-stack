@@ -78,8 +78,8 @@ build {
 
   provisioner "shell" {
     inline = [
-      "sudo /tmp/install-agent.sh ${var.agent_version}"
-      "sudo mv /tmp/start-agent.sh /opt/semaphore/agent/start.sh
+      "sudo /tmp/install-agent.sh ${var.agent_version}",
+      "sudo mv /tmp/start-agent.sh /opt/semaphore/agent/start.sh"
     ]
   }
 }
