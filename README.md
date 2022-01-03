@@ -39,7 +39,7 @@ Then, we can deploy our stack:
 ```bash
 export SEMAPHORE_AGENT_STACK_NAME=YOUR_STACK_NAME
 export SEMAPHORE_ORGANIZATION=YOUR_ORGANIZATION
-export SEMAPHORE_AGENT_AMI=ami-08eb4326402daffe3
+export SEMAPHORE_AGENT_AMI=ami-0cd67f2501a9c1d43
 export SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME=YOUR_SSM_PARAMETER_TOKEN_NAME
 cdk deploy
 ```
@@ -52,9 +52,7 @@ Other optional arguments are also available:
 | `SEMAPHORE_AGENT_ASG_MIN_SIZE`                  | Minimum size for the asg. Default: `0` |
 | `SEMAPHORE_AGENT_ASG_MAX_SIZE`                  | Maximum size for the asg. Default: `1` |
 | `SEMAPHORE_AGENT_ASG_DESIRED`                   | Desired capacity for the asg. Default: `1` |
-| `SEMAPHORE_AGENT_VERSION`                       | Agent version to use. Default: `v2.0.18` |
 | `SEMAPHORE_AGENT_ASG_WARM_POOL_STATE`           | State of warm pool instances: `Stopped` or `Running`. Default: `Stopped` |
-| `SEMAPHORE_AGENT_VM_USER`                       | VM user used to run the agent. Default: `ubuntu` |
 | `SEMAPHORE_AGENT_SECURITY_GROUP_ID`             | Security group id to use for agent instances. If not specified, a security group will be created with (1) an egress rule allowing all outbound traffic and (2) an ingress rule for SSH, if `SEMAPHORE_AGENT_KEY_NAME` is specified |
 | `SEMAPHORE_AGENT_KEY_NAME`                      | Key name to access agents through SSH. If not specified, no SSH inbound access is allowed |
 | `SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB`          | If the agent should shutdown or not after completing a job. Default is `true` |

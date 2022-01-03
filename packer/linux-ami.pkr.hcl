@@ -13,6 +13,10 @@ variable "instance_type" {
   default = "t2.micro"
 }
 
+variable "agent_version" {
+  type = string
+}
+
 locals {
   timestamp = regex_replace(timestamp(), "[- TZ:]", "")
 }
@@ -27,10 +31,14 @@ packer {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "${var.ami_prefix}-linux-${local.timestamp}"
+  ami_name      = "${var.ami_prefix}-linux-${var.agent_version}-${local.timestamp}"
   region        = "${var.region}"
   instance_type = "${var.instance_type}"
   ssh_username  = "ubuntu"
+
+  tags = {
+    Name = "Semaphore agent base image"
+  }
 
   source_ami_filter {
     most_recent = true
@@ -53,7 +61,6 @@ build {
     "source.amazon-ebs.ubuntu"
   ]
 
-  # Install dependencies
   provisioner "shell" {
     scripts = [
       "scripts/install-utils.sh"
@@ -63,19 +70,16 @@ build {
   provisioner "file" {
     destination = "/tmp/"
     sources = [
-      # Required by the lambda function that processes the asg lifecycle hooks
       "scripts/install-agent.sh",
-
-      # Required by the agent
+      "scripts/start-agent.sh",
       "scripts/terminate-instance.sh",
     ]
   }
 
   provisioner "shell" {
     inline = [
-      "sudo mkdir -p /opt/semaphore/",
-      "sudo mv /tmp/install-agent.sh /opt/semaphore/install-agent.sh",
-      "sudo mv /tmp/terminate-instance.sh /opt/semaphore/terminate-instance.sh"
+      "sudo /tmp/install-agent.sh ${var.agent_version}",
+      "sudo mv /tmp/start-agent.sh /opt/semaphore/agent/start.sh"
     ]
   }
 }
