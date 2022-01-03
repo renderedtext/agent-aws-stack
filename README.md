@@ -39,7 +39,7 @@ Then, we can deploy our stack:
 ```bash
 export SEMAPHORE_AGENT_STACK_NAME=YOUR_STACK_NAME
 export SEMAPHORE_ORGANIZATION=YOUR_ORGANIZATION
-export SEMAPHORE_AGENT_AMI=ami-0cd67f2501a9c1d43
+export SEMAPHORE_AGENT_AMI=ami-0442a81fe8739be5a
 export SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME=YOUR_SSM_PARAMETER_TOKEN_NAME
 cdk deploy
 ```
@@ -57,6 +57,7 @@ Other optional arguments are also available:
 | `SEMAPHORE_AGENT_KEY_NAME`                      | Key name to access agents through SSH. If not specified, no SSH inbound access is allowed |
 | `SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB`          | If the agent should shutdown or not after completing a job. Default is `true` |
 | `SEMAPHORE_AGENT_DISCONNECT_AFTER_IDLE_TIMEOUT` | Number of seconds of idleness after which the agent will shutdown. Default is `300`. Note: setting this to 0 will disable the scaling down behavior of the stack, since the agents won't shutdown due to idleness |
+| `SEMAPHORE_AGENT_CACHE_BUCKET_NAME`             | S3 bucket name to use for caching. If this is not set, the cache CLI won't work. |
 
 The stack is deployed in your default VPC, on one of the default subnets.
 
