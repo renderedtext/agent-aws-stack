@@ -58,18 +58,23 @@ Other optional arguments are also available:
 | `SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB`          | If the agent should shutdown or not after completing a job. Default is `true` |
 | `SEMAPHORE_AGENT_DISCONNECT_AFTER_IDLE_TIMEOUT` | Number of seconds of idleness after which the agent will shutdown. Default is `300`. Note: setting this to 0 will disable the scaling down behavior of the stack, since the agents won't shutdown due to idleness |
 | `SEMAPHORE_AGENT_CACHE_BUCKET_NAME`             | S3 bucket name to use for caching. If this is not set, the cache CLI won't work. |
+| `SEMAPHORE_AGENT_TOKEN_KMS_KEY`                 | KMS key id used to encrypt and decrypt `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME`. If nothing is given, the default `alias/aws/ssm` key is assumed. |
 
 The stack is deployed in your default VPC, on one of the default subnets.
 
 ## Create encrypted AWS SSM parameter
 
-Using the AWS CLI, you can create the required AWS SSM parameters, encrypted with the default AWS KMS key for SSM, with the following command:
+Using the AWS CLI, you can create the AWS SSM parameter for your agent token using the following commands:
+
+1. First, create a KMS key with `aws kms create-key`. The output of this command will give you a KMS key id.
+2. Then, create an SSM parameter using the previously created key id:
 
 ```
 aws ssm put-parameter \
   --name YOUR_PARAMETER_NAME \
   --value "VERY_SENSITIVE_TOKEN" \
-  --type SecureString
+  --type SecureString \
+  --key-id PREVIOUSLY_CREATED_KMS_KEY_ID
 ```
 
 Note: when resetting the agent token, you'll need to update this parameter with the new token.
