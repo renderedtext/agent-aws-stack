@@ -123,8 +123,9 @@ exports.handler = async (event, context, callback) => {
 
         // Poll instance state
         // SSM Run Command can only run once the SSM agent in the instance is Online
+        // We check 24 times, with a 5s sleep between, so we wait at max 2min
         var instanceStatus = 'Offline';
-        for (let i = 0; i <= 12 && instanceStatus != 'Online'; i++) {
+        for (let i = 0; i <= 24 && instanceStatus != 'Online'; i++) {
           console.log("Checking status for '" + instanceId + "'...");
           instanceStatus = await getInstanceStatus(instanceId);
           console.log("Status for instance '" + instanceId + "' is '" + instanceStatus + "'.");
@@ -147,7 +148,8 @@ exports.handler = async (event, context, callback) => {
         var commandStatus = 'Pending';
 
         // Poll the command status
-        for (let i = 0; i <= 12 && !isFinalCommandStatus(commandStatus); i++) {
+        // We check 10 times, with a 2s sleep between, so we wait up to 20s
+        for (let i = 0; i <= 10 && !isFinalCommandStatus(commandStatus); i++) {
           console.log("Checking status for command '" + commandId + "'...");
           commandStatus = await getCommandStatus(commandId);
           console.log("Status for command '" + commandId + "' is '" + commandStatus + "'.");
