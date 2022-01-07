@@ -59,8 +59,8 @@ Other optional arguments are also available:
 | `SEMAPHORE_AGENT_DISCONNECT_AFTER_IDLE_TIMEOUT` | Number of seconds of idleness after which the agent will shutdown. Default is `300`. Note: setting this to 0 will disable the scaling down behavior of the stack, since the agents won't shutdown due to idleness |
 | `SEMAPHORE_AGENT_CACHE_BUCKET_NAME`             | S3 bucket name to use for caching. If this is not set, the cache CLI won't work. |
 | `SEMAPHORE_AGENT_TOKEN_KMS_KEY`                 | KMS key id used to encrypt and decrypt `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME`. If nothing is given, the default `alias/aws/ssm` key is assumed. |
-
-The stack is deployed in your default VPC, on one of the default subnets.
+| `SEMAPHORE_AGENT_VPC_ID`                        | The id of an existing VPC to use when launching agent instances. By default, it is blank, and the default VPC on your AWS account will be used. |
+| `SEMAPHORE_AGENT_SUBNETS`                       | Comma-separated list of existing VPC subnet ids where EC2 instances will run. This is required when using `SEMAPHORE_AGENT_VPC_ID`. If `SEMAPHORE_AGENT_SUBNETS` is set, but `SEMAPHORE_AGENT_VPC_ID` is blank, the subnets will be ignored, and the default VPC will be used. Private and public subnets are possible, but isolated subnets cannot be used. |
 
 ## Create encrypted AWS SSM parameter
 
