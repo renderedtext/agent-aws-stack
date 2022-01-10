@@ -1,6 +1,6 @@
 const cdk = require('@aws-cdk/core');
 const ssm = require("@aws-cdk/aws-ssm");
-const { expect, haveResource, countResources, arrayWith, objectLike, anything, ABSENT } = require('@aws-cdk/assert');
+const { expect, haveResource, countResources, arrayWith, objectLike, anything, ABSENT, notMatching } = require('@aws-cdk/assert');
 const { AwsSemaphoreAgentStack } = require('../lib/aws-semaphore-agent-stack');
 const { ArgumentStore } = require('../lib/argument-store');
 
@@ -93,7 +93,9 @@ describe("launch configuration", () => {
       InstanceType: "t2.medium"
     }))
   })
+})
 
+describe("security group", () => {
   test("creates security group with no ssh access, if no key is given", () => {
     const stack = createStack(basicArgumentStore());
 
@@ -279,6 +281,40 @@ describe("scaler lambda", () => {
     expect(stack).to(countResources("AWS::Lambda::Function", 1))
     expect(stack).notTo(haveResource('AWS::Lambda::Function', {
       FunctionName: "test-stack-scaler-lambda"
+    }))
+  })
+})
+
+describe("vpc and subnets", () => {
+  test("uses default vpc if none is given", () => {
+    const stack = createStack(basicArgumentStore());
+    expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
+      VPCZoneIdentifier: ABSENT,
+      AvailabilityZones: anything(),
+    }))
+
+    expect(stack).to(haveResource('AWS::EC2::SecurityGroup', {
+      // TODO: it seems like ec2.Vpc.fromLookup() always returns "vpc-12345" when unable to lookup anything
+      // so we just assert something is used here
+      VpcId: anything()
+    }))
+  })
+
+  test("uses vpc and subnets if specified", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_VPC_ID", "vpc-000000000");
+    argumentStore.set("SEMAPHORE_AGENT_SUBNETS", "subnet-00001,subnet-00002,subnet-00003");
+
+    const stack = createStack(argumentStore);
+    expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
+      VPCZoneIdentifier: ["subnet-00001", "subnet-00002", "subnet-00003"],
+      AvailabilityZones: ABSENT,
+    }))
+
+    expect(stack).to(haveResource('AWS::EC2::SecurityGroup', {
+      // TODO: it seems like ec2.Vpc.fromLookup() always returns "vpc-12345" when unable to lookup anything
+      // so we just assert something is used here
+      VpcId: anything()
     }))
   })
 })
