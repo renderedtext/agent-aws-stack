@@ -244,6 +244,45 @@ describe("warm pool", () => {
   })
 })
 
+describe("scaler lambda", () => {
+  test("all needed properties are set", () => {
+    const stack = createStack(basicArgumentStore());
+
+    expect(stack).to(countResources("AWS::Lambda::Function", 2))
+    expect(stack).to(haveResource('AWS::Lambda::Function', {
+      FunctionName: "test-stack-scaler-lambda",
+      Description: "Lambda function to dynamically scale Semaphore agents for test-stack-asg based on jobs demand.",
+      Runtime: "nodejs14.x",
+      Timeout: 60,
+      Code: anything(),
+      Handler: "app.handler",
+      Environment: {
+        Variables: {
+          SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME: "test-token",
+          SEMAPHORE_AGENT_ASG_NAME: "test-stack-asg"
+        }
+      },
+      Role: {
+        "Fn::GetAtt": [
+          anything(),
+          "Arn"
+        ]
+      }
+    }))
+  })
+
+  test("it can be disabled", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_USE_DYNAMIC_SCALING", "false");
+
+    const stack = createStack(argumentStore);
+    expect(stack).to(countResources("AWS::Lambda::Function", 1))
+    expect(stack).notTo(haveResource('AWS::Lambda::Function', {
+      FunctionName: "test-stack-scaler-lambda"
+    }))
+  })
+})
+
 function createStack(argumentStore) {
   const app = new cdk.App();
   return new AwsSemaphoreAgentStack(app, 'MyTestStack', {

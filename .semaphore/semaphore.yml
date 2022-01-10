@@ -42,5 +42,4 @@ blocks:
         - name: Unit tests
           commands:
             - cache restore
-            - npm install
             - npm test
