@@ -1,13 +1,46 @@
 version: v1.0
-name: Initial Pipeline
+name: Main pipeline
 agent:
   machine:
     type: e1-standard-2
-    os_image: ubuntu2004
+    os_image: ubuntu1804
 blocks:
-  - name: 'Block #1'
+  - name: Install dependencies
     task:
+      env_vars:
+        - name: NODE_ENV
+          value: test
+        - name: CI
+          value: 'true'
+      prologue:
+        commands:
+          - checkout
+          - nvm use
+          - node --version
+          - npm --version
       jobs:
-        - name: 'Job #1'
+        - name: npm install and cache
           commands:
-            - checkout
+            - cache restore
+            - npm install
+            - cache store
+
+  - name: Tests
+    task:
+      env_vars:
+        - name: NODE_ENV
+          value: test
+        - name: CI
+          value: 'true'
+      prologue:
+        commands:
+          - checkout
+          - nvm use
+          - node --version
+          - npm --version
+      jobs:
+        - name: Unit tests
+          commands:
+            - cache restore
+            - npm install
+            - npm test
