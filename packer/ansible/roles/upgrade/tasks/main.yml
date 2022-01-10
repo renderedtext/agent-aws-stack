@@ -1,0 +1,26 @@
+---
+- name: apt update
+  shell: apt -y update
+  args:
+    executable: /bin/bash
+
+- name: apt dist-upgrade
+  shell: DEBIAN_FRONTEND=noninteractive apt -fuy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade
+  args: 
+    executable: /bin/bash
+
+- name: apt autoremove
+  shell: apt -y autoremove
+  args:
+    executable: /bin/bash
+
+- name: reboot
+  reboot:
+    msg: "Reboot initiated by Ansible for kernel updates"
+    connect_timeout: 5
+    reboot_timeout: 300
+    pre_reboot_delay: 0
+    post_reboot_delay: 30
+    test_command: uptime
+  tags:
+    - reboot

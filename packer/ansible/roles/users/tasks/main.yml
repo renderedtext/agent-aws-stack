@@ -1,0 +1,17 @@
+---
+- name: Add semaphore user
+  user:
+    name: semaphore
+    shell: /bin/bash
+    create_home: yes
+    state: present
+    groups: docker
+    append: yes
+
+- name: Allow passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^semaphore'
+    line: 'semaphore ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'

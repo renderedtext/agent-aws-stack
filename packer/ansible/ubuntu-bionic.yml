@@ -1,0 +1,16 @@
+---
+- name: Ubuntu Bionic 18.04
+  hosts: all
+  vars:
+    container_user: semaphore
+  become: true
+  become_user: root
+  roles:
+    - upgrade
+    - system-tools
+    - python
+    - awscli
+    - docker
+    - users
+    - agent
+    - cleanup

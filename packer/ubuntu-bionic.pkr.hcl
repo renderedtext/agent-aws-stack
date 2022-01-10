@@ -1,6 +1,11 @@
 variable "ami_prefix" {
   type    = string
-  default = "semaphore-agent-base"
+  default = "semaphore-agent"
+}
+
+variable "arch" {
+  type    = string
+  default = "amd64-server"
 }
 
 variable "region" {
@@ -31,13 +36,13 @@ packer {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "${var.ami_prefix}-linux-${var.agent_version}-${local.timestamp}"
+  ami_name      = "${var.ami_prefix}-ubuntu-bionic-${var.arch}-${var.agent_version}-${local.timestamp}"
   region        = "${var.region}"
   instance_type = "${var.instance_type}"
   ssh_username  = "ubuntu"
 
   tags = {
-    Name = "Semaphore agent base image"
+    Name = "Semaphore agent ${var.agent_version}, Ubuntu Bionic 18.04, ${var.arch}"
   }
 
   source_ami_filter {
@@ -47,7 +52,7 @@ source "amazon-ebs" "ubuntu" {
     owners = ["099720109477"]
 
     filters = {
-      name                = "ubuntu/images/*ubuntu-bionic-18.04-amd64-server-*"
+      name                = "ubuntu/images/*ubuntu-bionic-18.04-${var.arch}-*"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
     }
@@ -55,31 +60,19 @@ source "amazon-ebs" "ubuntu" {
 }
 
 build {
-  name = "semaphore-agent-base"
+  name = "semaphore-agent-ubuntu-bionic"
 
   sources = [
     "source.amazon-ebs.ubuntu"
   ]
 
-  provisioner "shell" {
-    scripts = [
-      "scripts/install-utils.sh"
-    ]
-  }
-
-  provisioner "file" {
-    destination = "/tmp/"
-    sources = [
-      "scripts/install-agent.sh",
-      "scripts/start-agent.sh",
-      "scripts/terminate-instance.sh",
-    ]
-  }
-
-  provisioner "shell" {
-    inline = [
-      "sudo /tmp/install-agent.sh ${var.agent_version}",
-      "sudo mv /tmp/start-agent.sh /opt/semaphore/agent/start.sh"
+  provisioner "ansible" {
+    playbook_file = "ansible/ubuntu-bionic.yml"
+    user          = "ubuntu"
+    extra_arguments = [
+      "--skip-tags",
+      "reboot",
+      "--extra-vars", "agent_version=${var.agent_version}"
     ]
   }
 }
