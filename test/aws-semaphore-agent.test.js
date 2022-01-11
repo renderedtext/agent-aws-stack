@@ -62,6 +62,118 @@ describe("SSM parameter", () => {
   });
 })
 
+describe("instance profile", () => {
+  test("name is prefixed with stack name", () => {
+    const stack = createStack(basicArgumentStore());
+    expect(stack).to(haveResource('AWS::IAM::InstanceProfile', {
+      InstanceProfileName: "test-stack-instance-profile",
+      Roles: anything(),
+      Path: "/"
+    }))
+  })
+
+  test("creates role", () => {
+    const stack = createStack(basicArgumentStore());
+    expect(stack).to(haveResource('AWS::IAM::Role', {
+      RoleName: "test-stack-instance-profile-role",
+      AssumeRolePolicyDocument: {
+        Statement: [
+          {
+            Action: "sts:AssumeRole",
+            Effect: "Allow",
+            Principal: {
+              Service: "ec2.amazonaws.com"
+            }
+          }
+        ],
+        Version: anything()
+      }
+    }))
+  })
+
+  test("permissions to access cache bucket are not included, if bucket is not specified", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_TOKEN_KMS_KEY", "dummy-kms-key-id");
+
+    const stack = createStack(argumentStore);
+    expect(stack).to(haveResource('AWS::IAM::Policy', {
+      PolicyName: "test-stack-instance-profile-policy",
+      PolicyDocument: {
+        Statement: [
+          {
+            Action: "autoscaling:TerminateInstanceInAutoScalingGroup",
+            Effect: "Allow",
+            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-asg"
+          },
+          {
+            Action: "ssm:GetParameter",
+            Effect: "Allow",
+            Resource: [
+              "arn:aws:ssm:*:*:parameter/test-stack-config",
+              "arn:aws:ssm:*:*:parameter/test-token"
+            ]
+          },
+          {
+            Action: "kms:Decrypt",
+            Effect: "Allow",
+            Resource: "arn:aws:kms:*:*:key/dummy-kms-key-id"
+          }
+        ],
+        Version: anything()
+      },
+      Roles: anything(),
+    }))
+  })
+
+  test("permissions to access cache bucket are included, if bucket is specified", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_TOKEN_KMS_KEY", "dummy-kms-key-id");
+    argumentStore.set("SEMAPHORE_AGENT_CACHE_BUCKET_NAME", "test-cache-bucket");
+
+    const stack = createStack(argumentStore);
+    expect(stack).to(haveResource('AWS::IAM::Policy', {
+      PolicyName: "test-stack-instance-profile-policy",
+      PolicyDocument: {
+        Statement: [
+          {
+            Action: "autoscaling:TerminateInstanceInAutoScalingGroup",
+            Effect: "Allow",
+            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-asg"
+          },
+          {
+            Action: "ssm:GetParameter",
+            Effect: "Allow",
+            Resource: [
+              "arn:aws:ssm:*:*:parameter/test-stack-config",
+              "arn:aws:ssm:*:*:parameter/test-token"
+            ]
+          },
+          {
+            Action: "kms:Decrypt",
+            Effect: "Allow",
+            Resource: "arn:aws:kms:*:*:key/dummy-kms-key-id"
+          },
+          {
+            Action: [
+              "s3:PutObject",
+              "s3:GetObject",
+              "s3:ListBucket",
+              "s3:DeleteObject"
+            ],
+            Effect: "Allow",
+            Resource: [
+              "arn:aws:s3:::test-cache-bucket/*",
+              `arn:aws:s3:::test-cache-bucket`
+            ]
+          }
+        ],
+        Version: anything()
+      },
+      Roles: anything(),
+    }))
+  })
+})
+
 describe("launch configuration", () => {
   test("name is prefixed with stack name", () => {
     const stack = createStack(basicArgumentStore());
@@ -246,6 +358,81 @@ describe("warm pool", () => {
   })
 })
 
+describe("starter lambda", () => {
+  test("all needed properties are set", () => {
+    const stack = createStack(basicArgumentStore());
+
+    expect(stack).to(countResources("AWS::Lambda::Function", 2))
+    expect(stack).to(haveResource('AWS::Lambda::Function', {
+      FunctionName: "test-stack-starter-lambda",
+      Description: "Lambda function to start the Semaphore agent on instances of test-stack-asg that went into rotation.",
+      Runtime: "nodejs14.x",
+      Timeout: 180,
+      Code: anything(),
+      Handler: "app.handler",
+      Environment: {
+        Variables: {
+          AGENT_CONFIG_PARAMETER_NAME: "test-stack-config"
+        }
+      },
+      Role: {
+        "Fn::GetAtt": [
+          anything(),
+          "Arn"
+        ]
+      }
+    }))
+  })
+
+  test("rule to route asg lifecycle events to lambda is created", () => {
+    const stack = createStack(basicArgumentStore());
+    expect(stack).to(haveResource('AWS::Events::Rule', {
+      Name: "test-stack-asg-events-rule",
+      Description: "Rule to route autoscaling events for test-stack-asg to a lambda function",
+      EventPattern: {
+        "source": ["aws.autoscaling"],
+        "detail-type": ["EC2 Instance-launch Lifecycle Action"]
+      },
+      State: "ENABLED",
+      Targets: anything()
+    }))
+  })
+
+  test("proper permissions are in place", () => {
+    const stack = createStack(basicArgumentStore());
+    expect(stack).to(haveResource('AWS::IAM::Policy', {
+      PolicyName: "test-stack-starter-lambda-policy",
+      PolicyDocument: {
+        Statement: [
+          {
+            Action: "autoscaling:CompleteLifecycleAction",
+            Effect: "Allow",
+            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-asg"
+          },
+          {
+            Action: "ssm:SendCommand",
+            Effect: "Allow",
+            Resource: [
+              "arn:aws:ssm:*:*:document/AWS-RunShellScript",
+              "arn:aws:ec2:*:*:instance/*"
+            ]
+          },
+          {
+            Action: [
+              "ssm:DescribeInstanceInformation",
+              "ssm:ListCommands"
+            ],
+            Effect: "Allow",
+            Resource: "*"
+          }
+        ],
+        Version: anything()
+      },
+      Roles: anything(),
+    }))
+  })
+})
+
 describe("scaler lambda", () => {
   test("all needed properties are set", () => {
     const stack = createStack(basicArgumentStore());
@@ -270,6 +457,53 @@ describe("scaler lambda", () => {
           "Arn"
         ]
       }
+    }))
+  })
+
+  test("rule to schedule lambda execution is created", () => {
+    const stack = createStack(basicArgumentStore());
+    expect(stack).to(haveResource('AWS::Events::Rule', {
+      Description: "Rule to dynamically invoke lambda function to scale test-stack-asg",
+      Name: "test-stack-asg-scaler-rule",
+      ScheduleExpression: "rate(1 minute)",
+      State: "ENABLED",
+      Targets: anything()
+    }))
+  })
+
+  test("proper permissions created", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_TOKEN_KMS_KEY", "dummy-kms-key-id");
+
+    const stack = createStack(argumentStore);
+    expect(stack).to(haveResource('AWS::IAM::Policy', {
+      PolicyName: "test-stack-scaler-lambda-policy",
+      PolicyDocument: {
+        Statement: [
+          {
+            Action: "autoscaling:DescribeAutoScalingGroups",
+            Effect: "Allow",
+            Resource: "*"
+          },
+          {
+            Action: "autoscaling:SetDesiredCapacity",
+            Effect: "Allow",
+            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-asg"
+          },
+          {
+            Action: "ssm:GetParameter",
+            Effect: "Allow",
+            Resource: "arn:aws:ssm:*:*:parameter/test-token"
+          },
+          {
+            Action: "kms:Decrypt",
+            Effect: "Allow",
+            Resource: "arn:aws:kms:*:*:key/dummy-kms-key-id"
+          }
+        ],
+        Version: anything()
+      },
+      Roles: anything(),
     }))
   })
 
