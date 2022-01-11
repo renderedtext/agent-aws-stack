@@ -1,4 +1,0 @@
----
-agent_root_dir: "/opt/semaphore/agent"
-agent_hooks_dir: "{{agent_root_dir}}/hooks"
-agent_url: "https://github.com/semaphoreci/agent/releases/download/{{agent_version}}/agent_Linux_x86_64.tar.gz"

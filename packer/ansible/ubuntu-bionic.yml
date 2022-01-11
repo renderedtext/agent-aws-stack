@@ -7,7 +7,7 @@
   become_user: root
   roles:
     - upgrade
-    - system-tools
+    - system_tools
     - python
     - awscli
     - docker

@@ -3,7 +3,6 @@
   apt:
     pkg:
       - python3.6
-    state: latest
     update_cache: yes
 
 - name: Create Python 3.6 symlink

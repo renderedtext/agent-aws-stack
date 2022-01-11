@@ -1,16 +1,18 @@
 ---
 - name: apt update
-  shell: apt -y update
+  command: apt -y update
   args:
     executable: /bin/bash
 
 - name: apt dist-upgrade
-  shell: DEBIAN_FRONTEND=noninteractive apt -fuy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade
+  command: apt -fuy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade
+  environment:
+    DEBIAN_FRONTEND: noninteractive
   args: 
     executable: /bin/bash
 
 - name: apt autoremove
-  shell: apt -y autoremove
+  command: apt -y autoremove
   args:
     executable: /bin/bash
 

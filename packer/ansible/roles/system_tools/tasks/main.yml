@@ -5,6 +5,7 @@
       - apt-transport-https
       - apt-utils
       - ca-certificates
+      - git
       - curl
       - software-properties-common
       - zip
@@ -14,12 +15,11 @@
       - gnupg
       - tree
       - wget
-    state: latest
     update_cache: yes
 
 - name: Install yq
   get_url:
-    url : "{{yq_url}}"
+    url : "{{ yq_url }}"
     dest: /usr/local/bin/yq
     mode: '0755'
     force: yes

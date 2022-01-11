@@ -1,17 +1,19 @@
 ---
 - name: Remove default Docker
-  shell: DEBIAN_FRONTEND=noninteractive apt purge -fy docker docker-engine docker.io containerd runc
+  command: apt purge -fy docker docker-engine docker.io containerd runc
+  environment:
+    DEBIAN_FRONTEND: noninteractive
   args:
     executable: /bin/bash
 
 - name: Add Docker GPG apt Key
   apt_key:
-    url: "{{docker_apt_gpg_key}}"
+    url: "{{ docker_apt_gpg_key }}"
     state: present
 
 - name: Add Docker Repository
   apt_repository:
-    repo: "{{docker_apt_repository}}"
+    repo: "{{ docker_apt_repository }}"
     state: present
     update_cache: yes
 
@@ -21,7 +23,6 @@
       - docker-ce
       - docker-ce-cli
       - containerd.io
-    state: latest
 
 - name: Configure Docker service
   service:
@@ -31,7 +32,7 @@
 
 - name: Install Docker Compose
   get_url:
-    url : "{{docker_compose_url}}"
+    url : "{{ docker_compose_url }}"
     dest: /usr/local/bin/docker-compose
     mode: '0755'
     force: yes
