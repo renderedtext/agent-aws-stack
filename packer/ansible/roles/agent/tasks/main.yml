@@ -1,0 +1,40 @@
+---
+- name: Create agent directory
+  file:
+    path: "{{ agent_root_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Download agent
+  unarchive:
+    src: "{{ agent_url }}"
+    dest: "{{ agent_root_dir }}"
+    mode: "0755"
+    remote_src: True
+
+- name: Create hooks directory
+  file:
+    path: "{{ agent_hooks_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy shutdown hook
+  copy:
+    src: terminate-instance.sh
+    dest: "{{ agent_hooks_dir }}/shutdown"
+    mode: "0755"
+
+- name: Install agent
+  environment:
+    SEMAPHORE_AGENT_INSTALLATION_USER: "semaphore"
+    SEMAPHORE_AGENT_SHUTDOWN_HOOK: "{{ agent_hooks_dir }}/shutdown"
+    SEMAPHORE_AGENT_START: "false"
+    SEMAPHORE_REGISTRATION_TOKEN: "DUMMY"
+    SEMAPHORE_ORGANIZATION: "DUMMY"
+  command: "{{ agent_root_dir }}/install.sh"
+
+- name: Copy start script
+  copy:
+    src: start-agent.sh
+    dest: "{{ agent_root_dir }}/start.sh"
+    mode: "0755"

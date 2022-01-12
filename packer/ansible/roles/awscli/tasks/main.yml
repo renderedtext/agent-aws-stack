@@ -1,0 +1,17 @@
+---
+- name: Download awscli
+  unarchive:
+    src: "{{ awscli_url }}"
+    dest: /tmp/
+    mode: "0755"
+    remote_src: True
+
+- name: Install awscli
+  command: /tmp/aws/install -i /usr/local/aws -b /usr/local/bin
+  args:
+    executable: /bin/bash
+
+- name: Cleanup awscli
+  file:
+    path: "/tmp/aws"
+    state: absent

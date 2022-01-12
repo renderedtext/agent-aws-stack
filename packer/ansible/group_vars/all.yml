@@ -1,0 +1,11 @@
+---
+agent_root_dir: "/opt/semaphore/agent"
+agent_hooks_dir: "{{ agent_root_dir }}/hooks"
+agent_url: "https://github.com/semaphoreci/agent/releases/download/{{ agent_version }}/agent_Linux_x86_64.tar.gz"
+awscli_version: "2.4.9"
+awscli_url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-{{ awscli_version }}.zip"
+docker_apt_repository: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+docker_apt_gpg_key: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+docker_compose_version: "1.29.2"
+docker_compose_url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-Linux-x86_64"
+yq_url: "https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd64"
