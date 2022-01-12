@@ -6,6 +6,7 @@ agent:
     os_image: ubuntu1804
 blocks:
   - name: Install dependencies
+    dependencies: []
     task:
       env_vars:
         - name: NODE_ENV
@@ -25,7 +26,17 @@ blocks:
             - npm install
             - cache store
 
+  - name: Lint
+    dependencies: ["Install dependencies"]
+    task:
+      jobs:
+        - name: Lint ansible AMI recipes
+          commands:
+            - sudo pip3 install virtualenv
+            - make ansible.lint
+
   - name: Tests
+    dependencies: ["Install dependencies"]
     task:
       env_vars:
         - name: NODE_ENV
