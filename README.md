@@ -53,6 +53,8 @@ Other optional arguments are also available:
 | `SEMAPHORE_AGENT_ASG_MAX_SIZE`                  | Maximum size for the asg. Default: `1` |
 | `SEMAPHORE_AGENT_ASG_DESIRED`                   | Desired capacity for the asg. Default: `1` |
 | `SEMAPHORE_AGENT_ASG_WARM_POOL_STATE`           | State of warm pool instances: `Stopped` or `Running`. Default: `Stopped` |
+| `SEMAPHORE_AGENT_USE_WARM_POOL`                 | Determines if the auto scaling group will use a warm pool. Default is `true`. |
+| `SEMAPHORE_AGENT_USE_DYNAMIC_SCALING`           | Whether to use a lambda to dynamically scale the number of agents in the auto scaling group based on the job demand. Default is `true`. |
 | `SEMAPHORE_AGENT_SECURITY_GROUP_ID`             | Security group id to use for agent instances. If not specified, a security group will be created with (1) an egress rule allowing all outbound traffic and (2) an ingress rule for SSH, if `SEMAPHORE_AGENT_KEY_NAME` is specified |
 | `SEMAPHORE_AGENT_KEY_NAME`                      | Key name to access agents through SSH. If not specified, no SSH inbound access is allowed |
 | `SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB`          | If the agent should shutdown or not after completing a job. Default is `true` |
