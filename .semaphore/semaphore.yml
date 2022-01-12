@@ -33,6 +33,7 @@ blocks:
         - name: Lint ansible AMI recipes
           commands:
             - sudo pip3 install virtualenv
+            - checkout
             - make ansible.lint
 
   - name: Tests
