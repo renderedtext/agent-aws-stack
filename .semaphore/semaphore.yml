@@ -34,7 +34,9 @@ blocks:
           commands:
             - sudo pip3 install virtualenv
             - checkout
+            - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
             - make ansible.lint
+            - cache store venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt) venv
 
   - name: Tests
     dependencies: ["Install dependencies"]
