@@ -2,7 +2,7 @@ AGENT_VERSION=v2.0.19
 
 venv.execute:
 	virtualenv -p python3 venv && \
-	source venv/bin/activate && \
+	. venv/bin/activate && \
 	pip3 install -r requirements.txt && \
 	$(COMMAND) && \
 	deactivate && \
