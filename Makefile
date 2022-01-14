@@ -3,6 +3,7 @@ AGENT_VERSION=v2.0.19
 venv.execute:
 	python3 -m venv venv && \
 	. venv/bin/activate && \
+	pip install --upgrade pip && \
 	pip install -r requirements.txt && \
 	$(COMMAND) && \
 	deactivate && \
