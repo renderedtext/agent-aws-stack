@@ -36,7 +36,7 @@ blocks:
       jobs:
         - name: Lint ansible recipes
           commands:
-            - sudo apt-get install python3-venv
+            - sudo apt-get -y install python3-venv
             - checkout
             - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
             - make ansible.lint
@@ -61,7 +61,7 @@ blocks:
             - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
             - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
             - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-            - sudo apt-get update && sudo apt-get install packer python3-venv
+            - sudo apt-get update && sudo apt-get -y install packer python3-venv
             - make packer.init
             - make packer.validate
             - make packer.build
