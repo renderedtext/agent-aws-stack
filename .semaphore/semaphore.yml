@@ -7,48 +7,48 @@ agent:
 blocks:
   - name: Install dependencies
     dependencies: []
-      task:
-        env_vars:
-          - name: NODE_ENV
-            value: test
-          - name: CI
-            value: 'true'
-        jobs:
-          - name: npm install and cache
-            commands:
-              - checkout
-              - nvm use
-              - node --version
-              - npm --version
-              - cache restore
-              - npm install
-              - cache store
+    task:
+      env_vars:
+        - name: NODE_ENV
+          value: test
+        - name: CI
+          value: 'true'
+      jobs:
+        - name: npm install and cache
+          commands:
+            - checkout
+            - nvm use
+            - node --version
+            - npm --version
+            - cache restore
+            - npm install
+            - cache store
 
   - name: Lint & Test
     dependencies:
       - Install dependencies
-      task:
-        env_vars:
-          - name: NODE_ENV
-            value: test
-          - name: CI
-            value: 'true'
-        jobs:
-          - name: Lint ansible recipes
-            commands:
-              - sudo pip3 install virtualenv
-              - checkout
-              - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
-              - make ansible.lint
-              - cache store venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt) venv
-          - name: Unit tests
-            commands:
-              - checkout
-              - nvm use
-              - node --version
-              - npm --version
-              - cache restore
-              - npm test
+    task:
+      env_vars:
+        - name: NODE_ENV
+          value: test
+        - name: CI
+          value: 'true'
+      jobs:
+        - name: Lint ansible recipes
+          commands:
+            - sudo pip3 install virtualenv
+            - checkout
+            - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
+            - make ansible.lint
+            - cache store venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt) venv
+        - name: Unit tests
+          commands:
+            - checkout
+            - nvm use
+            - node --version
+            - npm --version
+            - cache restore
+            - npm test
 
   - name: Build
     dependencies:
@@ -104,16 +104,16 @@ blocks:
 after_pipeline:
   task:
     env_vars:
-        - name: SEMAPHORE_AGENT_STACK_NAME
-          value: ami-testing
-        - name: SEMAPHORE_ORGANIZATION
-          value: semaphore
-        - name: SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME
-          value: ami-testing-token
-        - name: SEMAPHORE_AGENT_USE_DYNAMIC_SCALING
-          value: 'false'
-        - name: SEMAPHORE_AGENT_USE_WARM_POOL
-          value: 'false'
+      - name: SEMAPHORE_AGENT_STACK_NAME
+        value: ami-testing
+      - name: SEMAPHORE_ORGANIZATION
+        value: semaphore
+      - name: SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME
+        value: ami-testing-token
+      - name: SEMAPHORE_AGENT_USE_DYNAMIC_SCALING
+        value: 'false'
+      - name: SEMAPHORE_AGENT_USE_WARM_POOL
+        value: 'false'
     jobs:
       - name: Destroy AWS stack
         commands:
