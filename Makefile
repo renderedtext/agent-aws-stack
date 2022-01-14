@@ -1,9 +1,9 @@
 AGENT_VERSION=v2.0.19
 
 venv.execute:
-	virtualenv -p python3 venv && \
+	python3 -m venv venv && \
 	. venv/bin/activate && \
-	pip3 install -r requirements.txt && \
+	pip install -r requirements.txt && \
 	$(COMMAND) && \
 	deactivate && \
 	cd -
@@ -13,6 +13,9 @@ packer.fmt:
 
 packer.validate:
 	$(MAKE) venv.execute COMMAND='cd packer && packer validate -var "agent_version=$(AGENT_VERSION)" .'
+
+packer.init:
+	$(MAKE) venv.execute COMMAND='cd packer && packer init .'
 
 packer.build:
 	$(MAKE) venv.execute COMMAND='cd packer && packer build -var "agent_version=$(AGENT_VERSION)" ubuntu-bionic.pkr.hcl'
