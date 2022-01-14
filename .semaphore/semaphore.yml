@@ -58,8 +58,12 @@ blocks:
         - name: Build AMI
           commands:
             - checkout
+            - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
+            - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+            - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+            - sudo apt-get update && sudo apt-get install packer
             - make packer.build
-            - artifact workflow push packer/manifest.json -d manifest.json
+            - artifact push workflow packer/manifest.json -d manifest.json
             - aws ssm put-parameter -name $(NAME) --value "$(TOKEN)" --type SecureString --overwrite
 
   - name: Launch
@@ -82,7 +86,7 @@ blocks:
           commands:
             - checkout
             - cache restore
-            - artifact workflow pull manifest.json
+            - artifact pull workflow manifest.json
             - 'export SEMAPHORE_AGENT_AMI=$(cat manifest.json | jq -r .builds[0].artifact_id | cut -d: -f2)'
             - cdk deploy --require-approval never --progress events
 
@@ -118,6 +122,6 @@ after_pipeline:
       - name: Destroy AWS stack
         commands:
           - checkout
-          - artifact workflow pull manifest.json
+          - artifact pull workflow manifest.json
           - 'export SEMAPHORE_AGENT_AMI=$(cat manifest.json | jq -r .builds[0].artifact_id | cut -d: -f2)'
           - cdk destroy --force
