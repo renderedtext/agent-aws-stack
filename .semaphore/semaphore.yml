@@ -7,53 +7,117 @@ agent:
 blocks:
   - name: Install dependencies
     dependencies: []
+	    task:
+	      env_vars:
+	        - name: NODE_ENV
+	          value: test
+	        - name: CI
+	          value: 'true'
+	      jobs:
+	        - name: npm install and cache
+	          commands:
+              - checkout
+              - nvm use
+              - node --version
+              - npm --version
+	            - cache restore
+	            - npm install
+	            - cache store
+
+  - name: Lint & Test
+    dependencies:
+      - Install dependencies
+	    task:
+        env_vars:
+	        - name: NODE_ENV
+	          value: test
+	        - name: CI
+	          value: 'true'
+	      jobs:
+          - name: Lint ansible recipes
+            commands:
+              - sudo pip3 install virtualenv
+              - checkout
+              - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
+              - make ansible.lint
+              - cache store venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt) venv
+          - name: Unit tests
+            commands:
+              - checkout
+              - nvm use
+              - node --version
+              - npm --version
+              - cache restore
+              - npm test
+
+  - name: Build
+    dependencies:
+      - Lint & Test
+    task:
+      jobs:
+        - name: Build AMI
+          commands:
+            - checkout
+            - make packer.build
+            - artifact workflow push packer/manifest.json -d manifest.json
+            - aws ssm put-parameter -name $(NAME) --value "$(TOKEN)" --type SecureString --overwrite
+
+  - name: Launch
+    dependencies:
+      - Build
     task:
       env_vars:
-        - name: NODE_ENV
-          value: test
-        - name: CI
-          value: 'true'
-      prologue:
-        commands:
-          - checkout
-          - nvm use
-          - node --version
-          - npm --version
+        - name: SEMAPHORE_AGENT_STACK_NAME
+          value: ami-testing
+        - name: SEMAPHORE_ORGANIZATION
+          value: semaphore
+        - name: SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME
+          value: ami-testing-token
+        - name: SEMAPHORE_AGENT_USE_DYNAMIC_SCALING
+          value: 'false'
+        - name: SEMAPHORE_AGENT_USE_WARM_POOL
+          value: 'false'
       jobs:
-        - name: npm install and cache
+        - name: Launch stack
           commands:
-            - cache restore
-            - npm install
-            - cache store
-
-  - name: Lint
-    dependencies: ["Install dependencies"]
-    task:
-      jobs:
-        - name: Lint ansible AMI recipes
-          commands:
-            - sudo pip3 install virtualenv
             - checkout
-            - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
-            - make ansible.lint
-            - cache store venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt) venv
+            - cache restore
+            - artifact workflow pull manifest.json
+            - 'export SEMAPHORE_AGENT_AMI=$(cat manifest.json | jq -r .builds[0].artifact_id | cut -d: -f2)'
+            - cdk deploy --require-approval never --progress events
 
   - name: Tests
-    dependencies: ["Install dependencies"]
+    dependencies:
+      - Launch
+    execution_time_limit:
+      minutes: 5
     task:
-      env_vars:
-        - name: NODE_ENV
-          value: test
-        - name: CI
-          value: 'true'
-      prologue:
+      agent:
+        machine:
+          type: s1-aws-testing
+      jobs:
+        - name: Run goss tests
+          commands:
+            - checkout
+            - goss validate
+
+after_pipeline:
+  task:
+    env_vars:
+        - name: SEMAPHORE_AGENT_STACK_NAME
+          value: ami-testing
+        - name: SEMAPHORE_ORGANIZATION
+          value: semaphore
+        - name: SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME
+          value: ami-testing-token
+        - name: SEMAPHORE_AGENT_USE_DYNAMIC_SCALING
+          value: 'false'
+        - name: SEMAPHORE_AGENT_USE_WARM_POOL
+          value: 'false'
+    jobs:
+      - name: Destroy AWS stack
         commands:
           - checkout
-          - nvm use
-          - node --version
-          - npm --version
-      jobs:
-        - name: Unit tests
-          commands:
-            - cache restore
-            - npm test
+          - artifact workflow pull manifest.json
+          - 'export SEMAPHORE_AGENT_AMI=$(cat manifest.json | jq -r .builds[0].artifact_id | cut -d: -f2)'
+          - cdk destroy --force

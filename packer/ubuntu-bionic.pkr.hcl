@@ -75,4 +75,10 @@ build {
       "--extra-vars", "agent_version=${var.agent_version}"
     ]
   }
+
+  post-processors {
+    post-processor "manifest" {
+      output = "manifest.json"
+    }
+  }
 }
