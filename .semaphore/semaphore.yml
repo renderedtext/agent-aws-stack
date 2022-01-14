@@ -7,33 +7,33 @@ agent:
 blocks:
   - name: Install dependencies
     dependencies: []
-	    task:
-	      env_vars:
-	        - name: NODE_ENV
-	          value: test
-	        - name: CI
-	          value: 'true'
-	      jobs:
-	        - name: npm install and cache
-	          commands:
+      task:
+        env_vars:
+          - name: NODE_ENV
+            value: test
+          - name: CI
+            value: 'true'
+        jobs:
+          - name: npm install and cache
+            commands:
               - checkout
               - nvm use
               - node --version
               - npm --version
-	            - cache restore
-	            - npm install
-	            - cache store
+              - cache restore
+              - npm install
+              - cache store
 
   - name: Lint & Test
     dependencies:
       - Install dependencies
-	    task:
+      task:
         env_vars:
-	        - name: NODE_ENV
-	          value: test
-	        - name: CI
-	          value: 'true'
-	      jobs:
+          - name: NODE_ENV
+            value: test
+          - name: CI
+            value: 'true'
+        jobs:
           - name: Lint ansible recipes
             commands:
               - sudo pip3 install virtualenv
