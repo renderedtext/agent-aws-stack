@@ -66,19 +66,20 @@ blocks:
             - make packer.validate
             - make packer.build
             - artifact push workflow packer/manifest.json -d manifest.json
-            - aws ssm put-parameter -name $(NAME) --value "$(TOKEN)" --type SecureString --overwrite
 
   - name: Launch
     dependencies:
       - Build
+    secrets:
+      - s1-agent-aws-stack-testing-token
     task:
       env_vars:
         - name: SEMAPHORE_AGENT_STACK_NAME
-          value: ami-testing
+          value: agent-aws-stack-testing
         - name: SEMAPHORE_ORGANIZATION
           value: semaphore
         - name: SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME
-          value: ami-testing-token
+          value: s1-agent-aws-stack-testing-token
         - name: SEMAPHORE_AGENT_USE_DYNAMIC_SCALING
           value: 'false'
         - name: SEMAPHORE_AGENT_USE_WARM_POOL
@@ -90,6 +91,7 @@ blocks:
             - cache restore
             - artifact pull workflow manifest.json
             - 'export SEMAPHORE_AGENT_AMI=$(cat manifest.json | jq -r .builds[0].artifact_id | cut -d: -f2)'
+            - aws ssm put-parameter -name s1-agent-aws-stack-testing-token --value $TOKEN --type SecureString --overwrite
             - cdk deploy --require-approval never --progress events
 
   - name: Tests
@@ -100,7 +102,7 @@ blocks:
     task:
       agent:
         machine:
-          type: s1-aws-testing
+          type: s1-agent-aws-stack-testing
       jobs:
         - name: Run goss tests
           commands:
