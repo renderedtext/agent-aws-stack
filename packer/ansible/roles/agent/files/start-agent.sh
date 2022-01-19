@@ -16,13 +16,13 @@ echo "Fetching agent params..."
 agent_params=$(aws ssm get-parameter --region "$region" --name "$agent_config_param_name" --query Parameter.Value --output text)
 
 echo "Fetching agent token..."
-agent_token_param_name=$(echo $agent_params | jq '.agentTokenParameterName' | tr -d \")
+agent_token_param_name=$(echo $agent_params | jq -r '.agentTokenParameterName')
 agent_token=$(aws ssm get-parameter --region "$region" --name "$agent_token_param_name" --query Parameter.Value --output text --with-decryption)
 
 echo "Changing agent configuration..."
-organization=$(echo $agent_params | jq '.organization' | tr -d \")
-disconnect_after_job=$(echo $agent_params | jq '.disconnectAfterJob' | tr -d \")
-disconnect_after_idle_timeout=$(echo $agent_params | jq '.disconnectAfterIdleTimeout' | tr -d \")
+organization=$(echo $agent_params | jq -r '.organization')
+disconnect_after_job=$(echo $agent_params | jq -r '.disconnectAfterJob')
+disconnect_after_idle_timeout=$(echo $agent_params | jq -r '.disconnectAfterIdleTimeout')
 yq e -i ".endpoint = \"$organization.semaphoreci.com\"" /opt/semaphore/agent/config.yaml
 yq e -i ".token = \"$agent_token\"" /opt/semaphore/agent/config.yaml
 yq e -i ".disconnect-after-job = $disconnect_after_job" /opt/semaphore/agent/config.yaml

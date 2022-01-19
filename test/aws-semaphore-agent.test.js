@@ -1,8 +1,10 @@
 const cdk = require('@aws-cdk/core');
 const ssm = require("@aws-cdk/aws-ssm");
-const { expect, haveResource, countResources, arrayWith, objectLike, anything, ABSENT, notMatching } = require('@aws-cdk/assert');
+const { expect, haveResource, countResources, arrayWith, objectLike, anything, ABSENT } = require('@aws-cdk/assert');
 const { AwsSemaphoreAgentStack } = require('../lib/aws-semaphore-agent-stack');
 const { ArgumentStore } = require('../lib/argument-store');
+const { hash } = require('../lib/ami-hash');
+const packageInfo = require("../package.json");
 
 describe("SSM parameter", () => {
   test("name is prefixed with stack name", () => {
@@ -182,10 +184,20 @@ describe("launch configuration", () => {
     }))
   })
 
-  test("uses specified AMI", () => {
+  test("uses default AMI", () => {
     const stack = createStack(basicArgumentStore());
     expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
-      ImageId: "DUMMY"
+      ImageId: "default-ami-id"
+    }))
+  })
+
+  test("uses specified AMI", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_AMI", "ami-custom")
+
+    const stack = createStack(argumentStore);
+    expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
+      ImageId: "ami-custom"
     }))
   })
 
@@ -528,15 +540,13 @@ describe("vpc and subnets", () => {
     }))
 
     expect(stack).to(haveResource('AWS::EC2::SecurityGroup', {
-      // TODO: it seems like ec2.Vpc.fromLookup() always returns "vpc-12345" when unable to lookup anything
-      // so we just assert something is used here
-      VpcId: anything()
+      VpcId: "vpc-00000-default"
     }))
   })
 
   test("uses vpc and subnets if specified", () => {
     const argumentStore = basicArgumentStore();
-    argumentStore.set("SEMAPHORE_AGENT_VPC_ID", "vpc-000000000");
+    argumentStore.set("SEMAPHORE_AGENT_VPC_ID", "vpc-000000000-custom");
     argumentStore.set("SEMAPHORE_AGENT_SUBNETS", "subnet-00001,subnet-00002,subnet-00003");
 
     const stack = createStack(argumentStore);
@@ -546,28 +556,91 @@ describe("vpc and subnets", () => {
     }))
 
     expect(stack).to(haveResource('AWS::EC2::SecurityGroup', {
-      // TODO: it seems like ec2.Vpc.fromLookup() always returns "vpc-12345" when unable to lookup anything
-      // so we just assert something is used here
-      VpcId: anything()
+      VpcId: "vpc-000000000-custom"
     }))
   })
 })
 
 function createStack(argumentStore) {
-  const app = new cdk.App();
+  const account = "DUMMYACCOUNT";
+  const region = "us-east-1";
+  const customVpcId = "vpc-000000000-custom";
+  const defaultAmiName = `semaphore-agent-ubuntu-bionic-amd64-server-${packageInfo.version}-${hash()}`;
+  const amiLookupContextKey = `ami:account=${account}:filters.image-type.0=machine:filters.name.0=${defaultAmiName}:filters.state.0=available:region=${region}`;
+  const defaultVpcContextKey = `vpc-provider:account=${account}:filter.isDefault=true:region=${region}:returnAsymmetricSubnets=true`
+  const customVpcContextKey = `vpc-provider:account=${account}:filter.vpc-id=${customVpcId}:region=${region}:returnAsymmetricSubnets=true`
+
+  const app = new cdk.App({
+    context: {
+      [amiLookupContextKey]: "default-ami-id",
+      [defaultVpcContextKey]: {
+        "vpcId": "vpc-00000-default",
+        "vpcCidrBlock": "172.31.0.0/16",
+        "availabilityZones": [],
+        "subnetGroups": [
+          {
+            "name": "Public",
+            "type": "Public",
+            "subnets": [
+              {
+                "subnetId": "subnet-dummy-1",
+                "cidr": "172.31.32.0/20",
+                "availabilityZone": "us-east-1a",
+                "routeTableId": "rtb-dummy"
+              },
+              {
+                "subnetId": "subnet-dummy-2",
+                "cidr": "172.31.0.0/20",
+                "availabilityZone": "us-east-1b",
+                "routeTableId": "rtb-dummy"
+              }
+            ]
+          }
+        ]
+      },
+      [customVpcContextKey]: {
+        "vpcId": "vpc-000000000-custom",
+        "vpcCidrBlock": "10.0.0.0/16",
+        "availabilityZones": [],
+        "subnetGroups": [
+          {
+            "name": "public-subnet-for-testing",
+            "type": "Public",
+            "subnets": [
+              {
+                "subnetId": "subnet-00001",
+                "cidr": "10.0.3.0/24",
+                "availabilityZone": "us-east-1a",
+                "routeTableId": "rtb-dummy"
+              },
+              {
+                "subnetId": "subnet-00002",
+                "cidr": "10.0.4.0/24",
+                "availabilityZone": "us-east-1b",
+                "routeTableId": "rtb-dummy"
+              },
+              {
+                "subnetId": "subnet-00003",
+                "cidr": "10.0.5.0/24",
+                "availabilityZone": "us-east-1c",
+                "routeTableId": "rtb-dummy"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  });
+
   return new AwsSemaphoreAgentStack(app, 'MyTestStack', {
     argumentStore,
     stackName: "test-stack",
-    env: {
-      account: "DUMMYACCOUNT",
-      region: "us-east-1"
-    }
+    env: { account, region }
   });
 }
 
 function basicArgumentStore() {
   return ArgumentStore.fromMap({
-    SEMAPHORE_AGENT_AMI: "DUMMY",
     SEMAPHORE_AGENT_STACK_NAME: "test-stack",
     SEMAPHORE_ORGANIZATION: "test",
     SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME: "test-token"

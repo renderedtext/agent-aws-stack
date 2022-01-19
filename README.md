@@ -31,7 +31,6 @@ This is required because those tokens are sensitive pieces of information and th
 After that, you need to set a few required environment variables:
 - `SEMAPHORE_AGENT_STACK_NAME`: this is the name of your stack. If you want to deploy multiple instances of this stack, you'll need to use a different name for each one.
 - `SEMAPHORE_ORGANIZATION`: this is your Semaphore organization.
-- `SEMAPHORE_AGENT_AMI`: this is the AMI you created with `make packer.build` above.
 - `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME`: this is the name of the encrypted SSM parameter for the agent token you created above.
 
 Then, we can deploy our stack:
@@ -39,7 +38,6 @@ Then, we can deploy our stack:
 ```bash
 export SEMAPHORE_AGENT_STACK_NAME=YOUR_STACK_NAME
 export SEMAPHORE_ORGANIZATION=YOUR_ORGANIZATION
-export SEMAPHORE_AGENT_AMI=ami-09f27346de7b2a1a0
 export SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME=YOUR_SSM_PARAMETER_TOKEN_NAME
 cdk deploy
 ```
@@ -63,6 +61,7 @@ Other optional arguments are also available:
 | `SEMAPHORE_AGENT_TOKEN_KMS_KEY`                 | KMS key id used to encrypt and decrypt `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME`. If nothing is given, the default `alias/aws/ssm` key is assumed. |
 | `SEMAPHORE_AGENT_VPC_ID`                        | The id of an existing VPC to use when launching agent instances. By default, it is blank, and the default VPC on your AWS account will be used. |
 | `SEMAPHORE_AGENT_SUBNETS`                       | Comma-separated list of existing VPC subnet ids where EC2 instances will run. This is required when using `SEMAPHORE_AGENT_VPC_ID`. If `SEMAPHORE_AGENT_SUBNETS` is set, but `SEMAPHORE_AGENT_VPC_ID` is blank, the subnets will be ignored, and the default VPC will be used. Private and public subnets are possible, but isolated subnets cannot be used. |
+| `SEMAPHORE_AGENT_AMI`                           | The AMI used for all the instances. If empty, the stack will use the default AMIs, by looking them up by their name. The AMI name follows the pattern: `semaphore-agent-ubuntu-bionic-amd64-server-${STACK_VERSION}-${HASH}`, where `STACK_VERSION` is the version specified in `package.json`, and `HASH` is the hash of all files related to the AMI creation. If the default AMI isn't enough, you can use your own AMIs, but they need to be based off of the stack's default AMI. |
 
 ## Create encrypted AWS SSM parameter
 
