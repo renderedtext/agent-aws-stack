@@ -17,7 +17,7 @@ packer.validate:
 	$(MAKE) venv.execute COMMAND='\
 		cd packer && \
 		packer validate \
-			-var "stack_version=$(VERSION)" \
+			-var "stack_version=v$(VERSION)" \
 			-var "agent_version=$(AGENT_VERSION)" \
 			-var "hash=$(HASH)" \
 			.'
@@ -26,7 +26,7 @@ packer.build:
 	$(MAKE) venv.execute COMMAND='\
 		cd packer && \
 		packer build \
-			-var "stack_version=$(VERSION)" \
+			-var "stack_version=v$(VERSION)" \
 			-var "agent_version=$(AGENT_VERSION)" \
 			-var "hash=$(HASH)" \
 			ubuntu-bionic.pkr.hcl'

@@ -30,10 +30,6 @@ variable "instance_type" {
   default = "t2.micro"
 }
 
-locals {
-  timestamp = regex_replace(timestamp(), "[- TZ:]", "")
-}
-
 packer {
   required_plugins {
     amazon = {
@@ -44,13 +40,18 @@ packer {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "${var.ami_prefix}-ubuntu-bionic-${var.arch}-${var.stack_version}-${var.hash}"
+  ami_name      = "${var.ami_prefix}-${var.stack_version}-ubuntu-bionic-${var.arch}-${var.hash}"
   region        = "${var.region}"
   instance_type = "${var.instance_type}"
   ssh_username  = "ubuntu"
 
   tags = {
-    Name = "Semaphore agent stack ${var.stack_version}, agent ${var.agent_version}, Ubuntu Bionic 18.04, ${var.arch}"
+    Name = "Semaphore agent"
+    Version = "${var.stack_version}"
+    Arch = "${var.arch}"
+    Agent_Version = "${var.agent_version}"
+    OS_Version = "Ubuntu Bionic 18.04"
+    Hash = "${var.hash}"
   }
 
   source_ami_filter {

@@ -61,7 +61,7 @@ Other optional arguments are also available:
 | `SEMAPHORE_AGENT_TOKEN_KMS_KEY`                 | KMS key id used to encrypt and decrypt `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME`. If nothing is given, the default `alias/aws/ssm` key is assumed. |
 | `SEMAPHORE_AGENT_VPC_ID`                        | The id of an existing VPC to use when launching agent instances. By default, it is blank, and the default VPC on your AWS account will be used. |
 | `SEMAPHORE_AGENT_SUBNETS`                       | Comma-separated list of existing VPC subnet ids where EC2 instances will run. This is required when using `SEMAPHORE_AGENT_VPC_ID`. If `SEMAPHORE_AGENT_SUBNETS` is set, but `SEMAPHORE_AGENT_VPC_ID` is blank, the subnets will be ignored, and the default VPC will be used. Private and public subnets are possible, but isolated subnets cannot be used. |
-| `SEMAPHORE_AGENT_AMI`                           | The AMI used for all the instances. If empty, the stack will use the default AMIs, by looking them up by their name. The AMI name follows the pattern: `semaphore-agent-ubuntu-bionic-amd64-server-${STACK_VERSION}-${HASH}`, where `STACK_VERSION` is the version specified in `package.json`, and `HASH` is the hash of all files related to the AMI creation. If the default AMI isn't enough, you can use your own AMIs, but they need to be based off of the stack's default AMI. |
+| `SEMAPHORE_AGENT_AMI`                           | The AMI used for all the instances. If empty, the stack will use the default AMIs, by looking them up by their name. If the default AMI isn't enough, you can use your own AMIs, but they need to be based off of the stack's default AMI. |
 
 ## Create encrypted AWS SSM parameter
 
