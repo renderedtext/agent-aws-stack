@@ -92,7 +92,7 @@ blocks:
             - checkout
             - cache restore
             - aws ssm put-parameter --name $SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME --value $TOKEN --type SecureString --overwrite
-            - npm run cdk deploy --require-approval never --progress events
+            - npm run cdk -- deploy --require-approval never --progress events
 
   - name: Tests
     dependencies:
