@@ -66,7 +66,7 @@ blocks:
             - sudo apt-get update && sudo apt-get -y install packer python3-venv
             - make packer.init
             - make packer.validate
-            - make packer.build
+            - ./build.sh ubuntu-bionic amd64-server
 
   - name: Launch
     dependencies:
@@ -91,8 +91,8 @@ blocks:
           commands:
             - checkout
             - cache restore
-            - aws ssm put-parameter --name s1-agent-aws-stack-testing-token --value $TOKEN --type SecureString --overwrite
-            - cdk deploy --require-approval never --progress events
+            - aws ssm put-parameter --name $SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME --value $TOKEN --type SecureString --overwrite
+            - npm run cdk deploy --require-approval never --progress events
 
   - name: Tests
     dependencies:
@@ -129,4 +129,4 @@ after_pipeline:
         commands:
           - checkout
           - cache restore
-          - cdk destroy --force
+          - npm run cdk destroy --force
