@@ -54,6 +54,8 @@ blocks:
     dependencies:
       - Lint & Test
     task:
+      secrets:
+        - name: agent-aws-stack-tester-credentials
       jobs:
         - name: Build AMI
           commands:
@@ -73,6 +75,7 @@ blocks:
     task:
       secrets:
         - name: s1-agent-aws-stack-testing-token
+        - name: agent-aws-stack-tester-credentials
       env_vars:
         - name: SEMAPHORE_AGENT_STACK_NAME
           value: agent-aws-stack-testing
