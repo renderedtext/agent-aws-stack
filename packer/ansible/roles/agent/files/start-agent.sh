@@ -9,6 +9,19 @@ if [[ -z "$agent_config_param_name" ]]; then
   exit 1
 fi
 
+echo "Adding github SSH keys to ~/.ssh/known_hosts..."
+curl -s https://api.github.com/meta | jq -r '.ssh_keys[]' | sed 's/^/github.com /' >> ~/.ssh/known_hosts
+
+echo "Configuring .aws folder"
+token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
+region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/placement/region")
+
+sudo mkdir -p /home/semaphore/.aws
+sudo tee -a /home/semaphore/.aws/config > /dev/null <<EOT
+[default]
+region = $region
+EOT
+
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
 region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/placement/region")
 
@@ -31,15 +44,5 @@ echo $agent_params | jq '.envVars[]' | xargs -I {} yq e -P -i '.env-vars = .env-
 
 echo "Starting agent..."
 sudo systemctl start semaphore-agent
-
-echo "Configuring .aws folder"
-token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
-region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/placement/region")
-
-sudo mkdir -p /home/semaphore/.aws
-sudo tee -a /home/semaphore/.aws/config > /dev/null <<EOT
-[default]
-region = $region
-EOT
 
 echo "Done."
