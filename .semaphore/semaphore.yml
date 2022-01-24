@@ -72,7 +72,7 @@ blocks:
       - Build
     task:
       secrets:
-        - s1-agent-aws-stack-testing-token
+        - name: s1-agent-aws-stack-testing-token
       env_vars:
         - name: SEMAPHORE_AGENT_STACK_NAME
           value: agent-aws-stack-testing
