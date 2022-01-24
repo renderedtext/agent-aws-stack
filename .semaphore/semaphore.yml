@@ -129,4 +129,4 @@ after_pipeline:
         commands:
           - checkout
           - cache restore
-          - npm run cdk destroy -- --force
+          - npm run cdk destroy -- --verbose --force
