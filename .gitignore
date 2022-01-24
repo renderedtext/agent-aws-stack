@@ -5,6 +5,3 @@ venv
 .cdk.staging
 cdk.out
 cdk.context.json
-
-# Packer manifest
-packer/manifest.json
