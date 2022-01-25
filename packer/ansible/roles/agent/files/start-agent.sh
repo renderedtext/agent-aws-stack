@@ -10,7 +10,8 @@ if [[ -z "$agent_config_param_name" ]]; then
 fi
 
 echo "Adding github SSH keys to ~/.ssh/known_hosts..."
-curl -s https://api.github.com/meta | jq -r '.ssh_keys[]' | sed 's/^/github.com /' >> ~/.ssh/known_hosts
+curl -s https://api.github.com/meta | jq -r '.ssh_keys[]' | sed 's/^/github.com /' >> /home/semaphore/.ssh/known_hosts
+cat /home/semaphore/.ssh/known_hosts
 
 echo "Configuring .aws folder"
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
