@@ -23,6 +23,7 @@ sudo tee -a /home/semaphore/.aws/config > /dev/null <<EOT
 [default]
 region = $region
 EOT
+sudo chown -R semaphore:semaphore /home/semaphore/.aws
 
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
 region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/placement/region")
@@ -43,6 +44,7 @@ yq e -i ".token = \"$agent_token\"" /opt/semaphore/agent/config.yaml
 yq e -i ".disconnect-after-job = $disconnect_after_job" /opt/semaphore/agent/config.yaml
 yq e -i ".disconnect-after-idle-timeout = $disconnect_after_idle_timeout" /opt/semaphore/agent/config.yaml
 echo $agent_params | jq '.envVars[]' | xargs -I {} yq e -P -i '.env-vars = .env-vars + "{}"' /opt/semaphore/agent/config.yaml
+sudo chown semaphore:semaphore /opt/semaphore/agent/config.yaml
 
 echo "Starting agent..."
 sudo systemctl start semaphore-agent
