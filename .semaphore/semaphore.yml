@@ -64,7 +64,7 @@ blocks:
             - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
             - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
             - sudo apt-get update && sudo apt-get -y install packer python3-venv
-            - ./build.sh ubuntu-bionic amd64-server
+            - ./ci/build-ami.sh ubuntu-bionic amd64-server
 
   - name: Launch
     dependencies:
@@ -89,7 +89,7 @@ blocks:
           commands:
             - checkout
             - cache restore
-            - aws ssm put-parameter --name $SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME --value $TOKEN --type SecureString --overwrite
+            - ./ci/create-ssm-param.sh $SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME $TOKEN
             - npm run cdk -- deploy --require-approval never --progress events
 
   - name: Tests
