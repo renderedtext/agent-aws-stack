@@ -6,6 +6,7 @@ file:
     group: semaphore
 
   /opt/semaphore/agent/config.yaml:
+    filetype: file
     exists: true
     owner: semaphore
     group: semaphore
@@ -48,6 +49,7 @@ service:
     running: true
 
   semaphore-agent:
+    enabled: false
     running: true
 
 user:
