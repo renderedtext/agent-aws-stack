@@ -84,6 +84,8 @@ blocks:
           value: 'false'
         - name: SEMAPHORE_AGENT_USE_WARM_POOL
           value: 'false'
+        - name: SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB
+          value: 'false'
       jobs:
         - name: Launch stack
           commands:
@@ -123,6 +125,8 @@ after_pipeline:
       - name: SEMAPHORE_AGENT_USE_DYNAMIC_SCALING
         value: 'false'
       - name: SEMAPHORE_AGENT_USE_WARM_POOL
+        value: 'false'
+      - name: SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB
         value: 'false'
     jobs:
       - name: Destroy AWS stack
