@@ -23,6 +23,8 @@ response=$(aws ec2 describe-images --filters "Name=name,Values=${image_name}")
 images=$(echo $response | jq '.Images' | jq length)
 if [[ ${images} == "0" ]]; then
   echo "No images published with name ${image_name}. Creating it..."
+  make packer.init
+  make packer.validate
   make packer.build
 else
   echo "Image with name ${image_name} already exists. Not building anything."
