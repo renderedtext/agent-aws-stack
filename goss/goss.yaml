@@ -7,6 +7,8 @@ file:
 
   /opt/semaphore/agent/config.yaml:
     exists: true
+    owner: semaphore
+    group: semaphore
 
   /opt/semaphore/agent/hooks:
     filetype: directory
@@ -14,21 +16,31 @@ file:
     owner: semaphore
     group: semaphore
 
+  /home/semaphore/.toolbox:
+    filetype: directory
+    exists: true
+    owner: semaphore
+    group: semaphore
+
   /usr/local/bin/cache:
     exists: true
-    mode: "0755"
+    filetype: symlink
+    linked-to: /home/semaphore/.toolbox/cache
 
   /usr/local/bin/artifact:
     exists: true
-    mode: "0755"
+    filetype: symlink
+    linked-to: /home/semaphore/.toolbox/artifact
 
   /usr/local/bin/test-results:
     exists: true
-    mode: "0755"
+    filetype: symlink
+    linked-to: /home/semaphore/.toolbox/test-results
 
   /usr/local/bin/retry:
     exists: true
-    mode: "0755"
+    filetype: symlink
+    linked-to: /home/semaphore/.toolbox/retry
 
 service:
   docker:
@@ -36,7 +48,6 @@ service:
     running: true
 
   semaphore-agent:
-    enabled: true
     running: true
 
 user:
@@ -53,10 +64,6 @@ group:
 
   docker:
     exists: true
-
-process:
-  semaphore-agent:
-    running: true
 
 package:
   apt-transport-https:
