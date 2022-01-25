@@ -91,7 +91,7 @@ command:
   awscli:
     exec: "aws --version"
     exit-status: 0
-    contains:
+    stdout:
       - "{{ .Vars.awscli }}"
   docker:
     exit-status: 0
@@ -100,14 +100,14 @@ command:
     exit-status: 0
     exec: "docker-compose --version"
     stdout:
-    - "{{ .Vars.docker_compose }}"
+      - "{{ .Vars.docker_compose }}"
   python:
     exit-status: 0
     exec: "python --version"
     stdout:
-    - "Python {{ .Vars.python }}"
+      - "Python {{ .Vars.python }}"
   whoami:
     exit-status: 0
     exec: "whoami"
     stdout:
-    - {{.Vars.user}}
+      - "{{ .Vars.user }}"
