@@ -107,6 +107,7 @@ blocks:
             - sudo curl -L https://github.com/aelsabbahy/goss/releases/latest/download/goss-linux-amd64 -o /usr/local/bin/goss
             - sudo chmod +rx /usr/local/bin/goss
             - checkout
+            - ls -la /opt/semaphore/agent
             - goss -g goss/goss.yaml --vars goss/vars.yml validate
 
 after_pipeline:
