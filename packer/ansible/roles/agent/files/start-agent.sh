@@ -12,6 +12,7 @@ fi
 echo "Adding github SSH keys to known_hosts..."
 sudo mkdir -p /home/semaphore/.ssh
 curl -s https://api.github.com/meta | jq -r '.ssh_keys[]' | sed 's/^/github.com /' | sudo tee -a /home/semaphore/.ssh/known_hosts
+sudo chown -R semaphore:semaphore /home/semaphore/.ssh
 
 echo "Configuring .aws folder"
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
