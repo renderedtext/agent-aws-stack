@@ -19,10 +19,10 @@ response=$(aws ssm describe-parameters --filters "Key=Name,Values=${param_name}"
 parameters=$(echo $response | jq '.Parameters' | jq length)
 if [[ ${parameters} == "0" ]]; then
   echo "Creating SSM parameter '${param_name}'..."
-  # aws ssm put-parameter \
-  #   --name $param_name \
-  #   --value $param_value \
-  #   --type SecureString
+  aws ssm put-parameter \
+    --name $param_name \
+    --value $param_value \
+    --type SecureString
 else
   echo "SSM parameter '${param_name}' already exists."
 fi
