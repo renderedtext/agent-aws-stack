@@ -62,9 +62,9 @@ blocks:
             - checkout
             - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
             - sudo apt-get update && sudo apt-get -y install python3-venv
-            - curl -sL https://releases.hashicorp.com/packer/1.7.9/packer_1.7.9_linux_amd64.zip -o packer_1.7.9_linux_amd64.zip
-            - unzip packer_1.7.9_linux_amd64.zip
-            - sudo mv packer /usr/local/bin/
+            - curl -sL https://releases.hashicorp.com/packer/1.7.9/packer_1.7.9_linux_amd64.zip -o /tmp/packer_1.7.9_linux_amd64.zip
+            - unzip /tmp/packer_1.7.9_linux_amd64.zip -d /tmp/
+            - sudo mv /tmp/packer /usr/local/bin/
             - ./ci/build-ami.sh ubuntu-bionic amd64-server
 
   - name: Launch
