@@ -1,0 +1,122 @@
+file:
+  /opt/semaphore/agent:
+    filetype: directory
+    exists: true
+    owner: semaphore
+    group: semaphore
+
+  /opt/semaphore/agent/config.yaml:
+    filetype: file
+    exists: true
+    owner: semaphore
+    group: semaphore
+
+  /opt/semaphore/agent/hooks:
+    filetype: directory
+    exists: true
+    owner: semaphore
+    group: semaphore
+
+  /home/semaphore/.toolbox:
+    filetype: directory
+    exists: true
+    owner: semaphore
+    group: semaphore
+
+  /usr/local/bin/cache:
+    exists: true
+    filetype: symlink
+    linked-to: /home/semaphore/.toolbox/cache
+
+  /usr/local/bin/artifact:
+    exists: true
+    filetype: symlink
+    linked-to: /home/semaphore/.toolbox/artifact
+
+  /usr/local/bin/test-results:
+    exists: true
+    filetype: symlink
+    linked-to: /home/semaphore/.toolbox/test-results
+
+  /usr/local/bin/retry:
+    exists: true
+    filetype: symlink
+    linked-to: /home/semaphore/.toolbox/retry
+
+service:
+  docker:
+    enabled: true
+    running: true
+
+  semaphore-agent:
+    enabled: false
+    running: true
+
+user:
+  semaphore:
+    exists: true
+    groups:
+    - docker
+    home: /home/semaphore
+    shell: /bin/bash
+
+group:
+  semaphore:
+    exists: true
+
+  docker:
+    exists: true
+
+package:
+  apt-transport-https:
+    installed: true
+  apt-utils:
+    installed: true
+  ca-certificates:
+    installed: true
+  curl:
+    installed: true
+  software-properties-common:
+    installed: true
+  zip:
+    installed: true
+  unzip:
+    installed: true
+  jq:
+    installed: true
+  make:
+    installed: true
+  gnupg:
+    installed: true
+  tree:
+    installed: true
+  wget:
+    installed: true
+
+command:
+  git:
+    exec: "git --version"
+    exit-status: 0
+  awscli:
+    exec: "aws --version"
+    exit-status: 0
+    stdout:
+      - "{{ .Vars.awscli }}"
+  docker:
+    exit-status: 0
+    exec: "docker --version"
+  docker-compose:
+    exit-status: 0
+    exec: "docker-compose --version"
+    stdout:
+      - "{{ .Vars.docker_compose }}"
+  python:
+    exit-status: 0
+    exec: "python --version"
+    stdout:
+      - "Python {{ .Vars.python }}"
+  whoami:
+    exit-status: 0
+    exec: "whoami"
+    stdout:
+      - "{{ .Vars.user }}"

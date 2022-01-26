@@ -13,47 +13,125 @@ blocks:
           value: test
         - name: CI
           value: 'true'
-      prologue:
-        commands:
-          - checkout
-          - nvm use
-          - node --version
-          - npm --version
       jobs:
         - name: npm install and cache
           commands:
+            - checkout
+            - nvm use
+            - node --version
+            - npm --version
             - cache restore
             - npm install
             - cache store
 
-  - name: Lint
-    dependencies: ["Install dependencies"]
-    task:
-      jobs:
-        - name: Lint ansible AMI recipes
-          commands:
-            - sudo pip3 install virtualenv
-            - checkout
-            - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
-            - make ansible.lint
-            - cache store venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt) venv
-
-  - name: Tests
-    dependencies: ["Install dependencies"]
+  - name: Lint & Test
+    dependencies:
+      - Install dependencies
     task:
       env_vars:
         - name: NODE_ENV
           value: test
         - name: CI
           value: 'true'
-      prologue:
-        commands:
-          - checkout
-          - nvm use
-          - node --version
-          - npm --version
       jobs:
+        - name: Lint ansible recipes
+          commands:
+            - sudo apt-get -y install python3-venv
+            - checkout
+            - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
+            - make ansible.lint
+            - cache store venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt) venv
         - name: Unit tests
           commands:
+            - checkout
+            - nvm use
+            - node --version
+            - npm --version
             - cache restore
             - npm test
+
+  - name: Build
+    dependencies:
+      - Lint & Test
+    task:
+      secrets:
+        - name: agent-aws-stack-tester-credentials
+      jobs:
+        - name: Build AMI
+          commands:
+            - checkout
+            - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
+            - sudo apt-get update && sudo apt-get -y install python3-venv
+            - curl -sL https://releases.hashicorp.com/packer/1.7.9/packer_1.7.9_linux_amd64.zip -o /tmp/packer_1.7.9_linux_amd64.zip
+            - unzip /tmp/packer_1.7.9_linux_amd64.zip -d /tmp/
+            - sudo mv /tmp/packer /usr/local/bin/
+            - ./ci/build-ami.sh ubuntu-bionic amd64-server
+
+  - name: Launch
+    dependencies:
+      - Build
+    task:
+      secrets:
+        - name: s1-agent-aws-stack-testing-token
+        - name: agent-aws-stack-tester-credentials
+      env_vars:
+        - name: SEMAPHORE_AGENT_STACK_NAME
+          value: agent-aws-stack-testing
+        - name: SEMAPHORE_ORGANIZATION
+          value: semaphore
+        - name: SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME
+          value: s1-agent-aws-stack-testing-token
+        - name: SEMAPHORE_AGENT_USE_DYNAMIC_SCALING
+          value: 'false'
+        - name: SEMAPHORE_AGENT_USE_WARM_POOL
+          value: 'false'
+        - name: SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB
+          value: 'false'
+      jobs:
+        - name: Launch stack
+          commands:
+            - checkout
+            - cache restore
+            - ./ci/create-ssm-param.sh $SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME $TOKEN
+            - npm run cdk -- deploy --require-approval never --progress events
+
+  - name: Tests
+    dependencies:
+      - Launch
+    execution_time_limit:
+      minutes: 5
+    task:
+      agent:
+        machine:
+          type: s1-agent-aws-stack-testing
+      jobs:
+        - name: Run goss tests
+          commands:
+            - sudo curl -L https://github.com/aelsabbahy/goss/releases/latest/download/goss-linux-amd64 -o /usr/local/bin/goss
+            - sudo chmod +rx /usr/local/bin/goss
+            - checkout
+            - goss -g goss/goss.yaml --vars goss/vars.yml validate
+
+after_pipeline:
+  task:
+    secrets:
+      - name: agent-aws-stack-tester-credentials
+    env_vars:
+      - name: SEMAPHORE_AGENT_STACK_NAME
+        value: agent-aws-stack-testing
+      - name: SEMAPHORE_ORGANIZATION
+        value: semaphore
+      - name: SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME
+        value: s1-agent-aws-stack-testing-token
+      - name: SEMAPHORE_AGENT_USE_DYNAMIC_SCALING
+        value: 'false'
+      - name: SEMAPHORE_AGENT_USE_WARM_POOL
+        value: 'false'
+      - name: SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB
+        value: 'false'
+    jobs:
+      - name: Destroy AWS stack
+        commands:
+          - checkout
+          - cache restore
+          - npm run cdk destroy -- --verbose --force
