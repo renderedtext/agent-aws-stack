@@ -135,3 +135,9 @@ after_pipeline:
           - checkout
           - cache restore
           - npm run cdk destroy -- --verbose --force
+
+promotions:
+  - name: publish
+    pipeline_file: publish.yml
+    auto_promote:
+      when: branch = 'master' AND result = 'passed'

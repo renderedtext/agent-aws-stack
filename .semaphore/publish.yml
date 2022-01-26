@@ -1,0 +1,16 @@
+version: v1.0
+name: Publish
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+blocks:
+  - name: Publish AMIs
+    task:
+      secrets:
+        - name: agent-aws-stack-tester-credentials
+      jobs:
+        - name: Deploy
+          commands:
+            - checkout
+            - ./ci/publish-ami.sh ubuntu-bionic amd64-server

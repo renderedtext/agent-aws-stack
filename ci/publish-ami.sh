@@ -3,50 +3,62 @@
 set -e
 set -o pipefail
 
-get_image_name() {
-  ami_id=$1
+get_image_id() {
+  local image_name=$1
   aws ec2 describe-images \
-    --image-ids ${ami_id} \
+    --filters "Name=name,Values=${image_name}" \
     --region ${source_region} \
     --output text \
-    --query 'Images[*].Name'
+    --query 'Images[*].ImageId'
 }
 
 get_image_state() {
-  ami_id=$1
-  region=$2
+  local image_id=$1
+  local region=$2
 
   aws ec2 describe-images \
     --region ${region} \
-    --image-ids ${ami_id} \
+    --image-ids ${image_id} \
     --output text \
     --query 'Images[*].State'
 }
 
 wait_until_available() {
   local region=$1
-  local ami_id=$2
+  local image_id=$2
 
   while true; do
-    state=$(get_image_state ${ami_id} ${region});
+    state=$(get_image_state ${image_id} ${region});
     if [[ "$state" == "available" ]]; then
-      echo "'${ami_id}' in ${region} is available."
+      echo "'${image_id}' in ${region} is available."
       break
     elif [[ "$state" == "pending" ]]; then
-      echo "'${ami_id}' in ${region} is still pending. Waiting 10s..."
+      echo "'${image_id}' in ${region} is still pending. Waiting 10s..."
       sleep 10
     else
-      echo "'${ami_id}' in ${region} is in a bad state ${state}. Exiting..."
+      echo "'${image_id}' in ${region} is in a bad state ${state}. Exiting..."
       exit 1
     fi
   done
 }
 
-ami_id=$1
-if [[ -z "${ami_id}" ]]; then
-  echo "AMI id is required. Exiting..."
+os=$1
+if [[ -z "${os}" ]]; then
+  echo "OS is required. Exiting..."
   exit 1
 fi
+
+arch=$2
+if [[ -z "${arch}" ]]; then
+  echo "arch is required. Exiting..."
+  exit 1
+fi
+
+version=$(cat package.json | jq -r '.version')
+hash=$(find Makefile packer/ -type f -exec md5sum "{}" + | awk '{print $1}' | sort | md5sum | awk '{print $1}')
+image_name="semaphore-agent-v${version}-${os}-${arch}-${hash}"
+source_region=us-east-1
+image_id=$(get_image_id ${image_name})
 
 # These are all the regions where the AMI will be available, other than ${source_region}
 regions=(
@@ -55,21 +67,18 @@ regions=(
   us-west-2
 )
 
-source_region=us-east-1
-name=$(get_image_name ${ami_id})
-
-echo "Copying '${ami_id}' to other regions with name '${name}'..."
+echo "Copying '${image_id}' to other regions with name '${image_name}'..."
 
 declare -A images;
-images[${source_region}]=${ami_id}
+images[${source_region}]=${image_id}
 
 for region in ${regions[*]}; do
-  echo "Copying '${ami_id}' to '${region}'..."
+  echo "Copying to '${region}'..."
 
   id=$(aws ec2 copy-image \
-    --source-image-id ${ami_id} \
+    --source-image-id ${image_id} \
     --source-region ${source_region} \
-    --name ${name} \
+    --name ${image_name} \
     --region ${region} \
     --query "ImageId" \
     --output text
