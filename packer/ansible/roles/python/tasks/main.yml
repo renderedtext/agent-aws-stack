@@ -1,12 +1,6 @@
 ---
-- name: Install Python 3.6
-  apt:
-    pkg:
-      - python3.6
-    update_cache: yes
-
-- name: Create Python 3.6 symlink
+- name: Create Python 3 symlink
   file:   
-    src: "/usr/bin/python3.6"
+    src: "/usr/bin/python3"
     path: "/usr/bin/python"
     state: link

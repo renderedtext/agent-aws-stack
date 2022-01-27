@@ -40,7 +40,7 @@ packer {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "${var.ami_prefix}-${var.stack_version}-ubuntu-bionic-${var.arch}-${var.hash}"
+  ami_name      = "${var.ami_prefix}-${var.stack_version}-ubuntu-focal-${var.arch}-${var.hash}"
   region        = "${var.region}"
   instance_type = "${var.instance_type}"
   ssh_username  = "ubuntu"
@@ -61,7 +61,7 @@ source "amazon-ebs" "ubuntu" {
     owners = ["099720109477"]
 
     filters = {
-      name                = "ubuntu/images/*ubuntu-bionic-18.04-${var.arch}-*"
+      name                = "ubuntu/images/*ubuntu-focal-20.04-${var.arch}-*"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
     }
@@ -69,14 +69,14 @@ source "amazon-ebs" "ubuntu" {
 }
 
 build {
-  name = "semaphore-agent-ubuntu-bionic"
+  name = "semaphore-agent-ubuntu-focal"
 
   sources = [
     "source.amazon-ebs.ubuntu"
   ]
 
   provisioner "ansible" {
-    playbook_file = "ansible/ubuntu-bionic.yml"
+    playbook_file = "ansible/ubuntu-focal.yml"
     user          = "ubuntu"
     extra_arguments = [
       "--skip-tags",
