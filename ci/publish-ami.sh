@@ -3,11 +3,81 @@
 set -e
 set -o pipefail
 
+os=$1
+if [[ -z "${os}" ]]; then
+  echo "OS is required. Exiting..."
+  exit 1
+fi
+
+arch=$2
+if [[ -z "${arch}" ]]; then
+  echo "arch is required. Exiting..."
+  exit 1
+fi
+
+source_region=us-east-1
+version=$(cat package.json | jq -r '.version')
+hash=$(find Makefile packer/ -type f -exec md5sum "{}" + | awk '{print $1}' | sort | md5sum | awk '{print $1}')
+image_name="semaphore-agent-v${version}-${os}-${arch}-${hash}"
+all_regions=(
+  us-east-1
+  us-east-2
+  us-west-1
+  us-west-2
+  af-south-1
+  ap-east-1
+  ap-southeast-3
+  ap-south-1
+  ap-northeast-3
+  ap-northeast-2
+  ap-southeast-1
+  ap-southeast-2
+  ap-northeast-1
+  ca-central-1
+  eu-central-1
+  eu-west-1
+  eu-west-2
+  eu-south-1
+  eu-west-3
+  eu-north-1
+  me-south-1
+  sa-east-1
+)
+
+get_missing_regions() {
+  missing_regions=()
+  for region in ${all_regions[*]}; do
+    id=$(aws ec2 describe-images \
+      --filters "Name=name,Values=${image_name}" "Name=is-public,Values=true" \
+      --region ${region} \
+      --output text \
+      --query 'Images[*].ImageId'
+    )
+
+    if [[ -z ${id} ]]; then
+      missing_regions+=(${region})
+    fi
+  done
+
+  echo "${missing_regions[@]}"
+}
+
+get_private_image() {
+  local image_name=$1
+  local region=$2
+  aws ec2 describe-images \
+    --filters "Name=name,Values=${image_name}" "Name=is-public,Values=false" \
+    --region ${region} \
+    --output text \
+    --query 'Images[*].ImageId'
+}
+
 get_image_id() {
   local image_name=$1
+  local region=$2
   aws ec2 describe-images \
     --filters "Name=name,Values=${image_name}" \
-    --region ${source_region} \
+    --region ${region} \
     --output text \
     --query 'Images[*].ImageId'
 }
@@ -42,68 +112,31 @@ wait_until_available() {
   done
 }
 
-os=$1
-if [[ -z "${os}" ]]; then
-  echo "OS is required. Exiting..."
-  exit 1
-fi
-
-arch=$2
-if [[ -z "${arch}" ]]; then
-  echo "arch is required. Exiting..."
-  exit 1
-fi
-
-version=$(cat package.json | jq -r '.version')
-hash=$(find Makefile packer/ -type f -exec md5sum "{}" + | awk '{print $1}' | sort | md5sum | awk '{print $1}')
-image_name="semaphore-agent-v${version}-${os}-${arch}-${hash}"
-source_region=us-east-1
-image_id=$(get_image_id ${image_name})
-
-# These are all the regions where the AMI will be available, except the ${source_region} (us-east-1)
-regions=(
-  us-east-2
-  us-west-1
-  us-west-2
-  af-south-1
-  ap-east-1
-  ap-southeast-3
-  ap-south-1
-  ap-northeast-3
-  ap-northeast-2
-  ap-southeast-1
-  ap-southeast-2
-  ap-northeast-1
-  ca-central-1
-  eu-central-1
-  eu-west-1
-  eu-west-2
-  eu-south-1
-  eu-west-3
-  eu-north-1
-  me-south-1
-  sa-east-1
-)
-
-echo "Copying '${image_id}' to other regions with name '${image_name}'..."
+echo "Determining which regions are missing a public image with name '${image_name}'..."
+missing_regions=($(get_missing_regions))
+source_image_id=$(get_image_id ${image_name} ${source_region})
 
 declare -A images;
-images[${source_region}]=${image_id}
+for missing_region in ${missing_regions[*]}; do
+  private_image_id=$(get_private_image ${image_name} ${missing_region})
+  if [[ -z ${private_image_id} ]]; then
+    echo "${missing_region} is missing image. Copying..."
 
-for region in ${regions[*]}; do
-  echo "Copying to '${region}'..."
+    new_image_id=$(aws ec2 copy-image \
+      --source-image-id ${source_image_id} \
+      --source-region ${source_region} \
+      --name ${image_name} \
+      --region ${missing_region} \
+      --query "ImageId" \
+      --output text
+    )
 
-  id=$(aws ec2 copy-image \
-    --source-image-id ${image_id} \
-    --source-region ${source_region} \
-    --name ${image_name} \
-    --region ${region} \
-    --query "ImageId" \
-    --output text
-  )
-
-  echo "Created '${id}' in ${region}."
-  images[${region}]=${id}
+    echo "Created '${new_image_id}' in ${missing_region}."
+    images[${missing_region}]=${new_image_id}
+  else
+    echo "${missing_region} already has a private image '${private_image_id}'."
+    images[${missing_region}]=${private_image_id}
+  fi
 done
 
 for region in "${!images[@]}"; do
