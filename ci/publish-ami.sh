@@ -112,9 +112,14 @@ wait_until_available() {
   done
 }
 
+source_image_id=$(get_image_id ${image_name} ${source_region})
+if [[ -z ${source_image_id} ]]; then
+  echo "Couldn't find an AMI with name '${image_name}' in ${source_region}. Exiting..."
+  exit 1
+fi
+
 echo "Determining which regions are missing a public image with name '${image_name}'..."
 missing_regions=($(get_missing_regions))
-source_image_id=$(get_image_id ${image_name} ${source_region})
 
 declare -A images;
 for missing_region in ${missing_regions[*]}; do
