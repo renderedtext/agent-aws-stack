@@ -33,7 +33,7 @@ packer.build:
 			-var "stack_version=v$(VERSION)" \
 			-var "agent_version=$(AGENT_VERSION)" \
 			-var "hash=$(HASH)" \
-			ubuntu-bionic.pkr.hcl'
+			ubuntu-focal.pkr.hcl'
 
 ansible.lint:
 	$(MAKE) venv.execute COMMAND='cd packer && ansible-lint'

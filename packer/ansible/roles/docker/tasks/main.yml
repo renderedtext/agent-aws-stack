@@ -1,11 +1,4 @@
 ---
-- name: Remove default Docker
-  command: apt purge -fy docker docker-engine docker.io containerd runc
-  environment:
-    DEBIAN_FRONTEND: noninteractive
-  args:
-    executable: /bin/bash
-
 - name: Add Docker GPG apt Key
   apt_key:
     url: "{{ docker_apt_gpg_key }}"

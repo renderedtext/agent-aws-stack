@@ -65,7 +65,7 @@ blocks:
             - curl -sL https://releases.hashicorp.com/packer/1.7.9/packer_1.7.9_linux_amd64.zip -o /tmp/packer_1.7.9_linux_amd64.zip
             - unzip /tmp/packer_1.7.9_linux_amd64.zip -d /tmp/
             - sudo mv /tmp/packer /usr/local/bin/
-            - ./ci/build-ami.sh ubuntu-bionic amd64-server
+            - ./ci/build-ami.sh ubuntu-focal amd64-server
 
   - name: Launch
     dependencies:

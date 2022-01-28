@@ -565,7 +565,7 @@ function createStack(argumentStore) {
   const account = "DUMMYACCOUNT";
   const region = "us-east-1";
   const customVpcId = "vpc-000000000-custom";
-  const defaultAmiName = `semaphore-agent-v${packageInfo.version}-ubuntu-bionic-amd64-server-${hash()}`;
+  const defaultAmiName = `semaphore-agent-v${packageInfo.version}-ubuntu-focal-amd64-server-${hash()}`;
   const amiLookupContextKey = `ami:account=${account}:filters.image-type.0=machine:filters.name.0=${defaultAmiName}:filters.state.0=available:region=${region}`;
   const defaultVpcContextKey = `vpc-provider:account=${account}:filter.isDefault=true:region=${region}:returnAsymmetricSubnets=true`
   const customVpcContextKey = `vpc-provider:account=${account}:filter.vpc-id=${customVpcId}:region=${region}:returnAsymmetricSubnets=true`
