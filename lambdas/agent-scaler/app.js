@@ -23,14 +23,19 @@ function getAgentTypeToken(tokenParameterName) {
   });
 }
 
-function describeAsg(asgName) {
+function describeAsg(stackName) {
   var autoscaling = new aws.AutoScaling();
 
-  console.log(`Describing '${asgName}'...`);
+  console.log(`Describing asg for '${stackName}'...`);
 
   return new Promise(function(resolve, reject) {
     var params = {
-      AutoScalingGroupNames: [asgName]
+      Filters: [
+        {
+          Name: "tag:aws:cloudformation:stack-name",
+          Values: [stackName]
+        }
+      ]
     };
 
     autoscaling.describeAutoScalingGroups(params, function(err, data) {
@@ -40,7 +45,7 @@ function describeAsg(asgName) {
       } else {
         let autoScalingGroups = data.AutoScalingGroups;
         if (autoScalingGroups.length === 0) {
-          reject(`Could not find auto scaling group '${asgName}'`);
+          reject(`Could not find asg for stack '${stackName}'`);
         } else {
           let asg = autoScalingGroups[0];
           resolve({
@@ -120,7 +125,7 @@ const scaleUpIfNeeded = async (asgName, occupancy, asg) => {
     await setAsgDesiredCapacity(asgName, desired);
     console.log(`Successfully scaled up '${asg.name}'.`);
   } else {
-    console.log(`No need to scale up.`);
+    console.log(`No need to scale up '${asgName}'.`);
   }
 }
 
@@ -132,12 +137,12 @@ function epochSeconds() {
   return Math.round(Date.now() / 1000);
 }
 
-const tick = async (agentTokenParameterName, asgName) => {
+const tick = async (agentTokenParameterName, stackName) => {
   try {
     const agentTypeToken = await getAgentTypeToken(agentTokenParameterName);
     const occupancy = await getAgentTypeOccupancy(agentTypeToken);
-    const asg = await describeAsg(asgName);
-    await scaleUpIfNeeded(asgName, occupancy, asg);
+    const asg = await describeAsg(stackName);
+    await scaleUpIfNeeded(asg.name, occupancy, asg);
   } catch (e) {
     console.error("Error fetching occupancy", e);
   }
@@ -153,9 +158,9 @@ exports.handler = async (event, context, callback) => {
     };
   }
 
-  const asgName = process.env.SEMAPHORE_AGENT_ASG_NAME;
-  if (!asgName) {
-    console.error("No SEMAPHORE_AGENT_ASG_NAME specified.")
+  const stackName = process.env.SEMAPHORE_AGENT_STACK_NAME;
+  if (!stackName) {
+    console.error("No SEMAPHORE_AGENT_STACK_NAME specified.")
     return {
       statusCode: 500,
       message: "error",
@@ -172,7 +177,7 @@ exports.handler = async (event, context, callback) => {
 
   let now = epochSeconds();
   while (now < timeout) {
-    await tick(agentTokenParameterName, asgName);
+    await tick(agentTokenParameterName, stackName);
     console.log(`Sleeping ${interval}ms...`);
     await sleep(interval);
     now = epochSeconds();

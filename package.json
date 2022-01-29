@@ -12,6 +12,7 @@
     "destroy": "cdk destroy",
     "destroy:ci": "cdk destroy --verbose --force",
     "diff": "cdk diff",
+    "synth": "cdk synth",
     "test": "jest"
   },
   "devDependencies": {
