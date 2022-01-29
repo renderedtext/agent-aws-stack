@@ -217,6 +217,19 @@ describe("launch configuration", () => {
       InstanceType: "t2.medium"
     }))
   })
+
+  test("if not using warm pool, the agent is started using user data", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
+
+    const stack = createStack(argumentStore);
+    expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
+      LaunchConfigurationName: "test-stack-launch-configuration",
+      UserData: {
+        "Fn::Base64": "#!/bin/bash\n/opt/semaphore/agent/start.sh test-stack-config"
+      }
+    }))
+  })
 })
 
 describe("security group", () => {
@@ -295,6 +308,7 @@ describe("auto scaling group", () => {
   test("default values are set if nothing is given", () => {
     const stack = createStack(basicArgumentStore());
     expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
+      AutoScalingGroupName: "test-stack-asg",
       DesiredCapacity: "1",
       MinSize: "0",
       MaxSize: "1"
@@ -309,23 +323,35 @@ describe("auto scaling group", () => {
 
     const stack = createStack(argumentStore);
     expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
+      AutoScalingGroupName: "test-stack-asg",
       DesiredCapacity: "3",
       MinSize: "1",
       MaxSize: "5"
     }))
   })
 
-  test("lifecycle hook for EC2_INSTANCE_LAUNCHING is created", () => {
+  test("boot lifecycle hook is created if using warm pool", () => {
     const stack = createStack(basicArgumentStore());
     expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
+      AutoScalingGroupName: "test-stack-asg",
       LifecycleHookSpecificationList: [
         {
           "DefaultResult": "ABANDON",
           "HeartbeatTimeout": 180,
-          "LifecycleHookName": "test-stack-asg-lifecycle-hook",
+          "LifecycleHookName": "test-stack-asg-boot-lifecycle-hook",
           "LifecycleTransition": "autoscaling:EC2_INSTANCE_LAUNCHING"
         }
       ]
+    }))
+  })
+
+  test("boot lifecycle hook is not created if warm pool is not used", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
+    const stack = createStack(argumentStore);
+    expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
+      AutoScalingGroupName: "test-stack-asg",
+      LifecycleHookSpecificationList: ABSENT
     }))
   })
 
@@ -367,6 +393,15 @@ describe("warm pool", () => {
     argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
     const stack = createStack(argumentStore);
     expect(stack).to(countResources("AWS::AutoScaling::WarmPool", 0))
+  })
+
+  test("if warm pool is disabled, starter lambda resources are not created", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
+    const stack = createStack(argumentStore);
+    expect(stack).notTo(haveResource('AWS::Lambda::Function', { FunctionName: "test-stack-starter-lambda" }))
+    expect(stack).notTo(haveResource('AWS::Events::Rule', { Name: "test-stack-asg-events-rule" }))
+    expect(stack).notTo(haveResource('AWS::IAM::Policy', { PolicyName: "test-stack-starter-lambda-policy" }))
   })
 })
 
