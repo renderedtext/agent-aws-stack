@@ -95,8 +95,12 @@ function getCommandStatus(commandId) {
         reject(err);
       } else {
         console.log("listCommands: ", data);
-        var command = data.Commands[0];
-        resolve(command.Status);
+        if (data.Commands.length == 0) {
+          resolve("Pending");
+        } else {
+          var command = data.Commands[0];
+          resolve(command.Status);
+        }
       }
     });
   });

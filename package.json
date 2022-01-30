@@ -6,12 +6,15 @@
   },
   "scripts": {
     "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
-    "cdk": "cdk",
+    "predeploy": "cd lambdas/agent-scaler && npm i && cd -",
     "deploy": "cdk deploy",
+    "predeploy:ci": "cd lambdas/agent-scaler && npm i && cd -",
     "deploy:ci": "cdk deploy --require-approval never --progress events",
     "destroy": "cdk destroy",
     "destroy:ci": "cdk destroy --verbose --force",
+    "prediff": "cd lambdas/agent-scaler && npm i && cd -",
     "diff": "cdk diff",
+    "presynth": "cd lambdas/agent-scaler && npm i && cd -",
     "synth": "cdk synth",
     "test": "jest"
   },

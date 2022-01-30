@@ -1,0 +1,12 @@
+{
+  "name": "agent-scaler",
+  "version": "0.0.1",
+  "description": "Lambda function to scale up Semaphore agent stack",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1066.0"
+  }
+}
