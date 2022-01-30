@@ -65,19 +65,9 @@ describe("SSM parameter", () => {
 })
 
 describe("instance profile", () => {
-  test("name is prefixed with stack name", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::IAM::InstanceProfile', {
-      InstanceProfileName: "test-stack-instance-profile",
-      Roles: anything(),
-      Path: "/"
-    }))
-  })
-
-  test("creates role", () => {
+  test("ec2 can assume role", () => {
     const stack = createStack(basicArgumentStore());
     expect(stack).to(haveResource('AWS::IAM::Role', {
-      RoleName: "test-stack-instance-profile-role",
       AssumeRolePolicyDocument: {
         Statement: [
           {
@@ -105,7 +95,7 @@ describe("instance profile", () => {
           {
             Action: "autoscaling:TerminateInstanceInAutoScalingGroup",
             Effect: "Allow",
-            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-asg"
+            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
           },
           {
             Action: "ssm:GetParameter",
@@ -140,7 +130,7 @@ describe("instance profile", () => {
           {
             Action: "autoscaling:TerminateInstanceInAutoScalingGroup",
             Effect: "Allow",
-            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-asg"
+            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
           },
           {
             Action: "ssm:GetParameter",
@@ -177,13 +167,6 @@ describe("instance profile", () => {
 })
 
 describe("launch configuration", () => {
-  test("name is prefixed with stack name", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
-      LaunchConfigurationName: "test-stack-launch-configuration"
-    }))
-  })
-
   test("uses default AMI", () => {
     const stack = createStack(basicArgumentStore());
     expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
@@ -224,7 +207,6 @@ describe("launch configuration", () => {
 
     const stack = createStack(argumentStore);
     expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
-      LaunchConfigurationName: "test-stack-launch-configuration",
       UserData: {
         "Fn::Base64": "#!/bin/bash\n/opt/semaphore/agent/start.sh test-stack-config"
       }
@@ -298,17 +280,9 @@ describe("security group", () => {
 })
 
 describe("auto scaling group", () => {
-  test("name is prefixed with stack name", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
-      AutoScalingGroupName: "test-stack-asg"
-    }))
-  })
-
   test("default values are set if nothing is given", () => {
     const stack = createStack(basicArgumentStore());
     expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
-      AutoScalingGroupName: "test-stack-asg",
       DesiredCapacity: "1",
       MinSize: "0",
       MaxSize: "1"
@@ -323,7 +297,6 @@ describe("auto scaling group", () => {
 
     const stack = createStack(argumentStore);
     expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
-      AutoScalingGroupName: "test-stack-asg",
       DesiredCapacity: "3",
       MinSize: "1",
       MaxSize: "5"
@@ -333,12 +306,11 @@ describe("auto scaling group", () => {
   test("boot lifecycle hook is created if using warm pool", () => {
     const stack = createStack(basicArgumentStore());
     expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
-      AutoScalingGroupName: "test-stack-asg",
       LifecycleHookSpecificationList: [
         {
           "DefaultResult": "ABANDON",
           "HeartbeatTimeout": 180,
-          "LifecycleHookName": "test-stack-asg-boot-lifecycle-hook",
+          "LifecycleHookName": "test-stack-boot-lifecycle-hook",
           "LifecycleTransition": "autoscaling:EC2_INSTANCE_LAUNCHING"
         }
       ]
@@ -350,7 +322,6 @@ describe("auto scaling group", () => {
     argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
     const stack = createStack(argumentStore);
     expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
-      AutoScalingGroupName: "test-stack-asg",
       LifecycleHookSpecificationList: ABSENT
     }))
   })
@@ -373,7 +344,9 @@ describe("warm pool", () => {
   test("warm pool is used by default", () => {
     const stack = createStack(basicArgumentStore());
     expect(stack).to(haveResource('AWS::AutoScaling::WarmPool', {
-      AutoScalingGroupName: "test-stack-asg",
+      AutoScalingGroupName: {
+        "Ref": "autoScalingGroup"
+      },
       PoolState: "Stopped"
     }))
   })
@@ -383,7 +356,9 @@ describe("warm pool", () => {
     argumentStore.set("SEMAPHORE_AGENT_ASG_WARM_POOL_STATE", "Running");
     const stack = createStack(argumentStore);
     expect(stack).to(haveResource('AWS::AutoScaling::WarmPool', {
-      AutoScalingGroupName: "test-stack-asg",
+      AutoScalingGroupName: {
+        "Ref": "autoScalingGroup"
+      },
       PoolState: "Running"
     }))
   })
@@ -399,8 +374,8 @@ describe("warm pool", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
     const stack = createStack(argumentStore);
-    expect(stack).notTo(haveResource('AWS::Lambda::Function', { FunctionName: "test-stack-starter-lambda" }))
-    expect(stack).notTo(haveResource('AWS::Events::Rule', { Name: "test-stack-asg-events-rule" }))
+    expect(stack).notTo(haveResource('AWS::Lambda::Function', { Description: "Lambda function to start Semaphore agents" }))
+    expect(stack).notTo(haveResource('AWS::Events::Rule', { Description: "Rule to route semaphore agent asg events to a lambda function" }))
     expect(stack).notTo(haveResource('AWS::IAM::Policy', { PolicyName: "test-stack-starter-lambda-policy" }))
   })
 })
@@ -411,8 +386,7 @@ describe("starter lambda", () => {
 
     expect(stack).to(countResources("AWS::Lambda::Function", 2))
     expect(stack).to(haveResource('AWS::Lambda::Function', {
-      FunctionName: "test-stack-starter-lambda",
-      Description: "Lambda function to start the Semaphore agent on instances of test-stack-asg that went into rotation.",
+      Description: "Lambda function to start Semaphore agents",
       Runtime: "nodejs14.x",
       Timeout: 180,
       Code: anything(),
@@ -422,20 +396,14 @@ describe("starter lambda", () => {
           AGENT_CONFIG_PARAMETER_NAME: "test-stack-config"
         }
       },
-      Role: {
-        "Fn::GetAtt": [
-          anything(),
-          "Arn"
-        ]
-      }
+      Role: anything()
     }))
   })
 
-  test("rule to route asg lifecycle events to lambda is created", () => {
+  test("rule to route boot lifecycle hook events is created", () => {
     const stack = createStack(basicArgumentStore());
     expect(stack).to(haveResource('AWS::Events::Rule', {
-      Name: "test-stack-asg-events-rule",
-      Description: "Rule to route autoscaling events for test-stack-asg to a lambda function",
+      Description: "Rule to route Semaphore agent asg events to a lambda function",
       EventPattern: {
         "source": ["aws.autoscaling"],
         "detail-type": ["EC2 Instance-launch Lifecycle Action"]
@@ -454,7 +422,7 @@ describe("starter lambda", () => {
           {
             Action: "autoscaling:CompleteLifecycleAction",
             Effect: "Allow",
-            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-asg"
+            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
           },
           {
             Action: "ssm:SendCommand",
@@ -486,8 +454,7 @@ describe("scaler lambda", () => {
 
     expect(stack).to(countResources("AWS::Lambda::Function", 2))
     expect(stack).to(haveResource('AWS::Lambda::Function', {
-      FunctionName: "test-stack-scaler-lambda",
-      Description: "Lambda function to dynamically scale Semaphore agents for test-stack-asg based on jobs demand.",
+      Description: "Lambda function to dynamically scale Semaphore agents based on jobs demand",
       Runtime: "nodejs14.x",
       Timeout: 60,
       Code: anything(),
@@ -495,23 +462,17 @@ describe("scaler lambda", () => {
       Environment: {
         Variables: {
           SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME: "test-token",
-          SEMAPHORE_AGENT_ASG_NAME: "test-stack-asg"
+          SEMAPHORE_AGENT_STACK_NAME: "test-stack"
         }
       },
-      Role: {
-        "Fn::GetAtt": [
-          anything(),
-          "Arn"
-        ]
-      }
+      Role: anything()
     }))
   })
 
   test("rule to schedule lambda execution is created", () => {
     const stack = createStack(basicArgumentStore());
     expect(stack).to(haveResource('AWS::Events::Rule', {
-      Description: "Rule to dynamically invoke lambda function to scale test-stack-asg",
-      Name: "test-stack-asg-scaler-rule",
+      Description: "Rule to dynamically invoke lambda function to scale Semaphore agent asg",
       ScheduleExpression: "rate(1 minute)",
       State: "ENABLED",
       Targets: anything()
@@ -535,7 +496,7 @@ describe("scaler lambda", () => {
           {
             Action: "autoscaling:SetDesiredCapacity",
             Effect: "Allow",
-            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-asg"
+            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
           },
           {
             Action: "ssm:GetParameter",
@@ -561,7 +522,7 @@ describe("scaler lambda", () => {
     const stack = createStack(argumentStore);
     expect(stack).to(countResources("AWS::Lambda::Function", 1))
     expect(stack).notTo(haveResource('AWS::Lambda::Function', {
-      FunctionName: "test-stack-scaler-lambda"
+      Description: "Lambda function to dynamically scale Semaphore agents based on jobs demand"
     }))
   })
 })
