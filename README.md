@@ -52,27 +52,27 @@ npm run deploy
 
 ## Configuration
 
-| Environment variable name                       | Required | Description |
-|-------------------------------------------------|----------|-------------|
-| `SEMAPHORE_ORGANIZATION`                        | Yes      | The name of your Semaphore organization. |
-| `SEMAPHORE_AGENT_STACK_NAME`                    | Yes      | The name of the stack. This will end up being used as the Cloudformation stack name, and as a prefix to name all the resources of the stack. When deploying multiple stacks for multiple agent types, different stack names are required. |
-| `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME`          | Yes      | The AWS SSM parameter name containing the Semaphore agent registration token. |
-| `SEMAPHORE_AGENT_INSTANCE_TYPE`                 | No       | Instance type used for the agents. Default: `t2.micro`. |
-| `SEMAPHORE_AGENT_ASG_MIN_SIZE`                  | No       | Minimum size for the asg. Default: `0`. |
-| `SEMAPHORE_AGENT_ASG_MAX_SIZE`                  | No       | Maximum size for the asg. Default: `1`. |
-| `SEMAPHORE_AGENT_ASG_DESIRED`                   | No       | Desired capacity for the asg. Default: `1`. |
-| `SEMAPHORE_AGENT_ASG_WARM_POOL_STATE`           | No       | State of warm pool instances: `Stopped` or `Running`. Default: `Stopped`. |
-| `SEMAPHORE_AGENT_USE_WARM_POOL`                 | No       | Determines if the auto scaling group will use a warm pool. Default is `true`. |
-| `SEMAPHORE_AGENT_USE_DYNAMIC_SCALING`           | No       | Whether to use a lambda to dynamically scale the number of agents in the auto scaling group based on the job demand. Default is `true`. |
-| `SEMAPHORE_AGENT_SECURITY_GROUP_ID`             | No       | Security group id to use for agent instances. If not specified, a security group will be created with (1) an egress rule allowing all outbound traffic and (2) an ingress rule for SSH, if `SEMAPHORE_AGENT_KEY_NAME` is specified. |
-| `SEMAPHORE_AGENT_KEY_NAME`                      | No       | Key name to access agents through SSH. If not specified, no SSH inbound access is allowed. |
-| `SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB`          | No       | If the agent should shutdown or not after completing a job. Default is `true` |
-| `SEMAPHORE_AGENT_DISCONNECT_AFTER_IDLE_TIMEOUT` | No       | Number of seconds of idleness after which the agent will shutdown. Default is `300`. Note: setting this to 0 will disable the scaling down behavior of the stack, since the agents won't shutdown due to idleness. |
-| `SEMAPHORE_AGENT_CACHE_BUCKET_NAME`             | No       | Existing S3 bucket name to use for caching. If this is not set, the cache CLI won't work. |
-| `SEMAPHORE_AGENT_TOKEN_KMS_KEY`                 | No       | KMS key id used to encrypt and decrypt `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME`. If nothing is given, the default `alias/aws/ssm` key is assumed. |
-| `SEMAPHORE_AGENT_VPC_ID`                        | No       | The id of an existing VPC to use when launching agent instances. By default, it is blank, and the default VPC on your AWS account will be used. |
-| `SEMAPHORE_AGENT_SUBNETS`                       | No       | Comma-separated list of existing VPC subnet ids where EC2 instances will run. This is required when using `SEMAPHORE_AGENT_VPC_ID`. If `SEMAPHORE_AGENT_SUBNETS` is set, but `SEMAPHORE_AGENT_VPC_ID` is blank, the subnets will be ignored, and the default VPC will be used. Private and public subnets are possible, but isolated subnets cannot be used. |
-| `SEMAPHORE_AGENT_AMI`                           | No       | The AMI used for all the instances. If empty, the stack will use the default AMIs, by looking them up by their name. If the default AMI isn't enough, you can use your own AMIs, but they need to be based off of the stack's default AMI. |
+| Environment variable name                       | Required | Default  | Description |
+|-------------------------------------------------|----------|----------|-------------|
+| `SEMAPHORE_ORGANIZATION`                        | Yes      | -        | The name of your Semaphore organization. |
+| `SEMAPHORE_AGENT_STACK_NAME`                    | Yes      | -        | The name of the stack. This will end up being used as the Cloudformation stack name, and as a prefix to name all the resources of the stack. When deploying multiple stacks for multiple agent types, different stack names are required |
+| `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME`          | Yes      | -        | The AWS SSM parameter name containing the Semaphore agent registration token |
+| `SEMAPHORE_AGENT_INSTANCE_TYPE`                 | No       | t2.micro | Instance type used for the agents |
+| `SEMAPHORE_AGENT_ASG_MIN_SIZE`                  | No       | 0        | Minimum size for the asg |
+| `SEMAPHORE_AGENT_ASG_MAX_SIZE`                  | No       | 1        | Maximum size for the asg |
+| `SEMAPHORE_AGENT_ASG_DESIRED`                   | No       | 1        | Desired capacity for the asg |
+| `SEMAPHORE_AGENT_ASG_WARM_POOL_STATE`           | No       | Stopped  | State of warm pool instances: `Stopped` or `Running` |
+| `SEMAPHORE_AGENT_USE_WARM_POOL`                 | No       | true     | Determines if the auto scaling group will use a warm pool |
+| `SEMAPHORE_AGENT_USE_DYNAMIC_SCALING`           | No       | true     | Whether to use a lambda to dynamically scale the number of agents in the auto scaling group based on the job demand |
+| `SEMAPHORE_AGENT_SECURITY_GROUP_ID`             | No       | -        | Security group id to use for agent instances. If not specified, a security group will be created with (1) an egress rule allowing all outbound traffic and (2) an ingress rule for SSH, if `SEMAPHORE_AGENT_KEY_NAME` is specified. |
+| `SEMAPHORE_AGENT_KEY_NAME`                      | No       | -        | Key name to access agents through SSH. If not specified, no SSH inbound access is allowed |
+| `SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB`          | No       | true     | If the agent should shutdown or not after completing a job |
+| `SEMAPHORE_AGENT_DISCONNECT_AFTER_IDLE_TIMEOUT` | No       | 300      | Number of seconds of idleness after which the agent will shutdown. Note: setting this to 0 will disable the scaling down behavior of the stack, since the agents won't shutdown due to idleness. |
+| `SEMAPHORE_AGENT_CACHE_BUCKET_NAME`             | No       | -        | Existing S3 bucket name to use for caching. If this is not set, the cache CLI won't work. |
+| `SEMAPHORE_AGENT_TOKEN_KMS_KEY`                 | No       | -        | KMS key id used to encrypt and decrypt `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME`. If nothing is given, the default `alias/aws/ssm` key is assumed. |
+| `SEMAPHORE_AGENT_VPC_ID`                        | No       | -        | The id of an existing VPC to use when launching agent instances. By default, it is blank, and the default VPC on your AWS account will be used. |
+| `SEMAPHORE_AGENT_SUBNETS`                       | No       | -        | Comma-separated list of existing VPC subnet ids where EC2 instances will run. This is required when using `SEMAPHORE_AGENT_VPC_ID`. If `SEMAPHORE_AGENT_SUBNETS` is set, but `SEMAPHORE_AGENT_VPC_ID` is blank, the subnets will be ignored, and the default VPC will be used. Private and public subnets are possible, but isolated subnets cannot be used. |
+| `SEMAPHORE_AGENT_AMI`                           | No       | -        | The AMI used for all the instances. If empty, the stack will use the default AMIs, by looking them up by their name. If the default AMI isn't enough, you can use your own AMIs, but they need to be based off of the stack's default AMI. |
 
 ## In-place updates
 
