@@ -1,25 +1,25 @@
-const cdk = require('@aws-cdk/core');
-const ssm = require("@aws-cdk/aws-ssm");
-const { expect, haveResource, countResources, arrayWith, objectLike, anything, ABSENT } = require('@aws-cdk/assert');
-const { AwsSemaphoreAgentStack } = require('../lib/aws-semaphore-agent-stack');
-const { ArgumentStore } = require('../lib/argument-store');
-const { hash } = require('../lib/ami-hash');
+const { hash } = require("../lib/ami-hash");
 const packageInfo = require("../package.json");
+const { ArgumentStore } = require("../lib/argument-store");
+const { AwsSemaphoreAgentStack } = require("../lib/aws-semaphore-agent-stack");
+const { App } = require("aws-cdk-lib");
+const { ParameterTier } = require("aws-cdk-lib/aws-ssm");
+const { Template, Match } = require("aws-cdk-lib/assertions");
 
 describe("SSM parameter", () => {
   test("name is prefixed with stack name", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::SSM::Parameter', {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::SSM::Parameter", {
       Type: "String",
       Name: "test-stack-config",
       Description: "Parameters required by the semaphore agent",
-      Tier: ssm.ParameterTier.STANDARD
-    }));
+      Tier: ParameterTier.STANDARD
+    });
   })
 
   test("default values are used", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::SSM::Parameter', {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::SSM::Parameter", {
       Value: JSON.stringify({
         organization: "test",
         agentTokenParameterName: "test-token",
@@ -27,7 +27,7 @@ describe("SSM parameter", () => {
         disconnectAfterIdleTimeout: "300",
         envVars: []
       })
-    }));
+    });
   })
 
   test("disconnect-after-job and disconnect-after-idle-timeout can be set", () => {
@@ -35,8 +35,8 @@ describe("SSM parameter", () => {
     argumentStore.set("SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB", "false");
     argumentStore.set("SEMAPHORE_AGENT_DISCONNECT_AFTER_IDLE_TIMEOUT", "120");
 
-    const stack = createStack(argumentStore);
-    expect(stack).to(haveResource('AWS::SSM::Parameter', {
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::SSM::Parameter", {
       Value: JSON.stringify({
         organization: "test",
         agentTokenParameterName: "test-token",
@@ -44,15 +44,15 @@ describe("SSM parameter", () => {
         disconnectAfterIdleTimeout: "120",
         envVars: []
       })
-    }));
+    });
   });
 
   test("sets env vars, if using s3 bucket for caching", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_CACHE_BUCKET_NAME", "test-cache-bucket")
 
-    const stack = createStack(argumentStore);
-    expect(stack).to(haveResource('AWS::SSM::Parameter', {
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::SSM::Parameter", {
       Value: JSON.stringify({
         organization: "test",
         agentTokenParameterName: "test-token",
@@ -60,14 +60,14 @@ describe("SSM parameter", () => {
         disconnectAfterIdleTimeout: "300",
         envVars: ["SEMAPHORE_CACHE_BACKEND=s3", "SEMAPHORE_CACHE_S3_BUCKET=test-cache-bucket"]
       })
-    }));
+    });
   });
 })
 
 describe("instance profile", () => {
   test("ec2 can assume role", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::IAM::Role', {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::IAM::Role", {
       AssumeRolePolicyDocument: {
         Statement: [
           {
@@ -78,24 +78,24 @@ describe("instance profile", () => {
             }
           }
         ],
-        Version: anything()
+        Version: Match.anyValue()
       }
-    }))
+    });
   })
 
   test("permissions to access cache bucket are not included, if bucket is not specified", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_TOKEN_KMS_KEY", "dummy-kms-key-id");
 
-    const stack = createStack(argumentStore);
-    expect(stack).to(haveResource('AWS::IAM::Policy', {
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::IAM::Policy", {
       PolicyName: "test-stack-instance-profile-policy",
       PolicyDocument: {
         Statement: [
           {
             Action: "autoscaling:TerminateInstanceInAutoScalingGroup",
             Effect: "Allow",
-            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
+            Resource: "arn:aws:autoscaling:*:dummyaccount:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
           },
           {
             Action: "ssm:GetParameter",
@@ -111,10 +111,10 @@ describe("instance profile", () => {
             Resource: "arn:aws:kms:*:*:key/dummy-kms-key-id"
           }
         ],
-        Version: anything()
+        Version: Match.anyValue()
       },
-      Roles: anything(),
-    }))
+      Roles: Match.anyValue(),
+    });
   })
 
   test("permissions to access cache bucket are included, if bucket is specified", () => {
@@ -122,15 +122,15 @@ describe("instance profile", () => {
     argumentStore.set("SEMAPHORE_AGENT_TOKEN_KMS_KEY", "dummy-kms-key-id");
     argumentStore.set("SEMAPHORE_AGENT_CACHE_BUCKET_NAME", "test-cache-bucket");
 
-    const stack = createStack(argumentStore);
-    expect(stack).to(haveResource('AWS::IAM::Policy', {
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::IAM::Policy", {
       PolicyName: "test-stack-instance-profile-policy",
       PolicyDocument: {
         Statement: [
           {
             Action: "autoscaling:TerminateInstanceInAutoScalingGroup",
             Effect: "Allow",
-            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
+            Resource: "arn:aws:autoscaling:*:dummyaccount:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
           },
           {
             Action: "ssm:GetParameter",
@@ -159,66 +159,65 @@ describe("instance profile", () => {
             ]
           }
         ],
-        Version: anything()
+        Version: Match.anyValue()
       },
-      Roles: anything(),
-    }))
+      Roles: Match.anyValue(),
+    });
   })
 })
 
 describe("launch configuration", () => {
   test("uses default AMI", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
       ImageId: "default-ami-id"
-    }))
+    });
   })
 
   test("uses specified AMI", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_AMI", "ami-custom")
 
-    const stack = createStack(argumentStore);
-    expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
       ImageId: "ami-custom"
-    }))
+    });
   })
 
   test("uses t2.micro as default", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
       InstanceType: "t2.micro"
-    }))
+    });
   })
 
   test("uses specified instance type", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_INSTANCE_TYPE", "t2.medium");
 
-    const stack = createStack(argumentStore);
-    expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
       InstanceType: "t2.medium"
-    }))
+    })
   })
 
   test("if not using warm pool, the agent is started using user data", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
 
-    const stack = createStack(argumentStore);
-    expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
       UserData: {
         "Fn::Base64": "#!/bin/bash\n/opt/semaphore/agent/start.sh test-stack-config"
       }
-    }))
+    })
   })
 })
 
 describe("security group", () => {
   test("creates security group with no ssh access, if no key is given", () => {
-    const stack = createStack(basicArgumentStore());
-
-    expect(stack).to(haveResource('AWS::EC2::SecurityGroup', {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::EC2::SecurityGroup", {
       SecurityGroupEgress: [
         {
           CidrIp: "0.0.0.0/0",
@@ -226,22 +225,24 @@ describe("security group", () => {
           IpProtocol: "-1"
         }
       ],
-      SecurityGroupIngress: ABSENT
-    }))
+      SecurityGroupIngress: Match.absent()
+    });
 
-    expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
-      SecurityGroups: arrayWith(objectLike({
-        "Fn::GetAtt": [anything(), "GroupId"]
-      }))
-    }))
+    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
+      SecurityGroups: [
+        {
+          "Fn::GetAtt": [Match.anyValue(), "GroupId"]
+        }
+      ]
+    });
   })
 
   test("creates security group with ssh access, if key is given", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_KEY_NAME", "test-key");
 
-    const stack = createStack(argumentStore);
-    expect(stack).to(haveResource('AWS::EC2::SecurityGroup', {
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::EC2::SecurityGroup", {
       SecurityGroupEgress: [
         {
           CidrIp: "0.0.0.0/0",
@@ -258,35 +259,37 @@ describe("security group", () => {
           ToPort: 22
         }
       ]
-    }))
+    });
 
-    expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
-      SecurityGroups: arrayWith(objectLike({
-        "Fn::GetAtt": [anything(), "GroupId"]
-      }))
-    }))
+    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
+      SecurityGroups: [
+        {
+          "Fn::GetAtt": [Match.anyValue(), "GroupId"]
+        }
+      ]
+    });
   })
 
   test("uses specified security group", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_SECURITY_GROUP_ID", "dummy-sg");
 
-    const stack = createStack(argumentStore);
-    expect(stack).to(countResources('AWS::EC2::SecurityGroup', 0));
-    expect(stack).to(haveResource('AWS::AutoScaling::LaunchConfiguration', {
+    const template = createTemplate(argumentStore);
+    template.resourceCountIs("AWS::EC2::SecurityGroup", 0);
+    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
       SecurityGroups: ["dummy-sg"]
-    }))
+    });
   })
 })
 
 describe("auto scaling group", () => {
   test("default values are set if nothing is given", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
       DesiredCapacity: "1",
       MinSize: "0",
       MaxSize: "1"
-    }))
+    });
   })
 
   test("desired, min and max can be specified", () => {
@@ -295,17 +298,17 @@ describe("auto scaling group", () => {
     argumentStore.set("SEMAPHORE_AGENT_ASG_MAX_SIZE", "5");
     argumentStore.set("SEMAPHORE_AGENT_ASG_DESIRED", "3");
 
-    const stack = createStack(argumentStore);
-    expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
       DesiredCapacity: "3",
       MinSize: "1",
       MaxSize: "5"
-    }))
+    });
   })
 
   test("boot lifecycle hook is created if using warm pool", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
       LifecycleHookSpecificationList: [
         {
           "DefaultResult": "ABANDON",
@@ -314,21 +317,21 @@ describe("auto scaling group", () => {
           "LifecycleTransition": "autoscaling:EC2_INSTANCE_LAUNCHING"
         }
       ]
-    }))
+    });
   })
 
   test("boot lifecycle hook is not created if warm pool is not used", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
-    const stack = createStack(argumentStore);
-    expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
-      LifecycleHookSpecificationList: ABSENT
-    }))
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
+      LifecycleHookSpecificationList: Match.absent()
+    });
   })
 
   test("tags are used", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
       Tags: [
         {
           "Key": "application",
@@ -336,93 +339,92 @@ describe("auto scaling group", () => {
           "Value": "semaphore-agent"
         }
       ]
-    }))
+    });
   })
 })
 
 describe("warm pool", () => {
   test("warm pool is used by default", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::AutoScaling::WarmPool', {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::AutoScaling::WarmPool", {
       AutoScalingGroupName: {
         "Ref": "autoScalingGroup"
       },
       PoolState: "Stopped"
-    }))
+    });
   })
 
   test("warm pool state can be set", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_ASG_WARM_POOL_STATE", "Running");
-    const stack = createStack(argumentStore);
-    expect(stack).to(haveResource('AWS::AutoScaling::WarmPool', {
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::AutoScaling::WarmPool", {
       AutoScalingGroupName: {
         "Ref": "autoScalingGroup"
       },
       PoolState: "Running"
-    }))
+    });
   })
 
   test("warm pool can be disabled", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
-    const stack = createStack(argumentStore);
-    expect(stack).to(countResources("AWS::AutoScaling::WarmPool", 0))
+    const template = createTemplate(argumentStore);
+    template.resourceCountIs("AWS::AutoScaling::WarmPool", 0);
   })
 
   test("if warm pool is disabled, starter lambda resources are not created", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
-    const stack = createStack(argumentStore);
-    expect(stack).notTo(haveResource('AWS::Lambda::Function', { Description: "Lambda function to start Semaphore agents" }))
-    expect(stack).notTo(haveResource('AWS::Events::Rule', { Description: "Rule to route semaphore agent asg events to a lambda function" }))
-    expect(stack).notTo(haveResource('AWS::IAM::Policy', { PolicyName: "test-stack-starter-lambda-policy" }))
+    const template = createTemplate(argumentStore);
+    expect(template.findResources("AWS::Lambda::Function", { Description: "Lambda function to start Semaphore agents" })).toEqual({});
+    expect(template.findResources("AWS::Events::Rule", { Description: "Rule to route semaphore agent asg events to a lambda function" })).toEqual({});
+    expect(template.findResources("AWS::IAM::Policy", { PolicyName: "test-stack-starter-lambda-policy" })).toEqual({});
   })
 })
 
 describe("starter lambda", () => {
   test("all needed properties are set", () => {
-    const stack = createStack(basicArgumentStore());
-
-    expect(stack).to(countResources("AWS::Lambda::Function", 2))
-    expect(stack).to(haveResource('AWS::Lambda::Function', {
+    const template = createTemplate(basicArgumentStore());
+    template.resourceCountIs("AWS::Lambda::Function", 2);
+    template.hasResourceProperties("AWS::Lambda::Function", {
       Description: "Lambda function to start Semaphore agents",
       Runtime: "nodejs14.x",
       Timeout: 180,
-      Code: anything(),
+      Code: Match.anyValue(),
       Handler: "app.handler",
       Environment: {
         Variables: {
           AGENT_CONFIG_PARAMETER_NAME: "test-stack-config"
         }
       },
-      Role: anything()
-    }))
+      Role: Match.anyValue()
+    });
   })
 
   test("rule to route boot lifecycle hook events is created", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::Events::Rule', {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::Events::Rule", {
       Description: "Rule to route Semaphore agent asg events to a lambda function",
       EventPattern: {
         "source": ["aws.autoscaling"],
         "detail-type": ["EC2 Instance-launch Lifecycle Action"]
       },
       State: "ENABLED",
-      Targets: anything()
-    }))
+      Targets: Match.anyValue()
+    });
   })
 
   test("proper permissions are in place", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::IAM::Policy', {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::IAM::Policy", {
       PolicyName: "test-stack-starter-lambda-policy",
       PolicyDocument: {
         Statement: [
           {
             Action: "autoscaling:CompleteLifecycleAction",
             Effect: "Allow",
-            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
+            Resource: "arn:aws:autoscaling:*:dummyaccount:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
           },
           {
             Action: "ssm:SendCommand",
@@ -441,23 +443,22 @@ describe("starter lambda", () => {
             Resource: "*"
           }
         ],
-        Version: anything()
+        Version: Match.anyValue()
       },
-      Roles: anything(),
-    }))
+      Roles: Match.anyValue(),
+    });
   })
 })
 
 describe("scaler lambda", () => {
   test("all needed properties are set", () => {
-    const stack = createStack(basicArgumentStore());
-
-    expect(stack).to(countResources("AWS::Lambda::Function", 2))
-    expect(stack).to(haveResource('AWS::Lambda::Function', {
+    const template = createTemplate(basicArgumentStore());
+    template.resourceCountIs("AWS::Lambda::Function", 2);
+    template.hasResourceProperties("AWS::Lambda::Function", {
       Description: "Lambda function to dynamically scale Semaphore agents based on jobs demand",
       Runtime: "nodejs14.x",
       Timeout: 60,
-      Code: anything(),
+      Code: Match.anyValue(),
       Handler: "app.handler",
       Environment: {
         Variables: {
@@ -465,26 +466,26 @@ describe("scaler lambda", () => {
           SEMAPHORE_AGENT_STACK_NAME: "test-stack"
         }
       },
-      Role: anything()
-    }))
+      Role: Match.anyValue()
+    });
   })
 
   test("rule to schedule lambda execution is created", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::Events::Rule', {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::Events::Rule", {
       Description: "Rule to dynamically invoke lambda function to scale Semaphore agent asg",
       ScheduleExpression: "rate(1 minute)",
       State: "ENABLED",
-      Targets: anything()
-    }))
+      Targets: Match.anyValue()
+    });
   })
 
   test("proper permissions created", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_TOKEN_KMS_KEY", "dummy-kms-key-id");
 
-    const stack = createStack(argumentStore);
-    expect(stack).to(haveResource('AWS::IAM::Policy', {
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::IAM::Policy", {
       PolicyName: "test-stack-scaler-lambda-policy",
       PolicyDocument: {
         Statement: [
@@ -496,7 +497,7 @@ describe("scaler lambda", () => {
           {
             Action: "autoscaling:SetDesiredCapacity",
             Effect: "Allow",
-            Resource: "arn:aws:autoscaling:*:DUMMYACCOUNT:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
+            Resource: "arn:aws:autoscaling:*:dummyaccount:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
           },
           {
             Action: "ssm:GetParameter",
@@ -509,35 +510,38 @@ describe("scaler lambda", () => {
             Resource: "arn:aws:kms:*:*:key/dummy-kms-key-id"
           }
         ],
-        Version: anything()
+        Version: Match.anyValue()
       },
-      Roles: anything(),
-    }))
+      Roles: Match.anyValue(),
+    });
   })
 
   test("it can be disabled", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_USE_DYNAMIC_SCALING", "false");
 
-    const stack = createStack(argumentStore);
-    expect(stack).to(countResources("AWS::Lambda::Function", 1))
-    expect(stack).notTo(haveResource('AWS::Lambda::Function', {
+    const template = createTemplate(argumentStore);
+    template.resourceCountIs("AWS::Lambda::Function", 1);
+
+    const resources = template.findResources("AWS::Lambda::Function", {
       Description: "Lambda function to dynamically scale Semaphore agents based on jobs demand"
-    }))
+    })
+
+    expect(resources).toEqual({});
   })
 })
 
 describe("vpc and subnets", () => {
   test("uses default vpc if none is given", () => {
-    const stack = createStack(basicArgumentStore());
-    expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
-      VPCZoneIdentifier: ABSENT,
-      AvailabilityZones: anything(),
-    }))
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
+      VPCZoneIdentifier: Match.absent(),
+      AvailabilityZones: Match.anyValue(),
+    });
 
-    expect(stack).to(haveResource('AWS::EC2::SecurityGroup', {
+    template.hasResourceProperties("AWS::EC2::SecurityGroup", {
       VpcId: "vpc-00000-default"
-    }))
+    });
   })
 
   test("uses vpc and subnets if specified", () => {
@@ -545,20 +549,20 @@ describe("vpc and subnets", () => {
     argumentStore.set("SEMAPHORE_AGENT_VPC_ID", "vpc-000000000-custom");
     argumentStore.set("SEMAPHORE_AGENT_SUBNETS", "subnet-00001,subnet-00002,subnet-00003");
 
-    const stack = createStack(argumentStore);
-    expect(stack).to(haveResource('AWS::AutoScaling::AutoScalingGroup', {
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
       VPCZoneIdentifier: ["subnet-00001", "subnet-00002", "subnet-00003"],
-      AvailabilityZones: ABSENT,
-    }))
+      AvailabilityZones: Match.absent(),
+    });
 
-    expect(stack).to(haveResource('AWS::EC2::SecurityGroup', {
+    template.hasResourceProperties("AWS::EC2::SecurityGroup", {
       VpcId: "vpc-000000000-custom"
-    }))
+    });
   })
 })
 
-function createStack(argumentStore) {
-  const account = "DUMMYACCOUNT";
+function createTemplate(argumentStore) {
+  const account = "dummyaccount";
   const region = "us-east-1";
   const customVpcId = "vpc-000000000-custom";
   const defaultAmiName = `semaphore-agent-v${packageInfo.version}-ubuntu-focal-amd64-server-${hash()}`;
@@ -566,7 +570,7 @@ function createStack(argumentStore) {
   const defaultVpcContextKey = `vpc-provider:account=${account}:filter.isDefault=true:region=${region}:returnAsymmetricSubnets=true`
   const customVpcContextKey = `vpc-provider:account=${account}:filter.vpc-id=${customVpcId}:region=${region}:returnAsymmetricSubnets=true`
 
-  const app = new cdk.App({
+  const app = new App({
     context: {
       [amiLookupContextKey]: "default-ami-id",
       [defaultVpcContextKey]: {
@@ -628,11 +632,13 @@ function createStack(argumentStore) {
     }
   });
 
-  return new AwsSemaphoreAgentStack(app, 'MyTestStack', {
+  const stack = new AwsSemaphoreAgentStack(app, 'MyTestStack', {
     argumentStore,
     stackName: "test-stack",
     env: { account, region }
   });
+
+  return Template.fromStack(stack);
 }
 
 function basicArgumentStore() {

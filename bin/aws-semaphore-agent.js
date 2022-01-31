@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-const cdk = require('@aws-cdk/core');
+const { App } = require('aws-cdk-lib');
 const { AwsSemaphoreAgentStack } = require('../lib/aws-semaphore-agent-stack');
 const { ArgumentStore } = require('../lib/argument-store');
 
-const app = new cdk.App();
+const app = new App();
 const argumentStore = buildArgumentStore();
 
 new AwsSemaphoreAgentStack(app, 'AwsSemaphoreAgentStack', {

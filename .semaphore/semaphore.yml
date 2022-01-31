@@ -110,7 +110,8 @@ blocks:
             - sudo curl -L https://github.com/aelsabbahy/goss/releases/latest/download/goss-linux-amd64 -o /usr/local/bin/goss
             - sudo chmod +rx /usr/local/bin/goss
             - checkout
-            - goss -g goss/goss.yaml --vars goss/vars.yml validate
+            - goss -g goss/goss.yaml --vars goss/vars.yml validate --format junit > results.xml
+            - test-results publish results.xml
 
 after_pipeline:
   task:
@@ -130,6 +131,9 @@ after_pipeline:
       - name: SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB
         value: 'false'
     jobs:
+      - name: Submit Reports
+        commands:
+          - test-results gen-pipeline-report
       - name: Destroy AWS stack
         commands:
           - checkout
