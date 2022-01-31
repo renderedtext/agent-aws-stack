@@ -5,9 +5,10 @@
     "aws-semaphore-agent": "bin/aws-semaphore-agent.js"
   },
   "scripts": {
+    "bootstrap": "cdk bootstrap",
     "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
     "predeploy": "cd lambdas/agent-scaler && npm i && npm run build && cd -",
-    "deploy": "cdk deploy",
+    "deploy": "cdk deploy --progress events",
     "predeploy:ci": "cd lambdas/agent-scaler && npm i && npm run build && cd -",
     "deploy:ci": "cdk deploy --require-approval never --progress events",
     "destroy": "cdk destroy",
