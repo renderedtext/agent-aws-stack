@@ -4,13 +4,13 @@ This project is a CDK application used to deploy a fleet of Semaphore agents in 
 
 ## Building the AMI
 
-The agents need an AMI id to use. If you haven't created one yet, just run:
+The agents need an AMI to use. If you haven't created one yet, just run:
 
 ```bash
 make packer.build
 ```
 
-This command uses packer to create an AWS EC2 AMI with everything the agent needs. The AMI is based on the AMD 64 Ubuntu 20.04 server.
+This command uses packer to create an AMI with everything the agent needs in your AWS account. The AMI is based on the AMD 64 Ubuntu 20.04 server.
 
 ## Deploying the stack
 
@@ -19,12 +19,12 @@ This command uses packer to create an AWS EC2 AMI with everything the agent need
 The AWS CDK requires a few resources to be around for it to work properly. It creates them with the `bootstrap` command:
 
 ```bash
-npm run bootstrap -- aws://<YOUR_AWS_ACCOUNT_ID>/<YOUR_AWS_REGION>
+npm run bootstrap -- aws://YOUR_AWS_ACCOUNT_ID/YOUR_AWS_REGION
 ```
 
-<b>2. Create encrypted SSM parameter for agent type registration token</b>
+<b>2. Create the encrypted SSM parameter for the agent type registration token</b>
 
-When creating your agent type through Semaphore UI, you get a registration token. [Create an encrypted AWS SSM parameter](#create-encrypted-aws-ssm-parameter) with it. Then, set the `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME` and `SEMAPHORE_AGENT_TOKEN_KMS_KEY` environment variables:
+When creating your agent type through the Semaphore UI, you get a registration token. [Create an encrypted AWS SSM parameter](#create-encrypted-aws-ssm-parameter) with it. Then, set the `SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME` and `SEMAPHORE_AGENT_TOKEN_KMS_KEY` environment variables:
 
 ```bash
 export SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME=YOUR_SSM_PARAMETER_NAME
@@ -33,7 +33,7 @@ export SEMAPHORE_AGENT_TOKEN_KMS_KEY=YOUR_KMS_KEY_ID
 
 Note: if you have encrypted the SSM parameter with the default `alias/aws/ssm` key, `SEMAPHORE_AGENT_TOKEN_KMS_KEY` does not need to be set.
 
-<b>3. Set stack name and Semaphore organization environment variables</b>
+<b>3. Set required environment variables</b>
 
 The stack requires three environment variables to be set:
 
@@ -42,7 +42,7 @@ export SEMAPHORE_AGENT_STACK_NAME=YOUR_STACK_NAME
 export SEMAPHORE_ORGANIZATION=YOUR_ORGANIZATION
 ```
 
-[Other parameters](#configuration) may be configured as well.
+[Other environment variables](#configuration) may be configured as well.
 
 <b>4. Deploy the stack</b>
 
@@ -76,15 +76,17 @@ npm run deploy
 
 ## In-place updates
 
-When changing the configuration of your stack, you can update it in-place. AWS CDK will use AWS Cloudformation changesets to apply the required changes, and 
-
-Before updating it, you can check what will be different with the `diff` command:
+When changing the configuration of your stack, you can update it in-place. AWS CDK will use AWS Cloudformation changesets to apply the required changes. Before updating it, you can check what will be different with the `diff` command:
 
 ```bash
 npm run diff
 ```
 
-To update it, use `npm run deploy`.
+To update it, use:
+
+```bash
+npm run deploy
+```
 
 ## Create encrypted AWS SSM parameter
 
@@ -96,9 +98,9 @@ Using the AWS CLI, you can create the AWS SSM parameter for your agent token usi
 aws kms create-key
 ```
 
-Save the KMS key id.
+The output of that command will give you a KMS key id.
 
-Note: if no customer managed is required, this step can be skipped.
+Note: if no customer managed key is required, and you want to use the default `alias/aws/ssm` key in your account, this step can be skipped.
 
 <b>2. Create the SSM parameter</b>
 
@@ -112,7 +114,7 @@ aws ssm put-parameter \
   --key-id PREVIOUSLY_CREATED_KMS_KEY_ID
 ```
 
-If you didn't create a KMS key and want to use the default `alias/aws/ssm` key for your account, you can omit the `--key-id` parameter:
+If you didn't create a KMS key and want to use the default `alias/aws/ssm` key in your account, you can omit the `--key-id` parameter:
 
 ```bash
 aws ssm put-parameter \
@@ -125,8 +127,10 @@ Note: when resetting the agent token, you'll need to update this parameter with 
 
 ## Delete the stack
 
-You can delete the stack, use:
+To delete the stack, use:
 
 ```bash
 npm run destroy
 ```
+
+Note: make sure `SEMAPHORE_AGENT_STACK_NAME` is pointing to the stack you really want to destroy.
