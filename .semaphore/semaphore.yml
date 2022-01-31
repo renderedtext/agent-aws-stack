@@ -93,7 +93,7 @@ blocks:
             - checkout
             - cache restore
             - ./ci/create-ssm-param.sh $SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME $TOKEN
-            - npm run cdk -- deploy --require-approval never --progress events
+            - npm run deploy:ci
 
   - name: Tests
     dependencies:
@@ -134,4 +134,4 @@ after_pipeline:
         commands:
           - checkout
           - cache restore
-          - npm run cdk destroy -- --verbose --force
+          - npm run destroy:ci

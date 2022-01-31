@@ -1,3 +1,7 @@
 module.exports = {
-  testEnvironment: "node"
+  testEnvironment: "node",
+  modulePathIgnorePatterns: [
+    "<rootDir>/cdk.out/",
+    "<rootDir>/lambdas/agent-scaler/"
+  ]
 }

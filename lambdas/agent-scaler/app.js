@@ -1,18 +1,19 @@
-const aws = require("aws-sdk");
 const https = require('https');
+const { SSMClient, GetParameterCommand } = require("@aws-sdk/client-ssm");
+const { AutoScalingClient, DescribeAutoScalingGroupsCommand, SetDesiredCapacityCommand } = require("@aws-sdk/client-auto-scaling");
 
 function getAgentTypeToken(tokenParameterName) {
-  var ssm = new aws.SSM();
+  const ssmClient = new SSMClient();
+  const params = {
+    Name: tokenParameterName,
+    WithDecryption: true
+  };
 
   console.log("Fetching agent type token...");
 
   return new Promise(function(resolve, reject) {
-    var params = {
-      Name: tokenParameterName,
-      WithDecryption: true
-    };
-
-    ssm.getParameter(params, function(err, data) {
+    const command = new GetParameterCommand(params);
+    ssmClient.send(command, function(err, data) {
       if (err) {
         console.log("Error getting agent type registration token parameter: ", err);
         reject(err);
@@ -23,24 +24,28 @@ function getAgentTypeToken(tokenParameterName) {
   });
 }
 
-function describeAsg(asgName) {
-  var autoscaling = new aws.AutoScaling();
+function describeAsg(autoScalingClient, stackName) {
+  console.log(`Describing asg for '${stackName}'...`);
 
-  console.log(`Describing '${asgName}'...`);
+  const params = {
+    Filters: [
+      {
+        Name: "tag:aws:cloudformation:stack-name",
+        Values: [stackName]
+      }
+    ]
+  };
 
   return new Promise(function(resolve, reject) {
-    var params = {
-      AutoScalingGroupNames: [asgName]
-    };
-
-    autoscaling.describeAutoScalingGroups(params, function(err, data) {
+    const command = new DescribeAutoScalingGroupsCommand(params);
+    autoScalingClient.send(command, function(err, data) {
       if (err) {
         console.log("Error describing asg: ", err);
         reject(err);
       } else {
         let autoScalingGroups = data.AutoScalingGroups;
         if (autoScalingGroups.length === 0) {
-          reject(`Could not find auto scaling group '${asgName}'`);
+          reject(`Could not find asg for stack '${stackName}'`);
         } else {
           let asg = autoScalingGroups[0];
           resolve({
@@ -54,18 +59,18 @@ function describeAsg(asgName) {
   });
 }
 
-function setAsgDesiredCapacity(asgName, desiredCapacity) {
-  var autoscaling = new aws.AutoScaling();
+function setAsgDesiredCapacity(autoScalingClient, asgName, desiredCapacity) {
   console.log(`Scaling '${asgName}' up to ${desiredCapacity}...`);
 
-  return new Promise(function(resolve, reject) {
-    var params = {
-      AutoScalingGroupName: asgName,
-      DesiredCapacity: desiredCapacity,
-      HonorCooldown: false
-    };
+  var params = {
+    AutoScalingGroupName: asgName,
+    DesiredCapacity: desiredCapacity,
+    HonorCooldown: false
+  };
 
-    autoscaling.setDesiredCapacity(params, function(err, data) {
+  return new Promise(function(resolve, reject) {
+    const command = new SetDesiredCapacityCommand(params);
+    autoScalingClient.send(command, function(err, data) {
       if (err) {
         console.log("Error scaling asg: ", err);
         reject(err);
@@ -109,7 +114,7 @@ function getAgentTypeOccupancy(token) {
   })
 }
 
-const scaleUpIfNeeded = async (asgName, occupancy, asg) => {
+const scaleUpIfNeeded = async (autoScalingClient, asgName, occupancy, asg) => {
   const totalJobs = Object.keys(occupancy).reduce((count, state) => count + occupancy[state], 0);
 
   console.log(`Agent type occupancy: `, occupancy);
@@ -117,10 +122,10 @@ const scaleUpIfNeeded = async (asgName, occupancy, asg) => {
 
   const desired = totalJobs > asg.maxSize ? asg.maxSize : totalJobs;
   if (desired > asg.desiredCapacity) {
-    await setAsgDesiredCapacity(asgName, desired);
+    await setAsgDesiredCapacity(autoScalingClient, asgName, desired);
     console.log(`Successfully scaled up '${asg.name}'.`);
   } else {
-    console.log(`No need to scale up.`);
+    console.log(`No need to scale up '${asgName}'.`);
   }
 }
 
@@ -132,12 +137,12 @@ function epochSeconds() {
   return Math.round(Date.now() / 1000);
 }
 
-const tick = async (agentTokenParameterName, asgName) => {
+const tick = async (agentTokenParameterName, stackName, autoScalingClient) => {
   try {
     const agentTypeToken = await getAgentTypeToken(agentTokenParameterName);
     const occupancy = await getAgentTypeOccupancy(agentTypeToken);
-    const asg = await describeAsg(asgName);
-    await scaleUpIfNeeded(asgName, occupancy, asg);
+    const asg = await describeAsg(autoScalingClient, stackName);
+    await scaleUpIfNeeded(autoScalingClient, asg.name, occupancy, asg);
   } catch (e) {
     console.error("Error fetching occupancy", e);
   }
@@ -153,14 +158,16 @@ exports.handler = async (event, context, callback) => {
     };
   }
 
-  const asgName = process.env.SEMAPHORE_AGENT_ASG_NAME;
-  if (!asgName) {
-    console.error("No SEMAPHORE_AGENT_ASG_NAME specified.")
+  const stackName = process.env.SEMAPHORE_AGENT_STACK_NAME;
+  if (!stackName) {
+    console.error("No SEMAPHORE_AGENT_STACK_NAME specified.")
     return {
       statusCode: 500,
       message: "error",
     };
   }
+
+  const autoScalingClient = new AutoScalingClient();
 
   /**
    * The interval between ticks.
@@ -172,7 +179,7 @@ exports.handler = async (event, context, callback) => {
 
   let now = epochSeconds();
   while (now < timeout) {
-    await tick(agentTokenParameterName, asgName);
+    await tick(agentTokenParameterName, stackName, autoScalingClient);
     console.log(`Sleeping ${interval}ms...`);
     await sleep(interval);
     now = epochSeconds();
