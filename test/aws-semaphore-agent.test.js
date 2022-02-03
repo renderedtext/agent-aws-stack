@@ -201,11 +201,8 @@ describe("launch configuration", () => {
     })
   })
 
-  test("if not using warm pool, the agent is started using user data", () => {
-    const argumentStore = basicArgumentStore();
-    argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
-
-    const template = createTemplate(argumentStore);
+  test("agent is started using user data", () => {
+    const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
       UserData: {
         "Fn::Base64": "#!/bin/bash\n/opt/semaphore/agent/start.sh test-stack-config"
@@ -306,29 +303,6 @@ describe("auto scaling group", () => {
     });
   })
 
-  test("boot lifecycle hook is created if using warm pool", () => {
-    const template = createTemplate(basicArgumentStore());
-    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
-      LifecycleHookSpecificationList: [
-        {
-          "DefaultResult": "ABANDON",
-          "HeartbeatTimeout": 180,
-          "LifecycleHookName": "test-stack-boot-lifecycle-hook",
-          "LifecycleTransition": "autoscaling:EC2_INSTANCE_LAUNCHING"
-        }
-      ]
-    });
-  })
-
-  test("boot lifecycle hook is not created if warm pool is not used", () => {
-    const argumentStore = basicArgumentStore();
-    argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
-    const template = createTemplate(argumentStore);
-    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
-      LifecycleHookSpecificationList: Match.absent()
-    });
-  })
-
   test("tags are used", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
@@ -343,117 +317,9 @@ describe("auto scaling group", () => {
   })
 })
 
-describe("warm pool", () => {
-  test("warm pool is used by default", () => {
-    const template = createTemplate(basicArgumentStore());
-    template.hasResourceProperties("AWS::AutoScaling::WarmPool", {
-      AutoScalingGroupName: {
-        "Ref": "autoScalingGroup"
-      },
-      PoolState: "Stopped"
-    });
-  })
-
-  test("warm pool state can be set", () => {
-    const argumentStore = basicArgumentStore();
-    argumentStore.set("SEMAPHORE_AGENT_ASG_WARM_POOL_STATE", "Running");
-    const template = createTemplate(argumentStore);
-    template.hasResourceProperties("AWS::AutoScaling::WarmPool", {
-      AutoScalingGroupName: {
-        "Ref": "autoScalingGroup"
-      },
-      PoolState: "Running"
-    });
-  })
-
-  test("warm pool can be disabled", () => {
-    const argumentStore = basicArgumentStore();
-    argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
-    const template = createTemplate(argumentStore);
-    template.resourceCountIs("AWS::AutoScaling::WarmPool", 0);
-  })
-
-  test("if warm pool is disabled, starter lambda resources are not created", () => {
-    const argumentStore = basicArgumentStore();
-    argumentStore.set("SEMAPHORE_AGENT_USE_WARM_POOL", "false");
-    const template = createTemplate(argumentStore);
-    expect(template.findResources("AWS::Lambda::Function", { Description: "Lambda function to start Semaphore agents" })).toEqual({});
-    expect(template.findResources("AWS::Events::Rule", { Description: "Rule to route semaphore agent asg events to a lambda function" })).toEqual({});
-    expect(template.findResources("AWS::IAM::Policy", { PolicyName: "test-stack-starter-lambda-policy" })).toEqual({});
-  })
-})
-
-describe("starter lambda", () => {
-  test("all needed properties are set", () => {
-    const template = createTemplate(basicArgumentStore());
-    template.resourceCountIs("AWS::Lambda::Function", 2);
-    template.hasResourceProperties("AWS::Lambda::Function", {
-      Description: "Lambda function to start Semaphore agents",
-      Runtime: "nodejs14.x",
-      Timeout: 180,
-      Code: Match.anyValue(),
-      Handler: "app.handler",
-      Environment: {
-        Variables: {
-          AGENT_CONFIG_PARAMETER_NAME: "test-stack-config"
-        }
-      },
-      Role: Match.anyValue()
-    });
-  })
-
-  test("rule to route boot lifecycle hook events is created", () => {
-    const template = createTemplate(basicArgumentStore());
-    template.hasResourceProperties("AWS::Events::Rule", {
-      Description: "Rule to route Semaphore agent asg events to a lambda function",
-      EventPattern: {
-        "source": ["aws.autoscaling"],
-        "detail-type": ["EC2 Instance-launch Lifecycle Action"]
-      },
-      State: "ENABLED",
-      Targets: Match.anyValue()
-    });
-  })
-
-  test("proper permissions are in place", () => {
-    const template = createTemplate(basicArgumentStore());
-    template.hasResourceProperties("AWS::IAM::Policy", {
-      PolicyName: "test-stack-starter-lambda-policy",
-      PolicyDocument: {
-        Statement: [
-          {
-            Action: "autoscaling:CompleteLifecycleAction",
-            Effect: "Allow",
-            Resource: "arn:aws:autoscaling:*:dummyaccount:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
-          },
-          {
-            Action: "ssm:SendCommand",
-            Effect: "Allow",
-            Resource: [
-              "arn:aws:ssm:*:*:document/AWS-RunShellScript",
-              "arn:aws:ec2:*:*:instance/*"
-            ]
-          },
-          {
-            Action: [
-              "ssm:DescribeInstanceInformation",
-              "ssm:ListCommands"
-            ],
-            Effect: "Allow",
-            Resource: "*"
-          }
-        ],
-        Version: Match.anyValue()
-      },
-      Roles: Match.anyValue(),
-    });
-  })
-})
-
 describe("scaler lambda", () => {
   test("all needed properties are set", () => {
     const template = createTemplate(basicArgumentStore());
-    template.resourceCountIs("AWS::Lambda::Function", 2);
     template.hasResourceProperties("AWS::Lambda::Function", {
       Description: "Lambda function to dynamically scale Semaphore agents based on jobs demand",
       Runtime: "nodejs14.x",
@@ -521,13 +387,7 @@ describe("scaler lambda", () => {
     argumentStore.set("SEMAPHORE_AGENT_USE_DYNAMIC_SCALING", "false");
 
     const template = createTemplate(argumentStore);
-    template.resourceCountIs("AWS::Lambda::Function", 1);
-
-    const resources = template.findResources("AWS::Lambda::Function", {
-      Description: "Lambda function to dynamically scale Semaphore agents based on jobs demand"
-    })
-
-    expect(resources).toEqual({});
+    template.resourceCountIs("AWS::Lambda::Function", 0);
   })
 })
 
