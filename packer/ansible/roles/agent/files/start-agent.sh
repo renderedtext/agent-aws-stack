@@ -1,7 +1,19 @@
 #!/bin/bash
 
-set -e
-set -o pipefail
+set -eo pipefail
+
+on_failure() {
+  local exit_code=$1
+  if [[ $exit_code != 0 ]] ; then
+    token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
+    instance_id=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
+    aws autoscaling set-instance-health \
+      --instance-id "${instance_id}" \
+      --health-status Unhealthy
+  fi
+}
+
+trap 'on_failure $? $LINENO' EXIT
 
 agent_config_param_name=$1
 if [[ -z "$agent_config_param_name" ]]; then

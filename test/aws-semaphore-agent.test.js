@@ -93,7 +93,10 @@ describe("instance profile", () => {
       PolicyDocument: {
         Statement: [
           {
-            Action: "autoscaling:TerminateInstanceInAutoScalingGroup",
+            Action: [
+              "autoscaling:SetInstanceHealth",
+              "autoscaling:TerminateInstanceInAutoScalingGroup"
+            ],
             Effect: "Allow",
             Resource: "arn:aws:autoscaling:*:dummyaccount:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
           },
@@ -128,7 +131,10 @@ describe("instance profile", () => {
       PolicyDocument: {
         Statement: [
           {
-            Action: "autoscaling:TerminateInstanceInAutoScalingGroup",
+            Action: [
+              "autoscaling:SetInstanceHealth",
+              "autoscaling:TerminateInstanceInAutoScalingGroup"
+            ],
             Effect: "Allow",
             Resource: "arn:aws:autoscaling:*:dummyaccount:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
           },

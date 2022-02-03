@@ -102,6 +102,10 @@ blocks:
       agent:
         machine:
           type: s1-agent-aws-stack-testing
+      epilogue:
+        always:
+          commands:
+            - if [ -f results.xml ]; then test-results publish results.xml; fi
       jobs:
         - name: Run goss tests
           commands:
@@ -109,7 +113,6 @@ blocks:
             - sudo chmod +rx /usr/local/bin/goss
             - checkout
             - goss -g goss/goss.yaml --vars goss/vars.yml validate --format junit > results.xml
-            - test-results publish results.xml
 
 after_pipeline:
   task:
