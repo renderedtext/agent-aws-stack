@@ -321,13 +321,57 @@ describe("auto scaling group", () => {
       ]
     });
   })
+
+  test("AZRebalance process is suspended", () => {
+    const template = createTemplate(basicArgumentStore());
+
+    template.hasResourceProperties("AWS::IAM::Policy", {
+      PolicyName: "test-stack-az-rebalance-suspender-policy",
+      PolicyDocument: {
+        Statement: [
+          {
+            Action: "autoscaling:SuspendProcesses",
+            Effect: "Allow",
+            Resource: "arn:aws:autoscaling:*:dummyaccount:autoScalingGroup:*:autoScalingGroupName/test-stack-autoScalingGroup-*"
+          }
+        ],
+        Version: Match.anyValue()
+      },
+      Roles: Match.anyValue()
+    });
+
+    template.hasResourceProperties("AWS::IAM::Role", {
+      AssumeRolePolicyDocument: {
+        Statement: [
+          {
+            Action: "sts:AssumeRole",
+            Effect: "Allow",
+            Principal: {
+              Service: "lambda.amazonaws.com"
+            }
+          }
+        ],
+        Version: Match.anyValue()
+      }
+    });
+
+    template.hasResourceProperties("AWS::Lambda::Function", {
+      Description: "Suspend AZRebalance process for auto scaling group",
+      Runtime: "nodejs14.x",
+      Code: Match.anyValue(),
+      Handler: "app.handler",
+      Role: Match.anyValue()
+    });
+
+    template.resourceCountIs("AWS::CloudFormation::CustomResource", 1);
+  })
 })
 
 describe("scaler lambda", () => {
   test("all needed properties are set", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::Lambda::Function", {
-      Description: "Lambda function to dynamically scale Semaphore agents based on jobs demand",
+      Description: "Dynamically scale Semaphore agents based on jobs demand",
       Runtime: "nodejs14.x",
       Timeout: 60,
       Code: Match.anyValue(),
@@ -393,7 +437,11 @@ describe("scaler lambda", () => {
     argumentStore.set("SEMAPHORE_AGENT_USE_DYNAMIC_SCALING", "false");
 
     const template = createTemplate(argumentStore);
-    template.resourceCountIs("AWS::Lambda::Function", 0);
+    const resources = template.findResources("AWS::Lambda::Function", {
+      Description: "Dynamically scale Semaphore agents based on jobs demand"
+    });
+
+    expect(resources).toEqual({});
   })
 })
 
