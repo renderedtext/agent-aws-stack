@@ -1,10 +1,11 @@
 {
   "name": "aws-semaphore-agent",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "bin": {
     "aws-semaphore-agent": "bin/aws-semaphore-agent.js"
   },
   "scripts": {
+    "prebootstrap": "cd lambdas/agent-scaler && npm i && npm run build && cd -",
     "bootstrap": "cdk bootstrap",
     "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
     "predeploy": "cd lambdas/agent-scaler && npm i && npm run build && cd -",

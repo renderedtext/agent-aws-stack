@@ -14,12 +14,10 @@ This command uses packer to create an AMI with everything the agent needs in you
 
 ## Deploying the stack
 
-<b>1. CDK bootstrap</b>
-
-The AWS CDK requires a few resources to be around for it to work properly. It creates them with the `bootstrap` command:
+<b>1. Install dependencies</b>
 
 ```bash
-npm run bootstrap -- aws://YOUR_AWS_ACCOUNT_ID/YOUR_AWS_REGION
+npm i
 ```
 
 <b>2. Create the encrypted SSM parameter for the agent type registration token</b>
@@ -43,6 +41,14 @@ export SEMAPHORE_ORGANIZATION=YOUR_ORGANIZATION
 ```
 
 [Other environment variables](#configuration) may be configured as well.
+
+<b>4. CDK bootstrap</b>
+
+The AWS CDK requires a few resources to be around for it to work properly. It creates them with the `bootstrap` command:
+
+```bash
+npm run bootstrap -- aws://YOUR_AWS_ACCOUNT_ID/YOUR_AWS_REGION
+```
 
 <b>4. Deploy the stack</b>
 
