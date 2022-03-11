@@ -1,4 +1,7 @@
 function Add-GHKeysToKnownHosts {
+  $ProgressPreference = 'SilentlyContinue'
+  $ErrorActionPreference = 'Stop'
+
   Write-Output "Adding github SSH keys to known_hosts..."
   if (-not (Test-Path "$HOME\.ssh")) {
     New-Item -ItemType Directory -Path "$HOME\.ssh" > $null
@@ -24,6 +27,9 @@ function Add-AWSConfig {
       [string]
       $Region
   )
+
+  $ProgressPreference = 'SilentlyContinue'
+  $ErrorActionPreference = 'Stop'
 
   Write-Output "Configuring .aws folder"
   $awsFileContent = @"
@@ -56,6 +62,9 @@ function Update-AgentConfig {
       $SSMParamName
   )
 
+  $ProgressPreference = 'SilentlyContinue'
+  $ErrorActionPreference = 'Stop'
+
   Write-Output "Fetching agent params..."
   $agentParams = aws ssm get-parameter --region "$Region" --name "$SSMParamName" --query Parameter.Value --output text
 
@@ -64,11 +73,12 @@ function Update-AgentConfig {
   $env:SemaphoreAgentToken = aws ssm get-parameter --region "$Region" --name "$agentTokenParamName" --query Parameter.Value --output text --with-decryption
 
   Write-Output "Changing agent configuration..."
-  $env:SemaphoreOrganization = $agentParams | jq -r '.organization'
+  $semaphoreOrganization = $agentParams | jq -r '.organization'
+  $env:SemaphoreEndpoint = "$semaphoreOrganization.semaphoreci.com"
   $env:SemaphoreAgentDisconnectAfterJob = $agentParams | jq -r '.disconnectAfterJob'
   $env:SemaphoreAgentDisconnectAfterIdleTimeout = $agentParams | jq -r '.disconnectAfterIdleTimeout'
 
-  yq e -i '.endpoint = env(SemaphoreOrganization)' C:\semaphore-agent\config.yaml
+  yq e -i '.endpoint = env(SemaphoreEndpoint)' C:\semaphore-agent\config.yaml
   yq e -i '.token = env(SemaphoreAgentToken)' C:\semaphore-agent\config.yaml
   yq e -i '.disconnect-after-job = env(SemaphoreAgentDisconnectAfterJob)' C:\semaphore-agent\config.yaml
   yq e -i '.disconnect-after-idle-timeout = env(SemaphoreAgentDisconnectAfterIdleTimeout)' C:\semaphore-agent\config.yaml
@@ -95,5 +105,5 @@ Add-AWSConfig -Region $Region
 Update-AgentConfig -SSMParamName $AgentConfigParamName -Region $Region
 
 Write-Output "Starting agent..."
-Start-Process C:\semaphore-agent\agent.exe -ArgumentList '--config-file', 'C:\semaphore-agent\config.yaml'
+Start-Process C:\semaphore-agent\agent.exe -ArgumentList 'start', '--config-file', 'C:\semaphore-agent\config.yaml'
 Write-Output "Done."
