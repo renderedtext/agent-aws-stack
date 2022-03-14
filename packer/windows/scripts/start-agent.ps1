@@ -9,7 +9,7 @@ function Add-GHKeysToKnownHosts {
 
   $metaResponse = (Invoke-WebRequest -UseBasicParsing "https://api.github.com/meta").Content
   $keys = $metaResponse | jq -r '.ssh_keys[]'
-  $knownHosts = $keys -replace '^', 'github.com'
+  $knownHosts = $keys -replace '^', 'github.com '
 
   $KnownHostsPath = "$HOME\.ssh\known_hosts"
   if (-not (Test-Path $KnownHostsPath)) {
@@ -73,8 +73,7 @@ function Update-AgentConfig {
   $env:SemaphoreAgentToken = aws ssm get-parameter --region "$Region" --name "$agentTokenParamName" --query Parameter.Value --output text --with-decryption
 
   Write-Output "Changing agent configuration..."
-  $semaphoreOrganization = $agentParams | jq -r '.organization'
-  $env:SemaphoreEndpoint = "$semaphoreOrganization.semaphoreci.com"
+  $env:SemaphoreEndpoint = $agentParams | jq -r '.endpoint'
   $env:SemaphoreAgentDisconnectAfterJob = $agentParams | jq -r '.disconnectAfterJob'
   $env:SemaphoreAgentDisconnectAfterIdleTimeout = $agentParams | jq -r '.disconnectAfterIdleTimeout'
 
@@ -105,5 +104,7 @@ Add-AWSConfig -Region $Region
 Update-AgentConfig -SSMParamName $AgentConfigParamName -Region $Region
 
 Write-Output "Starting agent..."
-Start-Process C:\semaphore-agent\agent.exe -ArgumentList 'start', '--config-file', 'C:\semaphore-agent\config.yaml'
+Start-Process C:\semaphore-agent\agent.exe `
+  -ArgumentList 'start', '--config-file', 'C:\semaphore-agent\config.yaml' `
+  -WorkingDirectory 'C:\Users\Administrator'
 Write-Output "Done."
