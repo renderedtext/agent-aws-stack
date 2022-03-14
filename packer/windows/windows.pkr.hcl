@@ -89,13 +89,15 @@ build {
     destination = "C:\\packer-tmp\\start-agent.ps1"
   }
 
-  provisioner "powershell" {
-    script = "scripts/provision-ami.ps1"
+  provisioner "file" {
+    source = "scripts/provision-ami.ps1"
+    destination = "C:\\packer-tmp\\provision-ami.ps1"
   }
 
   provisioner "powershell" {
     inline = [
-      "Remove-Item -Path C:\\packer-tmp -Recurse",
+      "C:\\packer-tmp\\provision-ami.ps1 ${var.agent_version}",
+      "Remove-Item -Path C:\\packer-tmp -Recurse -Force",
       "C:\\ProgramData\\Amazon\\EC2-Windows\\Launch\\Scripts\\InitializeInstance.ps1 -Schedule",
       "C:\\ProgramData\\Amazon\\EC2-Windows\\Launch\\Scripts\\SysprepInstance.ps1 -NoShutdown"
     ]

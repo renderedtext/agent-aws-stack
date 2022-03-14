@@ -1,5 +1,11 @@
 $ErrorActionPreference = "Stop"
 
+$agentVersion = $args[0]
+if (-not $agentVersion) {
+  Write-Output "Agent version not specified. Exiting..."
+  Exit 1
+}
+
 # Install chocolatey
 Write-Output "Installing chocolatey package manager..."
 Set-ExecutionPolicy Bypass -Scope Process -Force
@@ -30,8 +36,8 @@ Write-Output "Creating C:\semaphore-agent..."
 New-Item -ItemType Directory -Path C:\semaphore-agent > $null
 Set-Location C:\semaphore-agent
 
-Write-Output "Downloading and unpacking agent..."
-Invoke-WebRequest "https://github.com/semaphoreci/agent/releases/download/v2.1.0/agent_Windows_x86_64.tar.gz" -OutFile agent.tar.gz
+Write-Output "Downloading and unpacking agent $agentVersion..."
+Invoke-WebRequest "https://github.com/semaphoreci/agent/releases/download/$agentVersion/agent_Windows_x86_64.tar.gz" -OutFile agent.tar.gz
 tar.exe xvf agent.tar.gz > $null
 Remove-Item agent.tar.gz
 
