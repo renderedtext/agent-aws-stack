@@ -21,7 +21,7 @@ describe("SSM parameter", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::SSM::Parameter", {
       Value: JSON.stringify({
-        organization: "test",
+        endpoint: "test.semaphoreci.com",
         agentTokenParameterName: "test-token",
         disconnectAfterJob: "true",
         disconnectAfterIdleTimeout: "300",
@@ -29,6 +29,22 @@ describe("SSM parameter", () => {
       })
     });
   })
+
+  test("sets endpoint directly", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_ENDPOINT", "someother.endpoint")
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::SSM::Parameter", {
+      Value: JSON.stringify({
+        endpoint: "someother.endpoint",
+        agentTokenParameterName: "test-token",
+        disconnectAfterJob: "true",
+        disconnectAfterIdleTimeout: "300",
+        envVars: []
+      })
+    });
+  });
 
   test("disconnect-after-job and disconnect-after-idle-timeout can be set", () => {
     const argumentStore = basicArgumentStore();
@@ -38,7 +54,7 @@ describe("SSM parameter", () => {
     const template = createTemplate(argumentStore);
     template.hasResourceProperties("AWS::SSM::Parameter", {
       Value: JSON.stringify({
-        organization: "test",
+        endpoint: "test.semaphoreci.com",
         agentTokenParameterName: "test-token",
         disconnectAfterJob: "false",
         disconnectAfterIdleTimeout: "120",
@@ -54,7 +70,7 @@ describe("SSM parameter", () => {
     const template = createTemplate(argumentStore);
     template.hasResourceProperties("AWS::SSM::Parameter", {
       Value: JSON.stringify({
-        organization: "test",
+        endpoint: "test.semaphoreci.com",
         agentTokenParameterName: "test-token",
         disconnectAfterJob: "true",
         disconnectAfterIdleTimeout: "300",
