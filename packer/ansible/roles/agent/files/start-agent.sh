@@ -48,10 +48,10 @@ agent_token_param_name=$(echo $agent_params | jq -r '.agentTokenParameterName')
 agent_token=$(aws ssm get-parameter --region "$region" --name "$agent_token_param_name" --query Parameter.Value --output text --with-decryption)
 
 echo "Changing agent configuration..."
-organization=$(echo $agent_params | jq -r '.organization')
+endpoint=$(echo $agent_params | jq -r '.endpoint')
 disconnect_after_job=$(echo $agent_params | jq -r '.disconnectAfterJob')
 disconnect_after_idle_timeout=$(echo $agent_params | jq -r '.disconnectAfterIdleTimeout')
-yq e -i ".endpoint = \"$organization.semaphoreci.com\"" /opt/semaphore/agent/config.yaml
+yq e -i ".endpoint = \"$endpoint\"" /opt/semaphore/agent/config.yaml
 yq e -i ".token = \"$agent_token\"" /opt/semaphore/agent/config.yaml
 yq e -i ".disconnect-after-job = $disconnect_after_job" /opt/semaphore/agent/config.yaml
 yq e -i ".disconnect-after-idle-timeout = $disconnect_after_idle_timeout" /opt/semaphore/agent/config.yaml

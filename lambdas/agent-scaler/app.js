@@ -81,9 +81,9 @@ function setAsgDesiredCapacity(autoScalingClient, asgName, desiredCapacity) {
   });
 }
 
-function getAgentTypeOccupancy(token) {
+function getAgentTypeOccupancy(token, semaphoreEndpoint) {
   const options = {
-    hostname: 'semaphore.semaphoreci.com',
+    hostname: semaphoreEndpoint,
     path: "/api/v1/self_hosted_agents/occupancy",
     method: 'GET',
     headers: {
@@ -137,10 +137,10 @@ function epochSeconds() {
   return Math.round(Date.now() / 1000);
 }
 
-const tick = async (agentTokenParameterName, stackName, autoScalingClient) => {
+const tick = async (agentTokenParameterName, stackName, autoScalingClient, semaphoreEndpoint) => {
   try {
     const agentTypeToken = await getAgentTypeToken(agentTokenParameterName);
-    const occupancy = await getAgentTypeOccupancy(agentTypeToken);
+    const occupancy = await getAgentTypeOccupancy(agentTypeToken, semaphoreEndpoint);
     const asg = await describeAsg(autoScalingClient, stackName);
     await scaleUpIfNeeded(autoScalingClient, asg.name, occupancy, asg);
   } catch (e) {
@@ -167,6 +167,15 @@ exports.handler = async (event, context, callback) => {
     };
   }
 
+  const semaphoreEndpoint = process.env.SEMAPHORE_ENDPOINT;
+  if (!semaphoreEndpoint) {
+    console.error("No SEMAPHORE_ENDPOINT specified.")
+    return {
+      statusCode: 500,
+      message: "error",
+    };
+  }
+
   const autoScalingClient = new AutoScalingClient();
 
   /**
@@ -179,7 +188,7 @@ exports.handler = async (event, context, callback) => {
 
   let now = epochSeconds();
   while (now < timeout) {
-    await tick(agentTokenParameterName, stackName, autoScalingClient);
+    await tick(agentTokenParameterName, stackName, autoScalingClient, semaphoreEndpoint);
     console.log(`Sleeping ${interval}ms...`);
     await sleep(interval);
     now = epochSeconds();
