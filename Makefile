@@ -25,7 +25,7 @@ packer.validate:
 			.'
 
 packer.init:
-	$(MAKE) venv.execute COMMAND='cd packer && packer init .'
+	$(MAKE) venv.execute COMMAND='cd packer/$(PACKER_OS) && packer init .'
 
 packer.build:
 	$(MAKE) venv.execute COMMAND='\
