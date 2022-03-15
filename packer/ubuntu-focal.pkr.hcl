@@ -11,18 +11,15 @@ variable "hash" {
 }
 
 variable "ami_prefix" {
-  type    = string
-  default = "semaphore-agent"
+  type = string
 }
 
 variable "arch" {
-  type    = string
-  default = "amd64-server"
+  type = string
 }
 
 variable "region" {
   type    = string
-  default = "us-east-1"
 }
 
 variable "instance_type" {
