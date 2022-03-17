@@ -16,6 +16,7 @@ choco install -y 7zip --version 21.7
 choco install -y git --version 2.35.1.2
 choco install -y jq --version 1.6
 choco install -y yq --version 4.21.1
+choco install -y nssm --version 2.24.101.20180116
 
 # Make `Update-SessionEnvironment` available
 Write-Output "Importing the Chocolatey profile module..."

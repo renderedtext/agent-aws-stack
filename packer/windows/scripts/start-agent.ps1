@@ -103,8 +103,14 @@ Add-GHKeysToKnownHosts
 Add-AWSConfig -Region $Region
 Update-AgentConfig -SSMParamName $AgentConfigParamName -Region $Region
 
-Write-Output "Starting agent..."
-Start-Process C:\semaphore-agent\agent.exe `
-  -ArgumentList 'start', '--config-file', 'C:\semaphore-agent\config.yaml' `
-  -WorkingDirectory 'C:\Users\Administrator'
+Write-Output "Creating agent nssm service..."
+nssm install semaphore-agent C:\semaphore-agent\agent.exe start --config-file C:\semaphore-agent\config.yaml
+nssm set semaphore-agent AppStdout C:\semaphore-agent\agent.log
+nssm set semaphore-agent AppStderr C:\semaphore-agent\agent.log
+nssm set semaphore-agent AppEnvironmentExtra :HOME=C:\semaphore-agent
+nssm set semaphore-agent AppExit Default Restart
+nssm set semaphore-agent AppRestartDelay 10000
+
+Write-Output "Starting agent service..."
+nssm start semaphore-agent
 Write-Output "Done."
