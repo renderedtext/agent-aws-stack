@@ -1,3 +1,12 @@
+function Set-InstanceHealth {
+  $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+  $instance_id=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
+
+  aws autoscaling set-instance-health `
+    --instance-id "$instance_id" `
+    --health-status Unhealthy
+}
+
 function Add-GHKeysToKnownHosts {
   $ProgressPreference = 'SilentlyContinue'
   $ErrorActionPreference = 'Stop'
@@ -90,10 +99,11 @@ function Update-AgentConfig {
 $ProgressPreference = 'SilentlyContinue'
 $ErrorActionPreference = 'Stop'
 
+trap {Set-InstanceHealth}
+
 $AgentConfigParamName = $args[0]
 if (-not $AgentConfigParamName) {
-  Write-Output "No agent config parameter name specified. Exiting..."
-  Exit 1
+  throw "No agent config parameter name specified."
 }
 
 # Configure GH keys and aws config
