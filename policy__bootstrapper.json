@@ -2,11 +2,27 @@
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "CDK__CloudformationFullAccess",
       "Effect": "Allow",
-      "Action": "cloudformation:*",
-      "Resource": "*"
+      "Action": [
+        "cloudformation:*"
+      ],
+      "Resource": ["*"]
     },
     {
+      "Sid": "CDK__AccessToManagedBuckets",
+      "Effect": "Allow",
+      "Action": ["s3:*"],
+      "Resources": "arn:aws:s3:::cdk*"
+    },
+    {
+      "Sid": "CDK__AccessToManagedECRRepository",
+      "Effect": "Allow",
+      "Action": ["ecr:*"],
+      "Resource": "arn:aws:ecr:::cdk*"
+    },
+    {
+      "Sid": "App__EC2Access",
       "Effect": "Allow",
       "Action": [
         "ec2:DescribeAccountAttributes",
@@ -23,6 +39,7 @@
       "Resource": "*"
     },
     {
+      "Sid": "App__SecurityGroupAccess",
       "Effect": "Allow",
       "Action": [
         "ec2:AuthorizeSecurityGroupIngress",
@@ -35,6 +52,7 @@
       "Resource": "arn:aws:ec2:*:*:security-group/*"
     },
     {
+      "Sid": "App__CreateSecurityGroupAccess",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateSecurityGroup"
@@ -42,11 +60,13 @@
       "Resource": "arn:aws:ec2:*:*:vpc/*"
     },
     {
+      "Sid": "App__RunEC2InstancesAccess",
       "Effect": "Allow",
       "Action": "ec2:RunInstances",
       "Resource": "*"
     },
     {
+      "Sid": "App__InstanceProfileAccess",
       "Effect": "Allow",
       "Action": [
         "iam:CreateInstanceProfile",
@@ -58,6 +78,7 @@
       "Resource": "arn:aws:iam::*:instance-profile/*"
     },
     {
+      "Sid": "App__KMSAccess",
       "Effect": "Allow",
       "Action": [
         "kms:DescribeKey",
@@ -68,6 +89,7 @@
       "Resource": "arn:aws:kms:*:*:key/*"
     },
     {
+      "Sid": "App__LambdaAccess",
       "Effect": "Allow",
       "Action": [
         "lambda:CreateFunction",
@@ -81,6 +103,7 @@
       "Resource": "arn:aws:lambda:*:*:function:*"
     },
     {
+      "Sid": "App__LogsAccess",
       "Effect": "Allow",
       "Action": [
         "logs:CreateLogGroup",
@@ -90,6 +113,7 @@
       "Resource": "arn:aws:logs:*:*:log-group:*"
     },
     {
+      "Sid": "App__SSMAccess",
       "Effect": "Allow",
       "Action": [
         "ssm:GetParameter",
@@ -100,6 +124,7 @@
       "Resource": "*"
     },
     {
+      "Sid": "App__IAMAccess",
       "Effect": "Allow",
       "Action": [
         "iam:ListPolicies",
@@ -146,6 +171,7 @@
       "Resource": "*"
     },
     {
+      "Sid": "App__AutoScalingAccess",
       "Effect": "Allow",
       "Action": [
         "autoscaling:DescribeLifecycleHookTypes",
@@ -181,6 +207,7 @@
       "Resource": "*"
     },
     {
+      "Sid": "App__EventBridgeAccess",
       "Effect": "Allow",
       "Action": [
         "events:DescribeRule",
@@ -190,24 +217,6 @@
         "events:DeleteRule"
       ],
       "Resource": "arn:aws:events:*:*:rule/*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:*Object",
-        "s3:ListBucket",
-        "s3:getBucketLocation"
-      ],
-      "Resource": "arn:aws:s3:::cdktoolkit-stagingbucket-*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:*Object",
-        "s3:ListBucket",
-        "s3:getBucketLocation"
-      ],
-      "Resource": "arn:aws:s3:::cdk-*-assets-*-*"
     }
   ]
 }
