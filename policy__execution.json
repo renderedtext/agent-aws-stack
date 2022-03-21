@@ -2,26 +2,6 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "CloudformationFullAccess",
-      "Effect": "Allow",
-      "Action": [
-        "cloudformation:*"
-      ],
-      "Resource": ["*"]
-    },
-    {
-      "Sid": "CDKManagedBucketsAccess",
-      "Effect": "Allow",
-      "Action": ["s3:*"],
-      "Resource": "arn:aws:s3:::cdk*"
-    },
-    {
-      "Sid": "CDKManagedECRRepositoryAccess",
-      "Effect": "Allow",
-      "Action": ["ecr:*"],
-      "Resource": "arn:aws:ecr:*:*:repository:cdk*"
-    },
-    {
       "Sid": "EC2Access",
       "Effect": "Allow",
       "Action": [
@@ -151,6 +131,7 @@
         "iam:DeleteRole",
         "iam:UpdateRoleDescription",
         "iam:UpdateRole",
+        "iam:PassRole",
         "iam:AddRoleToInstanceProfile",
         "iam:RemoveRoleFromInstanceProfile",
         "iam:CreateInstanceProfile",
@@ -216,6 +197,17 @@
         "events:DeleteRule"
       ],
       "Resource": "arn:aws:events:*:*:rule/*"
+    },
+    {
+      "Sid": "CDKManagedBucketsReadAccess",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket*",
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:GetEncryptionConfiguration"
+      ],
+      "Resource": "arn:aws:s3:::cdk*"
     }
   ]
 }
