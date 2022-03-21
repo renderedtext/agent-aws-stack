@@ -2,7 +2,7 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "CDK__CloudformationFullAccess",
+      "Sid": "CloudformationFullAccess",
       "Effect": "Allow",
       "Action": [
         "cloudformation:*"
@@ -10,19 +10,19 @@
       "Resource": ["*"]
     },
     {
-      "Sid": "CDK__AccessToManagedBuckets",
+      "Sid": "CDKManagedBucketsAccess",
       "Effect": "Allow",
       "Action": ["s3:*"],
-      "Resources": "arn:aws:s3:::cdk*"
+      "Resource": "arn:aws:s3:::cdk*"
     },
     {
-      "Sid": "CDK__AccessToManagedECRRepository",
+      "Sid": "CDKManagedECRRepositoryAccess",
       "Effect": "Allow",
       "Action": ["ecr:*"],
-      "Resource": "arn:aws:ecr:::cdk*"
+      "Resource": "arn:aws:ecr:*:*:repository:cdk*"
     },
     {
-      "Sid": "App__EC2Access",
+      "Sid": "EC2Access",
       "Effect": "Allow",
       "Action": [
         "ec2:DescribeAccountAttributes",
@@ -39,7 +39,7 @@
       "Resource": "*"
     },
     {
-      "Sid": "App__SecurityGroupAccess",
+      "Sid": "SecurityGroupAccess",
       "Effect": "Allow",
       "Action": [
         "ec2:AuthorizeSecurityGroupIngress",
@@ -52,7 +52,7 @@
       "Resource": "arn:aws:ec2:*:*:security-group/*"
     },
     {
-      "Sid": "App__CreateSecurityGroupAccess",
+      "Sid": "CreateSecurityGroupAccess",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateSecurityGroup"
@@ -60,13 +60,13 @@
       "Resource": "arn:aws:ec2:*:*:vpc/*"
     },
     {
-      "Sid": "App__RunEC2InstancesAccess",
+      "Sid": "RunEC2InstancesAccess",
       "Effect": "Allow",
       "Action": "ec2:RunInstances",
       "Resource": "*"
     },
     {
-      "Sid": "App__InstanceProfileAccess",
+      "Sid": "InstanceProfileAccess",
       "Effect": "Allow",
       "Action": [
         "iam:CreateInstanceProfile",
@@ -78,7 +78,7 @@
       "Resource": "arn:aws:iam::*:instance-profile/*"
     },
     {
-      "Sid": "App__KMSAccess",
+      "Sid": "KMSAccess",
       "Effect": "Allow",
       "Action": [
         "kms:DescribeKey",
@@ -89,7 +89,7 @@
       "Resource": "arn:aws:kms:*:*:key/*"
     },
     {
-      "Sid": "App__LambdaAccess",
+      "Sid": "LambdaAccess",
       "Effect": "Allow",
       "Action": [
         "lambda:CreateFunction",
@@ -103,7 +103,7 @@
       "Resource": "arn:aws:lambda:*:*:function:*"
     },
     {
-      "Sid": "App__LogsAccess",
+      "Sid": "LogsAccess",
       "Effect": "Allow",
       "Action": [
         "logs:CreateLogGroup",
@@ -113,7 +113,7 @@
       "Resource": "arn:aws:logs:*:*:log-group:*"
     },
     {
-      "Sid": "App__SSMAccess",
+      "Sid": "SSMAccess",
       "Effect": "Allow",
       "Action": [
         "ssm:GetParameter",
@@ -124,7 +124,7 @@
       "Resource": "*"
     },
     {
-      "Sid": "App__IAMAccess",
+      "Sid": "IAMAccess",
       "Effect": "Allow",
       "Action": [
         "iam:ListPolicies",
@@ -148,7 +148,6 @@
         "iam:TagRole",
         "iam:UntagRole",
         "iam:CreateRole",
-        "iam:PassRole",
         "iam:DeleteRole",
         "iam:UpdateRoleDescription",
         "iam:UpdateRole",
@@ -171,7 +170,7 @@
       "Resource": "*"
     },
     {
-      "Sid": "App__AutoScalingAccess",
+      "Sid": "AutoScalingAccess",
       "Effect": "Allow",
       "Action": [
         "autoscaling:DescribeLifecycleHookTypes",
@@ -207,7 +206,7 @@
       "Resource": "*"
     },
     {
-      "Sid": "App__EventBridgeAccess",
+      "Sid": "EventBridgeAccess",
       "Effect": "Allow",
       "Action": [
         "events:DescribeRule",
