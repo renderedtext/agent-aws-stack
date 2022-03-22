@@ -35,6 +35,7 @@
         "iam:PassRole",
         "iam:DeleteRole",
         "iam:DeleteRolePolicy",
+        "iam:DeletePolicy",
         "iam:TagPolicy",
         "iam:UntagPolicy",
         "iam:TagRole",
