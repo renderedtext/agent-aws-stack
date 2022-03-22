@@ -25,6 +25,7 @@
       "Effect": "Allow",
       "Action": [
         "iam:CreatePolicy",
+        "iam:CreatePolicyVersion",
         "iam:CreateRole",
         "iam:GetRole",
         "iam:GetRolePolicy",
@@ -36,10 +37,12 @@
         "iam:DeleteRole",
         "iam:DeleteRolePolicy",
         "iam:DeletePolicy",
+        "iam:DeletePolicyVersion",
         "iam:TagPolicy",
         "iam:UntagPolicy",
         "iam:TagRole",
-        "iam:UntagRole"
+        "iam:UntagRole",
+        "iam:ListPolicyVersions"
       ],
       "Resource": "*"
     },
