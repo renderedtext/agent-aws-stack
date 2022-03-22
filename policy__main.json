@@ -18,7 +18,7 @@
         "ssm:PutParameter",
         "ssm:DeleteParameter"
       ],
-      "Resource": "arn:aws:ssm:*:*:parameter/cdk*"
+      "Resource": "*"
     },
     {
       "Effect": "Allow",
