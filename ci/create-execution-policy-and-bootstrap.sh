@@ -24,7 +24,7 @@ policy=$(aws iam get-policy --policy-arn "${policy_arn}" --query 'Policy.Arn' --
 if [[ $? -eq 0 ]]; then
   echo "Deleting old versions of ${policy_arn}..."
   version_ids=($(aws iam list-policy-versions \
-    --policy-arn arn:aws:iam::762007957083:policy/agent-aws-stack-tester-permissions \
+    --policy-arn ${policy_arn} \
     | jq -r '.Versions[] | select(.IsDefaultVersion | not) | .VersionId'))
 
   for version_id in "${version_ids[@]}"; do
