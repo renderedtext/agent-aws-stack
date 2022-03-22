@@ -28,6 +28,7 @@
         "iam:CreateRole",
         "iam:GetRole",
         "iam:GetRolePolicy",
+        "iam:GetPolicy",
         "iam:AttachRolePolicy",
         "iam:DetachRolePolicy",
         "iam:PutRolePolicy",

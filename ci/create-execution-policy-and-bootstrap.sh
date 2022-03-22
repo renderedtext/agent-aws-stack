@@ -30,12 +30,17 @@ fi
 echo "Creating ${policy_arn}..."
 policy_arn=$(aws iam create-policy \
   --policy-name ${policy_name} \
-  --policy-document file://$(pwd)/policy__execution.json \
+  --policy-document file://$(pwd)/execution-policy.json \
   --description "Policy used by Cloudformation to deploy the agent-aws-stack CDK application" \
   --query 'Policy.Arn' \
   --output text)
 
-echo "Policy '$policy_arn' created. Bootstrapping application..."
-npm run bootstrap -- aws://${aws_account_id}/${aws_region} \
-  --cloudformation-execution-policies "${policy_arn}" \
-  --verbose
+if [[ $? -eq 0 ]]; then
+  echo "Policy '$policy_arn' created. Bootstrapping application..."
+  npm run bootstrap -- aws://${aws_account_id}/${aws_region} \
+    --cloudformation-execution-policies "${policy_arn}" \
+    --verbose
+else
+  echo "Error creating policy. Exiting..."
+  exit 1
+fi
