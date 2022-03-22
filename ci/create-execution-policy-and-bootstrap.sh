@@ -31,7 +31,7 @@ echo "Creating ${policy_arn}..."
 policy_arn=$(aws iam create-policy \
   --policy-name ${policy_name} \
   --policy-document file://$(pwd)/policy__execution.json \
-  --description "Policy used by Cloudformation to deploy the agent-aws-stack CDK application"
+  --description "Policy used by Cloudformation to deploy the agent-aws-stack CDK application" \
   --query 'Policy.Arn' \
   --output text)
 
