@@ -81,6 +81,8 @@ blocks:
       jobs:
         - name: Bootstrap stack
           commands:
+            - checkout
+            - cache restore
             - ./ci/create-execution-policy-and-bootstrap.sh $AWS_ACCOUNT_ID $AWS_DEFAULT_REGION
 
   - name: Linux launch
