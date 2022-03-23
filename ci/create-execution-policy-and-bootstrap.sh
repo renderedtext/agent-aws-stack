@@ -1,12 +1,12 @@
 #!/bin/bash
 
-aws_account_id=$2
+aws_account_id=$1
 if [[ -z "${aws_account_id}" ]]; then
   echo "AWS account id is required. Exiting..."
   exit 1
 fi
 
-aws_region=$3
+aws_region=$2
 if [[ -z "${aws_region}" ]]; then
   echo "AWS account region is required. Exiting..."
   exit 1
