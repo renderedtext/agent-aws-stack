@@ -22,7 +22,7 @@ function buildArgumentStore() {
   try {
     return ArgumentStore.fromEnv();
   } catch (e) {
-    console.error("ERROR: could not retrieve all required arguments from environment:", e)
+    console.error("ERROR: could not retrieve all required arguments:", e)
     process.exit(1);
   }
 }

@@ -85,12 +85,15 @@ blocks:
           value: 'false'
         - name: SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB
           value: 'false'
+        - name: CLOUDFORMATION_EXECUTION_POLICY_NAME
+          value: agent-aws-stack-test-execution-policy
       jobs:
         - name: Launch stack
           commands:
             - checkout
             - cache restore
             - ./ci/create-ssm-param.sh $SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME $TOKEN
+            - ./ci/create-execution-policy-and-bootstrap.sh $CLOUDFORMATION_EXECUTION_POLICY_NAME $AWS_ACCOUNT_ID $AWS_DEFAULT_REGION
             - npm run deploy:ci
 
   - name: Tests
