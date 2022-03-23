@@ -46,4 +46,4 @@ packer.build:
 			.'
 
 ansible.lint:
-	$(MAKE) venv.execute COMMAND='cd packer && ansible-lint'
+	$(MAKE) venv.execute COMMAND='cd packer/linux && ansible-lint'

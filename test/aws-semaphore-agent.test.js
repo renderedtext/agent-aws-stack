@@ -189,10 +189,20 @@ describe("instance profile", () => {
 })
 
 describe("launch configuration", () => {
-  test("uses default AMI", () => {
+  test("uses default linux AMI", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      ImageId: "default-ami-id"
+      ImageId: "default-ubuntu-focal-ami-id"
+    });
+  })
+
+  test("uses default windows AMI", () => {
+    const argumentStore = basicArgumentStore()
+    argumentStore.set("SEMAPHORE_AGENT_OS", "windows");
+
+    const template = createTemplateWithOS(argumentStore, "windows");
+    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
+      ImageId: "default-windows-ami-id"
     });
   })
 
@@ -223,11 +233,23 @@ describe("launch configuration", () => {
     })
   })
 
-  test("agent is started using user data", () => {
+  test("agent is started using user data for linux", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
       UserData: {
         "Fn::Base64": "#!/bin/bash\n/opt/semaphore/agent/start.sh test-stack-config"
+      }
+    })
+  })
+
+  test("agent is started using user data for windows", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_OS", "windows");
+
+    const template = createTemplateWithOS(argumentStore, "windows");
+    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
+      UserData: {
+        "Fn::Base64": "<powershell>C:\\semaphore-agent\\start.ps1 test-stack-config</powershell>"
       }
     })
   })
@@ -492,17 +514,21 @@ describe("vpc and subnets", () => {
 })
 
 function createTemplate(argumentStore) {
+  return createTemplateWithOS(argumentStore, "ubuntu-focal");
+}
+
+function createTemplateWithOS(argumentStore, os) {
   const account = "dummyaccount";
   const region = "us-east-1";
   const customVpcId = "vpc-000000000-custom";
-  const defaultAmiName = `semaphore-agent-v${packageInfo.version}-ubuntu-focal-amd64-server-${hash()}`;
+  const defaultAmiName = `semaphore-agent-v${packageInfo.version}-${os}-amd64-server-${hash()}`;
   const amiLookupContextKey = `ami:account=${account}:filters.image-type.0=machine:filters.name.0=${defaultAmiName}:filters.state.0=available:owners.0=${account}:region=${region}`;
   const defaultVpcContextKey = `vpc-provider:account=${account}:filter.isDefault=true:region=${region}:returnAsymmetricSubnets=true`
   const customVpcContextKey = `vpc-provider:account=${account}:filter.vpc-id=${customVpcId}:region=${region}:returnAsymmetricSubnets=true`
 
   const app = new App({
     context: {
-      [amiLookupContextKey]: "default-ami-id",
+      [amiLookupContextKey]: `default-${os}-ami-id`,
       [defaultVpcContextKey]: {
         "vpcId": "vpc-00000-default",
         "vpcCidrBlock": "172.31.0.0/16",
