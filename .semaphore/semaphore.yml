@@ -85,7 +85,7 @@ blocks:
 
   - name: Linux launch
     dependencies:
-      - Prepare AWS dependencies
+      - Bootstrap
     task:
       secrets:
         - name: s1-agent-aws-stack-linux-token
@@ -100,7 +100,7 @@ blocks:
 
   - name: Windows launch
     dependencies:
-      - Prepare AWS dependencies
+      - Bootstrap
     task:
       secrets:
         - name: s1-agent-aws-stack-windows-token
