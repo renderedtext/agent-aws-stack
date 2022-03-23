@@ -61,6 +61,10 @@ else
 fi
 
 echo "Bootstrapping application..."
-npm run bootstrap -- aws://${aws_account_id}/${aws_region} \
+
+# For the bootstrap part, it doesn't really matter which stack
+# we are deploying, only that the CDK required resources are bootstrapped,
+# so we just use the linux config for this.
+SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-config.json npm run bootstrap -- aws://${aws_account_id}/${aws_region} \
   --cloudformation-execution-policies "${policy_arn}" \
   --verbose
