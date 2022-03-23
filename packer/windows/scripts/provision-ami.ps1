@@ -47,9 +47,3 @@ Write-Output "Moving scripts..."
 New-Item -ItemType Directory -Path C:\semaphore-agent\hooks > $null
 Move-Item C:\packer-tmp\terminate-instance.ps1 C:\semaphore-agent\hooks\shutdown.ps1
 Move-Item C:\packer-tmp\start-agent.ps1 C:\semaphore-agent\start.ps1
-
-# Install agent
-$env:SemaphoreAgentShutdownHook = "C:\\semaphore-agent\\hooks\\shutdown.ps1"
-$env:SemaphoreRegistrationToken = "DUMMY"
-$env:SemaphoreOrganization = "DUMMY"
-.\install.ps1
