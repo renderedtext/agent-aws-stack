@@ -32,6 +32,15 @@ git config --system core.autocrlf false
 Write-Output "Installing awscli..."
 msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi
 
+# Install cloudwatch agent
+Write-Output "Downloading and installing amazon cloudwatch agent..."
+Invoke-WebRequest -OutFile C:\packer-tmp\amazon-cloudwatch-agent.msi -Uri "https://s3.amazonaws.com/amazoncloudwatch-agent/windows/amd64/latest/amazon-cloudwatch-agent.msi"
+Start-Process C:\packer-tmp\amazon-cloudwatch-agent.msi -Wait
+sc.exe config AmazonCloudWatchAgent start= delayed-auto
+Write-Output "Starting amazon cloudwatch agent..."
+Copy-Item -Path C:\packer-tmp\amazon-cloudwatch-agent.json -Destination C:\ProgramData\Amazon\AmazonCloudWatchAgent
+& 'C:\Program Files\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent-ctl.ps1' -a fetch-config -m ec2 -c file:C:\ProgramData\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent.json -s
+
 # Download and unpack agent
 Write-Output "Creating C:\semaphore-agent..."
 New-Item -ItemType Directory -Path C:\semaphore-agent > $null

@@ -1,0 +1,42 @@
+{
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "C:\\cfn\\log\\cfn-init.log",
+            "log_group_name": "/semaphore/cfn-init",
+            "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f",
+            "retention_in_days": 30
+          },
+          {
+            "file_path": "C:\\ProgramData\\Amazon\\EC2-Windows\\Launch\\Log\\UserdataExecution.log",
+            "log_group_name": "/semaphore/EC2Launch/UserdataExecution",
+            "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f",
+            "retention_in_days": 30
+          },
+          {
+            "file_path": "C:\\semaphore-agent\\agent.log",
+            "log_group_name": "/semaphore/agent",
+            "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f",
+            "retention_in_days": 30
+          }
+        ]
+      },
+      "windows_events": {
+        "collect_list": [
+          {
+            "event_name": "System",
+            "event_levels": [
+              "INFORMATION",
+              "WARNING",
+              "ERROR"
+            ],
+            "log_group_name": "/semaphore/system",
+            "retention_in_days": 30
+          }
+        ]
+      }
+    }
+  }
+}

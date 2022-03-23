@@ -94,6 +94,11 @@ build {
     destination = "C:\\packer-tmp\\provision-ami.ps1"
   }
 
+  provisioner "file" {
+    source = "files/amazon-cloudwatch-agent.json"
+    destination = "C:\\packer-tmp\\amazon-cloudwatch-agent.json"
+  }
+
   provisioner "powershell" {
     inline = [
       "C:\\packer-tmp\\provision-ami.ps1 ${var.agent_version}",
