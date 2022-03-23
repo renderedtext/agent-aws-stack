@@ -25,13 +25,13 @@ if [[ ${images} == "0" ]]; then
   echo "No images published with name ${image_name}. Creating it..."
   make packer.init
 
-  packer_dir=linux
+  packer_os=linux
   if [[ ${os} -eq "windows" ]]; then
-    packer_dir=windows
+    packer_os=windows
   fi
 
-  make packer.validate OS=${packer_dir}
-  make packer.build OS=${packer_dir}
+  make packer.validate PACKER_OS=${packer_os}
+  make packer.build PACKER_OS=${packer_os}
 else
   echo "Image with name ${image_name} already exists. Not building anything."
 fi
