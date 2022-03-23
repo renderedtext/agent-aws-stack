@@ -72,14 +72,14 @@ blocks:
           commands:
             - ./ci/build-ami.sh windows amd64-server
 
-  - name: Prepare AWS dependencies
+  - name: Bootstrap
     dependencies:
       - Build
     task:
       secrets:
         - name: agent-aws-stack-tester-credentials
       jobs:
-        - name: Set up execution policy and bootstrap
+        - name: Bootstrap stack
           commands:
             - ./ci/create-execution-policy-and-bootstrap.sh $AWS_ACCOUNT_ID $AWS_DEFAULT_REGION
 

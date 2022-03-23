@@ -26,7 +26,7 @@ if [[ ${images} == "0" ]]; then
   make packer.init
 
   packer_dir=linux
-  if [[ ${os} -eq "windows"]]; then
+  if [[ ${os} -eq "windows" ]]; then
     packer_dir=windows
   fi
 
