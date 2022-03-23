@@ -24,8 +24,14 @@ images=$(echo $response | jq '.Images' | jq length)
 if [[ ${images} == "0" ]]; then
   echo "No images published with name ${image_name}. Creating it..."
   make packer.init
-  make packer.validate
-  make packer.build
+
+  packer_dir=linux
+  if [[ ${os} -eq "windows"]]; then
+    packer_dir=windows
+  fi
+
+  make packer.validate OS=${packer_dir}
+  make packer.build OS=${packer_dir}
 else
   echo "Image with name ${image_name} already exists. Not building anything."
 fi

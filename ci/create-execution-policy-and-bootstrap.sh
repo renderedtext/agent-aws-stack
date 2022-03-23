@@ -1,11 +1,5 @@
 #!/bin/bash
 
-policy_name=$1
-if [[ -z "${policy_name}" ]]; then
-  echo "Policy name is required. Exiting..."
-  exit 1
-fi
-
 aws_account_id=$2
 if [[ -z "${aws_account_id}" ]]; then
   echo "AWS account id is required. Exiting..."
@@ -18,6 +12,7 @@ if [[ -z "${aws_region}" ]]; then
   exit 1
 fi
 
+policy_name="agent-aws-stack-test-execution-policy"
 policy_arn="arn:aws:iam::${aws_account_id}:policy/${policy_name}"
 
 policy=$(aws iam get-policy --policy-arn "${policy_arn}" --query 'Policy.Arn' --output text)
