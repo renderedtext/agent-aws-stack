@@ -60,12 +60,13 @@ $agentToken = aws ssm get-parameter --region "$Region" --name "$agentTokenParamN
 # The installation script needs to be run by the semaphore user
 # because it downloads and sets up the toolbox at '$HOME/.toolbox'
 Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
+  Set-Location C:\semaphore-agent
   $env:SemaphoreRegistrationToken = $using:agentToken
   $env:SemaphoreEndpoint = $using:agentParams | jq -r '.endpoint'
   $env:SemaphoreAgentDisconnectAfterJob = $using:agentParams | jq -r '.disconnectAfterJob'
   $env:SemaphoreAgentDisconnectAfterIdleTimeout = $using:agentParams | jq -r '.disconnectAfterIdleTimeout'
   $env:SemaphoreAgentShutdownHook = "C:\\semaphore-agent\\hooks\\shutdown.ps1"
-  C:\semaphore-agent\install.ps1
+  .\install.ps1
 }
 
 $agentParams | jq '.envVars[]' | ForEach-Object -Process {

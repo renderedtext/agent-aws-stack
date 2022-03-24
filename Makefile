@@ -4,7 +4,7 @@ AMI_PREFIX=semaphore-agent
 AGENT_VERSION=v2.1.1
 PACKER_OS=linux
 VERSION=$(shell cat package.json | jq -r '.version')
-HASH=$(shell find Makefile packer/ -type f -exec md5sum "{}" + | awk '{print $$1}' | sort | md5sum | awk '{print $$1}')
+HASH=$(shell find Makefile packer/$(PACKER_OS) -type f -exec md5sum "{}" + | awk '{print $$1}' | sort | md5sum | awk '{print $$1}')
 
 venv.execute:
 	python3 -m venv venv && \
