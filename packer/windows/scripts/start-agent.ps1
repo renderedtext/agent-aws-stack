@@ -51,7 +51,7 @@ Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock { C
 # We grab the agent configuration and token from the SSM parameters
 # and put them into environment variables for the 'install.ps1' script to use.
 Write-Output "Fetching agent params..."
-$agentParams = aws ssm get-parameter --region "$Region" --name "$SSMParamName" --query Parameter.Value --output text
+$agentParams = aws ssm get-parameter --region "$Region" --name "$AgentConfigParamName" --query Parameter.Value --output text
 
 Write-Output "Fetching agent token..."
 $agentTokenParamName = $agentParams | jq -r '.agentTokenParameterName'
