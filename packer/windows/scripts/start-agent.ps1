@@ -45,8 +45,8 @@ winrm quickconfig -quiet
 # These scripts need to be run by the semaphore user
 # because they use the $HOME variable to properly configure
 # the '$HOME/.ssh' and '$HOME/.aws' folders.
-Invoke-Command -ComputerName localhost -ScriptBlock { C:\semaphore-agent\configure-github-ssh-keys.ps1 } -Credential $Credentials
-Invoke-Command -ComputerName localhost -ScriptBlock { C:\semaphore-agent\configure-aws-region.ps1 } -Credential $Credentials
+Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock { C:\semaphore-agent\configure-github-ssh-keys.ps1 }
+Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock { C:\semaphore-agent\configure-aws-region.ps1 $using:Region }
 
 # We grab the agent configuration and token from the SSM parameters
 # and put them into environment variables for the 'install.ps1' script to use.
@@ -55,15 +55,18 @@ $agentParams = aws ssm get-parameter --region "$Region" --name "$SSMParamName" -
 
 Write-Output "Fetching agent token..."
 $agentTokenParamName = $agentParams | jq -r '.agentTokenParameterName'
-$env:SemaphoreRegistrationToken = aws ssm get-parameter --region "$Region" --name "$agentTokenParamName" --query Parameter.Value --output text --with-decryption
-$env:SemaphoreEndpoint = $agentParams | jq -r '.endpoint'
-$env:SemaphoreAgentDisconnectAfterJob = $agentParams | jq -r '.disconnectAfterJob'
-$env:SemaphoreAgentDisconnectAfterIdleTimeout = $agentParams | jq -r '.disconnectAfterIdleTimeout'
-$env:SemaphoreAgentShutdownHook = "C:\\semaphore-agent\\hooks\\shutdown.ps1"
+$agentToken = aws ssm get-parameter --region "$Region" --name "$agentTokenParamName" --query Parameter.Value --output text --with-decryption
 
 # The installation script needs to be run by the semaphore user
 # because it downloads and sets up the toolbox at '$HOME/.toolbox'
-Invoke-Command -ComputerName localhost -ScriptBlock { C:\semaphore-agent\install.ps1 } -Credential $Credentials
+Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
+  $env:SemaphoreRegistrationToken = $using:agentToken
+  $env:SemaphoreEndpoint = $using:agentParams | jq -r '.endpoint'
+  $env:SemaphoreAgentDisconnectAfterJob = $using:agentParams | jq -r '.disconnectAfterJob'
+  $env:SemaphoreAgentDisconnectAfterIdleTimeout = $using:agentParams | jq -r '.disconnectAfterIdleTimeout'
+  $env:SemaphoreAgentShutdownHook = "C:\\semaphore-agent\\hooks\\shutdown.ps1"
+  C:\semaphore-agent\install.ps1
+}
 
 $agentParams | jq '.envVars[]' | ForEach-Object -Process {
   yq e -P -i ".env-vars = .env-vars + `"$_`"" C:\semaphore-agent\config.yaml
