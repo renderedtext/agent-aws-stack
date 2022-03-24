@@ -80,23 +80,15 @@ build {
   ]
 
   provisioner "file" {
-    source = "scripts/terminate-instance.ps1"
-    destination = "C:\\packer-tmp\\terminate-instance.ps1"
-  }
-
-  provisioner "file" {
-    source = "scripts/start-agent.ps1"
-    destination = "C:\\packer-tmp\\start-agent.ps1"
-  }
-
-  provisioner "file" {
-    source = "scripts/provision-ami.ps1"
-    destination = "C:\\packer-tmp\\provision-ami.ps1"
-  }
-
-  provisioner "file" {
-    source = "files/amazon-cloudwatch-agent.json"
-    destination = "C:\\packer-tmp\\amazon-cloudwatch-agent.json"
+    destination = "C:\\packer-tmp\\"
+    sources = [
+      "scripts/terminate-instance.ps1",
+      "scripts/start-agent.ps1",
+      "scripts/provision-ami.ps1",
+      "scripts/configure-aws-region.ps1",
+      "scripts/configure-github-ssh-keys.ps1",
+      "files/amazon-cloudwatch-agent.json"
+    ]
   }
 
   provisioner "powershell" {

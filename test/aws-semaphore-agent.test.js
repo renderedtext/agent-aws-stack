@@ -128,6 +128,15 @@ describe("instance profile", () => {
             Action: "kms:Decrypt",
             Effect: "Allow",
             Resource: "arn:aws:kms:*:*:key/dummy-kms-key-id"
+          },
+          {
+            Action: [
+              "logs:CreateLogGroup",
+              "logs:PutRetentionPolicy",
+              "logs:DeleteLogGroup"
+            ],
+            Effect: "Allow",
+            Resource: "arn:aws:logs:*:*:log-group:/semaphore/*"
           }
         ],
         Version: Match.anyValue()
@@ -166,6 +175,15 @@ describe("instance profile", () => {
             Action: "kms:Decrypt",
             Effect: "Allow",
             Resource: "arn:aws:kms:*:*:key/dummy-kms-key-id"
+          },
+          {
+            Action: [
+              "logs:CreateLogGroup",
+              "logs:PutRetentionPolicy",
+              "logs:DeleteLogGroup"
+            ],
+            Effect: "Allow",
+            Resource: "arn:aws:logs:*:*:log-group:/semaphore/*"
           },
           {
             Action: [
