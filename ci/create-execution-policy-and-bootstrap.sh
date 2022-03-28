@@ -1,23 +1,18 @@
 #!/bin/bash
 
-policy_name=$1
-if [[ -z "${policy_name}" ]]; then
-  echo "Policy name is required. Exiting..."
-  exit 1
-fi
-
-aws_account_id=$2
+aws_account_id=$1
 if [[ -z "${aws_account_id}" ]]; then
   echo "AWS account id is required. Exiting..."
   exit 1
 fi
 
-aws_region=$3
+aws_region=$2
 if [[ -z "${aws_region}" ]]; then
   echo "AWS account region is required. Exiting..."
   exit 1
 fi
 
+policy_name="agent-aws-stack-test-execution-policy"
 policy_arn="arn:aws:iam::${aws_account_id}:policy/${policy_name}"
 
 policy=$(aws iam get-policy --policy-arn "${policy_arn}" --query 'Policy.Arn' --output text)
@@ -66,6 +61,10 @@ else
 fi
 
 echo "Bootstrapping application..."
-npm run bootstrap -- aws://${aws_account_id}/${aws_region} \
+
+# For the bootstrap part, it doesn't really matter which stack
+# we are deploying, only that the CDK required resources are bootstrapped,
+# so we just use the linux config for this.
+SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-config.json npm run bootstrap -- aws://${aws_account_id}/${aws_region} \
   --cloudformation-execution-policies "${policy_arn}" \
   --verbose

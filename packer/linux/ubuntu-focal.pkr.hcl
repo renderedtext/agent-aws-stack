@@ -45,9 +45,7 @@ source "amazon-ebs" "ubuntu" {
   tags = {
     Name = "Semaphore agent"
     Version = "${var.stack_version}"
-    Arch = "${var.arch}"
     Agent_Version = "${var.agent_version}"
-    OS_Version = "Ubuntu Bionic 18.04"
     Hash = "${var.hash}"
   }
 
@@ -58,7 +56,8 @@ source "amazon-ebs" "ubuntu" {
     owners = ["099720109477"]
 
     filters = {
-      name                = "ubuntu/images/*ubuntu-focal-20.04-${var.arch}-*"
+      name                = "ubuntu/images/*ubuntu-focal-20.04-*"
+      architecture        = "${var.arch}"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
     }

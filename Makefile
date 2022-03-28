@@ -1,9 +1,10 @@
 AWS_REGION=us-east-1
-AMI_ARCH=amd64-server
+AMI_ARCH=x86_64
 AMI_PREFIX=semaphore-agent
-AGENT_VERSION=v2.0.19
+AGENT_VERSION=v2.1.1
+PACKER_OS=linux
 VERSION=$(shell cat package.json | jq -r '.version')
-HASH=$(shell find Makefile packer/ -type f -exec md5sum "{}" + | awk '{print $$1}' | sort | md5sum | awk '{print $$1}')
+HASH=$(shell find Makefile packer/$(PACKER_OS) -type f -exec md5sum "{}" + | awk '{print $$1}' | sort | md5sum | awk '{print $$1}')
 
 venv.execute:
 	python3 -m venv venv && \
@@ -15,11 +16,11 @@ venv.execute:
 	cd -
 
 packer.fmt:
-	cd packer && packer fmt . && cd -
+	cd packer/$(PACKER_OS) && packer fmt . && cd -
 
 packer.validate:
 	$(MAKE) venv.execute COMMAND='\
-		cd packer && \
+		cd packer/$(PACKER_OS) && \
 		packer validate \
 			-var "stack_version=v$(VERSION)" \
 			-var "agent_version=$(AGENT_VERSION)" \
@@ -30,11 +31,11 @@ packer.validate:
 			.'
 
 packer.init:
-	$(MAKE) venv.execute COMMAND='cd packer && packer init .'
+	$(MAKE) venv.execute COMMAND='cd packer/$(PACKER_OS) && packer init .'
 
 packer.build:
 	$(MAKE) venv.execute COMMAND='\
-		cd packer && \
+		cd packer/$(PACKER_OS) && \
 		packer build \
 			-var "stack_version=v$(VERSION)" \
 			-var "agent_version=$(AGENT_VERSION)" \
@@ -42,7 +43,7 @@ packer.build:
 			-var "region=$(AWS_REGION)" \
 			-var "ami_prefix=$(AMI_PREFIX)" \
 			-var "arch=$(AMI_ARCH)" \
-			ubuntu-focal.pkr.hcl'
+			.'
 
 ansible.lint:
-	$(MAKE) venv.execute COMMAND='cd packer && ansible-lint'
+	$(MAKE) venv.execute COMMAND='cd packer/linux && ansible-lint'

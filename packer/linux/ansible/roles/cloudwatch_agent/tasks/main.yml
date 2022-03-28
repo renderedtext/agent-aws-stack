@@ -1,0 +1,20 @@
+---
+- name: Download cloudwatch agent
+  get_url:
+    url : "{{ cloudwatch_agent_url }}"
+    dest: /tmp/cloudwatch-agent.deb
+    mode: '0755'
+    force: yes
+
+- name: Install cloudwatch agent
+  command: dpkg -i -E /tmp/cloudwatch-agent.deb
+
+- name: Copy cloudwatch agent configuration
+  copy:
+    src: cloudwatch-agent-config.json
+    dest: /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+- name: Enable cloudwatch agent service
+  service:
+    name: amazon-cloudwatch-agent
+    enabled: true

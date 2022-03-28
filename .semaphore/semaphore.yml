@@ -56,55 +56,74 @@ blocks:
     task:
       secrets:
         - name: agent-aws-stack-tester-credentials
+      prologue:
+        commands:
+          - checkout
+          - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
+          - sudo apt-get update && sudo apt-get -y install python3-venv
+          - curl -sL https://releases.hashicorp.com/packer/1.7.9/packer_1.7.9_linux_amd64.zip -o /tmp/packer_1.7.9_linux_amd64.zip
+          - unzip /tmp/packer_1.7.9_linux_amd64.zip -d /tmp/
+          - sudo mv /tmp/packer /usr/local/bin/
       jobs:
-        - name: Build AMI
+        - name: Build Linux AMI
           commands:
-            - checkout
-            - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
-            - sudo apt-get update && sudo apt-get -y install python3-venv
-            - curl -sL https://releases.hashicorp.com/packer/1.7.9/packer_1.7.9_linux_amd64.zip -o /tmp/packer_1.7.9_linux_amd64.zip
-            - unzip /tmp/packer_1.7.9_linux_amd64.zip -d /tmp/
-            - sudo mv /tmp/packer /usr/local/bin/
-            - ./ci/build-ami.sh ubuntu-focal amd64-server
+            - ./ci/build-ami.sh ubuntu-focal x86_64
+        - name: Build Windows AMI
+          commands:
+            - ./ci/build-ami.sh windows x86_64
 
-  - name: Launch
+  - name: Bootstrap
     dependencies:
       - Build
     task:
       secrets:
-        - name: s1-agent-aws-stack-testing-token
         - name: agent-aws-stack-tester-credentials
-      env_vars:
-        - name: SEMAPHORE_AGENT_STACK_NAME
-          value: agent-aws-stack-testing
-        - name: SEMAPHORE_ORGANIZATION
-          value: semaphore
-        - name: SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME
-          value: s1-agent-aws-stack-testing-token
-        - name: SEMAPHORE_AGENT_USE_DYNAMIC_SCALING
-          value: 'false'
-        - name: SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB
-          value: 'false'
-        - name: CLOUDFORMATION_EXECUTION_POLICY_NAME
-          value: agent-aws-stack-test-execution-policy
+      jobs:
+        - name: Bootstrap stack
+          commands:
+            - checkout
+            - cache restore
+            - ./ci/create-execution-policy-and-bootstrap.sh $AWS_ACCOUNT_ID $AWS_DEFAULT_REGION
+
+  - name: Linux launch
+    dependencies:
+      - Bootstrap
+    task:
+      secrets:
+        - name: s1-agent-aws-stack-linux-token
+        - name: agent-aws-stack-tester-credentials
       jobs:
         - name: Launch stack
           commands:
             - checkout
             - cache restore
-            - ./ci/create-ssm-param.sh $SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME $TOKEN
-            - ./ci/create-execution-policy-and-bootstrap.sh $CLOUDFORMATION_EXECUTION_POLICY_NAME $AWS_ACCOUNT_ID $AWS_DEFAULT_REGION
-            - npm run deploy:ci
+            - ./ci/create-ssm-param.sh s1-agent-aws-stack-linux-token $TOKEN
+            - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-config.json npm run deploy:ci
 
-  - name: Tests
+  - name: Windows launch
     dependencies:
-      - Launch
+      - Bootstrap
+    task:
+      secrets:
+        - name: s1-agent-aws-stack-windows-token
+        - name: agent-aws-stack-tester-credentials
+      jobs:
+        - name: Launch stack
+          commands:
+            - checkout
+            - cache restore
+            - ./ci/create-ssm-param.sh s1-agent-aws-stack-windows-token $TOKEN
+            - SEMAPHORE_AGENT_STACK_CONFIG=./ci/windows-config.json npm run deploy:ci
+
+  - name: Linux tests
+    dependencies:
+      - Linux launch
     execution_time_limit:
       minutes: 10
     task:
       agent:
         machine:
-          type: s1-agent-aws-stack-testing
+          type: s1-agent-aws-stack-linux
       epilogue:
         always:
           commands:
@@ -117,27 +136,36 @@ blocks:
             - checkout
             - goss -g goss/goss.yaml --vars goss/vars.yml validate --max-concurrent 1 --format junit > results.xml
 
+  - name: Windows tests
+    dependencies:
+      - Windows launch
+    execution_time_limit:
+      minutes: 30
+    task:
+      agent:
+        machine:
+          type: s1-agent-aws-stack-windows
+      jobs:
+        - name: Run commands
+          commands:
+            - checkout
+            - Write-Output 'hello'
+
 after_pipeline:
   task:
     secrets:
       - name: agent-aws-stack-tester-credentials
-    env_vars:
-      - name: SEMAPHORE_AGENT_STACK_NAME
-        value: agent-aws-stack-testing
-      - name: SEMAPHORE_ORGANIZATION
-        value: semaphore
-      - name: SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME
-        value: s1-agent-aws-stack-testing-token
-      - name: SEMAPHORE_AGENT_USE_DYNAMIC_SCALING
-        value: 'false'
-      - name: SEMAPHORE_AGENT_DISCONNECT_AFTER_JOB
-        value: 'false'
     jobs:
       - name: Submit Reports
         commands:
           - test-results gen-pipeline-report
-      - name: Destroy AWS stack
+      - name: Destroy Linux stack
         commands:
           - checkout
           - cache restore
-          - npm run destroy:ci
+          - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-config.json npm run destroy:ci
+      - name: Destroy Windows stack
+        commands:
+          - checkout
+          - cache restore
+          - SEMAPHORE_AGENT_STACK_CONFIG=./ci/windows-config.json npm run destroy:ci
