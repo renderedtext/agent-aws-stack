@@ -78,7 +78,8 @@
         "lambda:AddPermission",
         "lambda:RemovePermission",
         "lambda:DeleteFunction",
-        "lambda:InvokeFunction"
+        "lambda:InvokeFunction",
+        "lambda:UpdateFunctionCode"
       ],
       "Resource": "arn:aws:lambda:*:*:function:*"
     },
