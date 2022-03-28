@@ -4,7 +4,7 @@ This project is a CDK application used to deploy a fleet of Semaphore agents in 
 
 ## Features
 
-- Run self-hosted agents in Linux-based machines
+- Run self-hosted agents in Linux and Windows machines
 - Dynamically increase and decrease the number of agents available based on your job demand
 - Deploy multiple stacks of agents, one for each self-hosted agent type
 - Access the agent EC2 instances through SSH or using AWS Systems Manager Session Manager

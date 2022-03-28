@@ -10,19 +10,16 @@ variable "hash" {
   type = string
 }
 
-variable "ami_prefix" {
-  type    = string
-  default = "semaphore-agent"
+variable "arch" {
+  type = string
 }
 
-variable "arch" {
+variable "ami_prefix" {
   type    = string
-  default = "amd64-server"
 }
 
 variable "region" {
   type    = string
-  default = "us-east-1"
 }
 
 variable "instance_type" {
@@ -52,9 +49,7 @@ source "amazon-ebs" "windows" {
   tags = {
     Name = "Semaphore agent"
     Version = "${var.stack_version}"
-    Arch = "${var.arch}"
     Agent_Version = "${var.agent_version}"
-    OS_Version = "Windows Server 2019"
     Hash = "${var.hash}"
   }
 
@@ -66,6 +61,7 @@ source "amazon-ebs" "windows" {
 
     filters = {
       name                = "Windows_Server-2019-English-Full-Containers*"
+      architecture        = "${var.arch}"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
     }

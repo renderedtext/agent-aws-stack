@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 
 $Region = $args[0]
 if (-not $region) {
-  throw "Region is required"
+  throw "AWS region is required"
 }
 
 Write-Output "Configuring .aws folder"

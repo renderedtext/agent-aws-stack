@@ -67,10 +67,10 @@ blocks:
       jobs:
         - name: Build Linux AMI
           commands:
-            - ./ci/build-ami.sh ubuntu-focal amd64-server
+            - ./ci/build-ami.sh ubuntu-focal x86_64
         - name: Build Windows AMI
           commands:
-            - ./ci/build-ami.sh windows amd64-server
+            - ./ci/build-ami.sh windows x86_64
 
   - name: Bootstrap
     dependencies:

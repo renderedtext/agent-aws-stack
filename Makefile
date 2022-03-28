@@ -1,5 +1,5 @@
 AWS_REGION=us-east-1
-AMI_ARCH=amd64-server
+AMI_ARCH=x86_64
 AMI_PREFIX=semaphore-agent
 AGENT_VERSION=v2.1.1
 PACKER_OS=linux
