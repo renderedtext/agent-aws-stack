@@ -4,6 +4,14 @@ agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
+
+# We still don't have a way to programatically create agent types, so we need to share the same agent type.
+# To avoid running into issues where different pipelines might be doing something different things to the
+# same stack at the same time, we use a queue.
+queue:
+  name: Testing
+  scope: project
+
 blocks:
   - name: Install dependencies
     dependencies: []
@@ -148,6 +156,7 @@ blocks:
       jobs:
         - name: Run commands
           commands:
+            - cache
             - checkout
             - Write-Output 'hello'
 
