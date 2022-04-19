@@ -15,6 +15,10 @@
       - gnupg
       - tree
       - wget
+      - python3-pip
+      - build-essential
+      - libssl-dev
+      - libffi-dev
     update_cache: yes
 
 - name: Install yq

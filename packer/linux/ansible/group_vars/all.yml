@@ -10,3 +10,8 @@ docker_compose_version: "1.29.2"
 docker_compose_url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-Linux-x86_64"
 yq_url: "https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd64"
 cloudwatch_agent_url: https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+tmp_root_dir: "/tmp"
+helm_url: "https://get.helm.sh/helm-v3.3.4-linux-amd64.tar.gz"
+golang_url: "https://dl.google.com/go/go1.17.7.linux-amd64.tar.gz"
+vault_apt_repository: "deb [arch=amd64] https://apt.releases.hashicorp.com focal main"
+vault_apt_gpg_key: "https://apt.releases.hashicorp.com/gpg"

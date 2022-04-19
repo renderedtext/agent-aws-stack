@@ -14,4 +14,7 @@
     - docker
     - users
     - agent
+    - helm
+    - dev-tools
+    - vault
     - cleanup

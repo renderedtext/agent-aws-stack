@@ -1,0 +1,32 @@
+---
+- name: Add Vault GPG apt Key
+  apt_key:
+    url: "{{ vault_apt_gpg_key }}"
+    state: present
+
+- name: Add Vault Repository
+  apt_repository:
+    repo: "{{ vault_apt_repository }}"
+    state: present
+    update_cache: yes
+
+- name: Install Vault
+  apt:
+    pkg:
+      - vault
+
+- name: Copy vault-setup scripts
+  copy:
+    src: vault-setup
+    dest: "/usr/local/bin"
+    mode: "0755"
+    owner: semaphore
+    group: semaphore
+
+- name: Copy vault-sem-get-secret scripts
+  copy:
+    src: vault-sem-get-secret
+    dest: "/usr/local/bin"
+    mode: "0755"
+    owner: semaphore
+    group: semaphore

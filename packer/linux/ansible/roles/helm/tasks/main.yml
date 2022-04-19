@@ -1,0 +1,12 @@
+---
+- name: Download helm
+  unarchive:
+    src: "{{ helm_url }}"
+    dest: "{{ tmp_root_dir }}"
+    mode: "0755"
+    remote_src: True
+    owner: semaphore
+    group: semaphore
+
+- name: Install helm
+  command: "cp {{ tmp_root_dir }}/linux-amd64/helm /usr/local/bin"
