@@ -9,6 +9,7 @@
     - upgrade
     - system_tools
     - python
+    - erlang
     - awscli
     - cloudwatch_agent
     - docker

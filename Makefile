@@ -3,6 +3,7 @@ AMI_ARCH=x86_64
 AMI_PREFIX=semaphore-agent
 AGENT_VERSION=v2.1.1
 PACKER_OS=linux
+ON_PREM_INSTALLATION=false
 VERSION=$(shell cat package.json | jq -r '.version')
 HASH=$(shell find Makefile packer/$(PACKER_OS) -type f -exec md5sum "{}" + | awk '{print $$1}' | sort | md5sum | awk '{print $$1}')
 
@@ -28,6 +29,7 @@ packer.validate:
 			-var "region=$(AWS_REGION)" \
 			-var "ami_prefix=$(AMI_PREFIX)" \
 			-var "arch=$(AMI_ARCH)" \
+			-var "on_prem_installation=$(ON_PREM_INSTALLATION)" \
 			.'
 
 packer.init:
@@ -43,6 +45,7 @@ packer.build:
 			-var "region=$(AWS_REGION)" \
 			-var "ami_prefix=$(AMI_PREFIX)" \
 			-var "arch=$(AMI_ARCH)" \
+			-var "on_prem_installation=$(ON_PREM_INSTALLATION)" \
 			.'
 
 ansible.lint:
