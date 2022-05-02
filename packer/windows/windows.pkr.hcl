@@ -27,6 +27,11 @@ variable "instance_type" {
   default = "t2.micro"
 }
 
+variable "on_prem_installation" {
+  type    = string
+  default = "false"
+}
+
 packer {
   required_plugins {
     amazon = {
