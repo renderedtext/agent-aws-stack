@@ -1,6 +1,6 @@
 {
   "name": "aws-semaphore-agent",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "bin": {
     "aws-semaphore-agent": "bin/aws-semaphore-agent.js"
   },
@@ -25,8 +25,8 @@
     "jest": "^27.5.1"
   },
   "dependencies": {
-    "aws-cdk": "^2.17.0",
-    "aws-cdk-lib": "^2.17.0",
-    "constructs": "^10.0.91"
+    "aws-cdk": "^2.23.0",
+    "aws-cdk-lib": "^2.23.0",
+    "constructs": "^10.1.4"
   }
 }
