@@ -6,6 +6,10 @@ variable "agent_version" {
   type = string
 }
 
+variable "toolbox_version" {
+  type = string
+}
+
 variable "hash" {
   type = string
 }
@@ -55,6 +59,7 @@ source "amazon-ebs" "windows" {
     Name = "Semaphore agent"
     Version = "${var.stack_version}"
     Agent_Version = "${var.agent_version}"
+    Toolbox_Version = "${var.toolbox_version}"
     Hash = "${var.hash}"
   }
 
@@ -94,7 +99,7 @@ build {
 
   provisioner "powershell" {
     inline = [
-      "C:\\packer-tmp\\provision-ami.ps1 ${var.agent_version}",
+      "C:\\packer-tmp\\provision-ami.ps1 ${var.agent_version} ${var.toolbox_version}",
       "Remove-Item -Path C:\\packer-tmp -Recurse -Force",
       "C:\\ProgramData\\Amazon\\EC2-Windows\\Launch\\Scripts\\InitializeInstance.ps1 -Schedule",
       "C:\\ProgramData\\Amazon\\EC2-Windows\\Launch\\Scripts\\SysprepInstance.ps1 -NoShutdown"

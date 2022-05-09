@@ -6,6 +6,12 @@ if (-not $agentVersion) {
   Exit 1
 }
 
+$toolboxVersion = $args[1]
+if (-not $toolboxVersion) {
+  Write-Output "Toolbox version not specified. Exiting..."
+  Exit 1
+}
+
 # Install chocolatey
 Write-Output "Installing chocolatey package manager..."
 Set-ExecutionPolicy Bypass -Scope Process -Force
@@ -58,3 +64,11 @@ Move-Item C:\packer-tmp\terminate-instance.ps1 C:\semaphore-agent\hooks\shutdown
 Move-Item C:\packer-tmp\start-agent.ps1 C:\semaphore-agent\start.ps1
 Move-Item C:\packer-tmp\configure-aws-region.ps1 C:\semaphore-agent\configure-aws-region.ps1
 Move-Item C:\packer-tmp\configure-github-ssh-keys.ps1 C:\semaphore-agent\configure-github-ssh-keys.ps1
+
+# The agent is installed when the instance starts, but the toolbox version
+# is specified during the AMI provisioning phase. To pass that information
+# to the agent start script, we place a 'toolbox_version' file in the
+# agent installation directory. That file will be read by the start-agent.ps1 script
+# when installing the agent and the specified toolbox version will be installed.
+New-Item -ItemType File -Path C:\semaphore-agent\toolbox_version
+Set-Content -Path C:\semaphore-agent\toolbox_version -Value "$toolboxVersion"

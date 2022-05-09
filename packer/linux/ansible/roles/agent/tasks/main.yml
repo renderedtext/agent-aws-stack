@@ -36,6 +36,7 @@
   environment:
     SEMAPHORE_AGENT_INSTALLATION_USER: "semaphore"
     SEMAPHORE_AGENT_SHUTDOWN_HOOK: "{{ agent_hooks_dir }}/shutdown"
+    SEMAPHORE_TOOLBOX_VERSION: "{{ toolbox_version }}"
     SEMAPHORE_AGENT_START: "false"
     SEMAPHORE_REGISTRATION_TOKEN: "DUMMY"
     SEMAPHORE_ORGANIZATION: "DUMMY"
