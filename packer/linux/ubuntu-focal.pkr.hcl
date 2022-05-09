@@ -27,6 +27,11 @@ variable "instance_type" {
   default = "t2.micro"
 }
 
+variable "on_prem_installation" {
+  type    = string
+  default = "false"
+}
+
 packer {
   required_plugins {
     amazon = {
@@ -77,7 +82,8 @@ build {
     extra_arguments = [
       "--skip-tags",
       "reboot",
-      "--extra-vars", "agent_version=${var.agent_version}"
+      "-e agent_version=${var.agent_version}",
+      "-e on_prem_installation=${var.on_prem_installation}"
     ]
   }
 }
