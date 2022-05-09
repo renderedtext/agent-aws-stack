@@ -66,6 +66,7 @@ Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
   $env:SemaphoreAgentDisconnectAfterJob = $using:agentParams | jq -r '.disconnectAfterJob'
   $env:SemaphoreAgentDisconnectAfterIdleTimeout = $using:agentParams | jq -r '.disconnectAfterIdleTimeout'
   $env:SemaphoreAgentShutdownHook = "C:\\semaphore-agent\\hooks\\shutdown.ps1"
+  $env:SemaphoreToolboxVersion = Get-Content -Path C:\semaphore-agent\toolbox_version
   .\install.ps1
 }
 

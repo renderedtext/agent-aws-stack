@@ -2,6 +2,7 @@ AWS_REGION=us-east-1
 AMI_ARCH=x86_64
 AMI_PREFIX=semaphore-agent
 AGENT_VERSION=v2.1.1
+TOOLBOX_VERSION=v1.16.20
 PACKER_OS=linux
 ON_PREM_INSTALLATION=false
 VERSION=$(shell cat package.json | jq -r '.version')
@@ -25,6 +26,7 @@ packer.validate:
 		packer validate \
 			-var "stack_version=v$(VERSION)" \
 			-var "agent_version=$(AGENT_VERSION)" \
+			-var "toolbox_version=$(TOOLBOX_VERSION)" \
 			-var "hash=$(HASH)" \
 			-var "region=$(AWS_REGION)" \
 			-var "ami_prefix=$(AMI_PREFIX)" \
@@ -41,6 +43,7 @@ packer.build:
 		packer build \
 			-var "stack_version=v$(VERSION)" \
 			-var "agent_version=$(AGENT_VERSION)" \
+			-var "toolbox_version=$(TOOLBOX_VERSION)" \
 			-var "hash=$(HASH)" \
 			-var "region=$(AWS_REGION)" \
 			-var "ami_prefix=$(AMI_PREFIX)" \

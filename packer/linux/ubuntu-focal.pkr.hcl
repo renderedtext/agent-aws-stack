@@ -6,6 +6,10 @@ variable "agent_version" {
   type = string
 }
 
+variable "toolbox_version" {
+  type = string
+}
+
 variable "hash" {
   type = string
 }
@@ -51,6 +55,7 @@ source "amazon-ebs" "ubuntu" {
     Name = "Semaphore agent"
     Version = "${var.stack_version}"
     Agent_Version = "${var.agent_version}"
+    Toolbox_Version = "${var.toolbox_version}"
     Hash = "${var.hash}"
   }
 
@@ -83,6 +88,7 @@ build {
       "--skip-tags",
       "reboot",
       "-e agent_version=${var.agent_version}",
+      "-e toolbox_version=${var.toolbox_version}",
       "-e on_prem_installation=${var.on_prem_installation}"
     ]
   }
