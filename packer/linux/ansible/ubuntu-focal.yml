@@ -1,5 +1,5 @@
 ---
-- name: Ubuntu Bionic 18.04
+- name: Ubuntu Focal 20.04
   hosts: all
   vars:
     container_user: semaphore
