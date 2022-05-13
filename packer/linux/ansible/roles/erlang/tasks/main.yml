@@ -1,19 +1,19 @@
 ---
 - name: Add Erlang GPG apt Key
-  when: on_prem_installation | bool
+  when: install_erlang | bool
   apt_key:
     url: "{{ erlang_apt_gpg_key }}"
     state: present
 
 - name: Add Erlang Repository
-  when: on_prem_installation | bool
+  when: install_erlang | bool
   apt_repository:
     repo: "{{ erlang_apt_repository }}"
     state: present
     update_cache: yes
 
 - name: Install Erlang
-  when: on_prem_installation | bool
+  when: install_erlang | bool
   apt:
     pkg:
       - erlang
