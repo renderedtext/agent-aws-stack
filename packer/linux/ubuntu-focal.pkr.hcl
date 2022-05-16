@@ -31,9 +31,9 @@ variable "instance_type" {
   default = "t2.micro"
 }
 
-variable "on_prem_installation" {
+variable "install_erlang" {
   type    = string
-  default = "false"
+  default = "true"
 }
 
 packer {
@@ -89,7 +89,7 @@ build {
       "reboot",
       "-e agent_version=${var.agent_version}",
       "-e toolbox_version=${var.toolbox_version}",
-      "-e on_prem_installation=${var.on_prem_installation}"
+      "-e install_erlang=${var.install_erlang}"
     ]
   }
 }

@@ -31,9 +31,9 @@ variable "instance_type" {
   default = "t2.micro"
 }
 
-variable "on_prem_installation" {
+variable "install_erlang" {
   type    = string
-  default = "false"
+  default = "true"
 }
 
 packer {
