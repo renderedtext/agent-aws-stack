@@ -7,6 +7,9 @@ if (-not $Region) {
 
 Write-Output "Configuring .aws folder"
 $awsFileContent = @"
+[default]
+region = $Region
+
 [profile instance]
 region = $Region
 credential_source = Ec2InstanceMetadata
