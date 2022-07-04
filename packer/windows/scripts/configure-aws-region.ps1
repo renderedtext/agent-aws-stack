@@ -1,14 +1,15 @@
 $ErrorActionPreference = 'Stop'
 
 $Region = $args[0]
-if (-not $region) {
+if (-not $Region) {
   throw "AWS region is required"
 }
 
 Write-Output "Configuring .aws folder"
 $awsFileContent = @"
-[default]
+[profile instance]
 region = $Region
+credential_source = Ec2InstanceMetadata
 "@
 
 if (-not (Test-Path "$HOME\.aws")) {

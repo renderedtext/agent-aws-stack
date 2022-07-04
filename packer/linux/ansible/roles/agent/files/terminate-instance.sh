@@ -6,10 +6,12 @@ if [[ $SEMAPHORE_AGENT_SHUTDOWN_REASON == "IDLE" ]]; then
   aws autoscaling terminate-instance-in-auto-scaling-group \
     --region "$region" \
     --instance-id "$instance_id" \
+    --profile "instance" \
     --should-decrement-desired-capacity
 else
   aws autoscaling terminate-instance-in-auto-scaling-group \
     --region "$region" \
     --instance-id "$instance_id" \
+    --profile "instance" \
     --no-should-decrement-desired-capacity
 fi

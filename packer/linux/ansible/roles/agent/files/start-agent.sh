@@ -32,8 +32,9 @@ region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error
 
 sudo mkdir -p /home/semaphore/.aws
 sudo tee -a /home/semaphore/.aws/config > /dev/null <<EOT
-[default]
+[profile instance]
 region = $region
+credential_source = Ec2InstanceMetadata
 EOT
 sudo chown -R semaphore:semaphore /home/semaphore/.aws
 

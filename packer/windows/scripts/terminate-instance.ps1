@@ -3,7 +3,7 @@ $InstanceId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata
 $Region = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/placement/region).content
 
 if ($env:SEMAPHORE_AGENT_SHUTDOWN_REASON -eq "IDLE") {
-  aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" 2> $null
+  aws autoscaling terminate-instance-in-auto-scaling-group --profile "instance" --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" 2> $null
 } else {
-  aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--no-should-decrement-desired-capacity" 2> $null
+  aws autoscaling terminate-instance-in-auto-scaling-group --profile "instance" --region "$Region" --instance-id "$InstanceId" "--no-should-decrement-desired-capacity" 2> $null
 }
