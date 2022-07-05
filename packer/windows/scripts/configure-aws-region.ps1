@@ -20,7 +20,7 @@ $awsFileContent = @"
 [default]
 region = $Region
 
-[profile instance]
+[profile semaphore__agent-aws-stack-instance-profile]
 region = $Region
 role_arn = arn:aws:iam::$AccountId`:role/$RoleName
 credential_source = Ec2InstanceMetadata

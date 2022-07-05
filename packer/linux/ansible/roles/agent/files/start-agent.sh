@@ -37,7 +37,7 @@ sudo tee -a /home/semaphore/.aws/config > /dev/null <<EOT
 [default]
 region = $region
 
-[profile instance]
+[profile semaphore__agent-aws-stack-instance-profile]
 region = $region
 role_arn = arn:aws:iam::$account_id:role/$role_name
 credential_source = Ec2InstanceMetadata
