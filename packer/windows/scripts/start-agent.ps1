@@ -24,6 +24,8 @@ if (-not $AgentConfigParamName) {
 
 $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).Content
 $Region = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/placement/region).Content
+$RoleName = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/iam/security-credentials).Content
+$AccountId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/dynamic/instance-identity/document).Content | jq -r '.accountId'
 
 # Create semaphore password and user
 # This is the user we will use to run the nssm service for the agent
@@ -46,7 +48,9 @@ winrm quickconfig -quiet
 # because they use the $HOME variable to properly configure
 # the '$HOME/.ssh' and '$HOME/.aws' folders.
 Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock { C:\semaphore-agent\configure-github-ssh-keys.ps1 }
-Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock { C:\semaphore-agent\configure-aws-region.ps1 $using:Region }
+Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
+  C:\semaphore-agent\configure-aws-region.ps1 $using:Region $using:AccountId $using:RoleName
+}
 
 # We grab the agent configuration and token from the SSM parameters
 # and put them into environment variables for the 'install.ps1' script to use.

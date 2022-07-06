@@ -29,11 +29,18 @@ sudo chown -R semaphore:semaphore /home/semaphore/.ssh
 echo "Configuring .aws folder"
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
 region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/placement/region")
+role_name=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/iam/security-credentials")
+account_id=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/dynamic/instance-identity/document" | jq -r '.accountId')
 
 sudo mkdir -p /home/semaphore/.aws
 sudo tee -a /home/semaphore/.aws/config > /dev/null <<EOT
 [default]
 region = $region
+
+[profile semaphore__agent-aws-stack-instance-profile]
+region = $region
+role_arn = arn:aws:iam::$account_id:role/$role_name
+credential_source = Ec2InstanceMetadata
 EOT
 sudo chown -R semaphore:semaphore /home/semaphore/.aws
 

@@ -74,7 +74,11 @@ describe("SSM parameter", () => {
         agentTokenParameterName: "test-token",
         disconnectAfterJob: "true",
         disconnectAfterIdleTimeout: "300",
-        envVars: ["SEMAPHORE_CACHE_BACKEND=s3", "SEMAPHORE_CACHE_S3_BUCKET=test-cache-bucket"]
+        envVars: [
+          "SEMAPHORE_CACHE_BACKEND=s3",
+          "SEMAPHORE_CACHE_AWS_PROFILE=semaphore__agent-aws-stack-instance-profile",
+          "SEMAPHORE_CACHE_S3_BUCKET=test-cache-bucket"
+        ]
       })
     });
   });
@@ -108,6 +112,11 @@ describe("instance profile", () => {
       PolicyName: "test-stack-instance-profile-policy",
       PolicyDocument: {
         Statement: [
+          {
+            "Action": "sts:AssumeRole",
+            "Effect": "Allow",
+            "Resource": "arn:aws:iam::dummyaccount:role/test-stack-instanceProfileRole*"
+          },
           {
             Action: [
               "autoscaling:SetInstanceHealth",
@@ -155,6 +164,11 @@ describe("instance profile", () => {
       PolicyName: "test-stack-instance-profile-policy",
       PolicyDocument: {
         Statement: [
+          {
+            "Action": "sts:AssumeRole",
+            "Effect": "Allow",
+            "Resource": "arn:aws:iam::dummyaccount:role/test-stack-instanceProfileRole*"
+          },
           {
             Action: [
               "autoscaling:SetInstanceHealth",
