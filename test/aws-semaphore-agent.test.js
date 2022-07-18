@@ -113,11 +113,6 @@ describe("instance profile", () => {
       PolicyDocument: {
         Statement: [
           {
-            "Action": "sts:AssumeRole",
-            "Effect": "Allow",
-            "Resource": "arn:aws:iam::dummyaccount:role/test-stack-instanceProfileRole*"
-          },
-          {
             Action: [
               "autoscaling:SetInstanceHealth",
               "autoscaling:TerminateInstanceInAutoScalingGroup"
@@ -146,6 +141,13 @@ describe("instance profile", () => {
             ],
             Effect: "Allow",
             Resource: "arn:aws:logs:*:*:log-group:/semaphore/*"
+          },
+          {
+            "Action": "sts:AssumeRole",
+            "Effect": "Allow",
+            "Resource": {
+              "Fn::GetAtt": [Match.anyValue(), "Arn"]
+            }
           }
         ],
         Version: Match.anyValue()
@@ -164,11 +166,6 @@ describe("instance profile", () => {
       PolicyName: "test-stack-instance-profile-policy",
       PolicyDocument: {
         Statement: [
-          {
-            "Action": "sts:AssumeRole",
-            "Effect": "Allow",
-            "Resource": "arn:aws:iam::dummyaccount:role/test-stack-instanceProfileRole*"
-          },
           {
             Action: [
               "autoscaling:SetInstanceHealth",
@@ -211,6 +208,13 @@ describe("instance profile", () => {
               "arn:aws:s3:::test-cache-bucket/*",
               `arn:aws:s3:::test-cache-bucket`
             ]
+          },
+          {
+            "Action": "sts:AssumeRole",
+            "Effect": "Allow",
+            "Resource": {
+              "Fn::GetAtt": [Match.anyValue(), "Arn"]
+            }
           }
         ],
         Version: Match.anyValue()
