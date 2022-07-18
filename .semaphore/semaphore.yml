@@ -44,7 +44,7 @@ blocks:
       jobs:
         - name: Lint ansible recipes
           commands:
-            - sudo apt-get -y install python3-venv
+            - sudo apt-get update && sudo apt-get -y install python3-venv
             - checkout
             - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
             - make ansible.lint
