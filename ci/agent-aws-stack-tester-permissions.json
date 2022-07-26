@@ -69,7 +69,8 @@
         "ecr:CreateRepository",
         "ecr:DeleteRepository",
         "ecr:SetRepositoryPolicy",
-        "ecr:GetLifecyclePolicy"
+        "ecr:GetLifecyclePolicy",
+        "ecr:PutImageTagMutability"
       ],
       "Resource": "arn:aws:ecr:*:*:repository/cdk*"
     },
