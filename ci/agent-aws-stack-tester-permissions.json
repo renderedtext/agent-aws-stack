@@ -71,7 +71,8 @@
         "ecr:SetRepositoryPolicy",
         "ecr:GetLifecyclePolicy",
         "ecr:PutImageTagMutability",
-        "ecr:PutImageScanningConfiguration"
+        "ecr:PutImageScanningConfiguration",
+        "ecr:ListTagsForResource"
       ],
       "Resource": "arn:aws:ecr:*:*:repository/cdk*"
     },
