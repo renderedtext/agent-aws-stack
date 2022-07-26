@@ -70,7 +70,8 @@
         "ecr:DeleteRepository",
         "ecr:SetRepositoryPolicy",
         "ecr:GetLifecyclePolicy",
-        "ecr:PutImageTagMutability"
+        "ecr:PutImageTagMutability",
+        "ecr:PutImageScanningConfiguration"
       ],
       "Resource": "arn:aws:ecr:*:*:repository/cdk*"
     },
