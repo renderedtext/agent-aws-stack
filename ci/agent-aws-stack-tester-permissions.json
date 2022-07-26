@@ -68,7 +68,8 @@
         "ecr:DescribeRepositories",
         "ecr:CreateRepository",
         "ecr:DeleteRepository",
-        "ecr:SetRepositoryPolicy"
+        "ecr:SetRepositoryPolicy",
+        "ecr:GetLifecyclePolicy"
       ],
       "Resource": "arn:aws:ecr:*:*:repository/cdk*"
     },
