@@ -363,7 +363,7 @@ describe("auto scaling group", () => {
   test("default values are set if nothing is given", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
-      DesiredCapacity: "1",
+      DesiredCapacity: Match.absent(),
       MinSize: "0",
       MaxSize: "1"
     });
