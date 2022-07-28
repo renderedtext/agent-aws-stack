@@ -23,6 +23,7 @@ describe("SSM parameter", () => {
       Value: JSON.stringify({
         endpoint: "test.semaphoreci.com",
         agentTokenParameterName: "test-token",
+        sshKeysParameterName: "test-stack-ssh-public-keys",
         disconnectAfterJob: "true",
         disconnectAfterIdleTimeout: "300",
         envVars: []
@@ -39,6 +40,7 @@ describe("SSM parameter", () => {
       Value: JSON.stringify({
         endpoint: "someother.endpoint",
         agentTokenParameterName: "test-token",
+        sshKeysParameterName: "test-stack-ssh-public-keys",
         disconnectAfterJob: "true",
         disconnectAfterIdleTimeout: "300",
         envVars: []
@@ -56,6 +58,7 @@ describe("SSM parameter", () => {
       Value: JSON.stringify({
         endpoint: "test.semaphoreci.com",
         agentTokenParameterName: "test-token",
+        sshKeysParameterName: "test-stack-ssh-public-keys",
         disconnectAfterJob: "false",
         disconnectAfterIdleTimeout: "120",
         envVars: []
@@ -72,6 +75,7 @@ describe("SSM parameter", () => {
       Value: JSON.stringify({
         endpoint: "test.semaphoreci.com",
         agentTokenParameterName: "test-token",
+        sshKeysParameterName: "test-stack-ssh-public-keys",
         disconnectAfterJob: "true",
         disconnectAfterIdleTimeout: "300",
         envVars: [
@@ -125,6 +129,7 @@ describe("instance profile", () => {
             Effect: "Allow",
             Resource: [
               "arn:aws:ssm:*:*:parameter/test-stack-config",
+              "arn:aws:ssm:*:*:parameter/test-stack-ssh-public-keys",
               "arn:aws:ssm:*:*:parameter/test-token"
             ]
           },
@@ -179,6 +184,7 @@ describe("instance profile", () => {
             Effect: "Allow",
             Resource: [
               "arn:aws:ssm:*:*:parameter/test-stack-config",
+              "arn:aws:ssm:*:*:parameter/test-stack-ssh-public-keys",
               "arn:aws:ssm:*:*:parameter/test-token"
             ]
           },
@@ -626,6 +632,7 @@ function createTemplateWithOS(argumentStore, os) {
 
   const stack = new AwsSemaphoreAgentStack(app, 'MyTestStack', {
     argumentStore,
+    sshKeys: [],
     stackName: "test-stack",
     env: { account, region }
   });
