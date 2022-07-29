@@ -99,7 +99,49 @@ describe("instance profile", () => {
           }
         ],
         Version: Match.anyValue()
-      }
+      },
+      ManagedPolicyArns: [{
+        'Fn::Join': ['', [
+          'arn:', { Ref: 'AWS::Partition' }, ':iam::aws:policy/service-role/AmazonEC2RoleforSSM'
+        ]]
+      }]
+    });
+  })
+
+  test("role includes custom policies", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_MANAGED_POLICY_NAMES", "custom-policy-1,custom-policy-2")
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::IAM::Role", {
+      AssumeRolePolicyDocument: {
+        Statement: [
+          {
+            Action: "sts:AssumeRole",
+            Effect: "Allow",
+            Principal: {
+              Service: "ec2.amazonaws.com"
+            }
+          }
+        ],
+        Version: Match.anyValue()
+      },
+      ManagedPolicyArns: [
+        {
+          'Fn::Join': ['', [
+            'arn:', { Ref: 'AWS::Partition' }, ':iam::aws:policy/service-role/AmazonEC2RoleforSSM'
+          ]]
+        },
+        {
+          'Fn::Join': ['', [
+            'arn:', { Ref: 'AWS::Partition' }, ':iam::dummyaccount:policy/custom-policy-1'
+          ]]
+        },
+        {
+          'Fn::Join': ['', [
+            'arn:', { Ref: 'AWS::Partition' }, ':iam::dummyaccount:policy/custom-policy-2'
+          ]]
+        }
+      ]
     });
   })
 
