@@ -1,14 +1,17 @@
 $ProgressPreference = 'SilentlyContinue'
 $ErrorActionPreference = 'Stop'
 
+$SSHKeys = $args[0]
+if (-not $SSHKeys) {
+  throw "SSH Keys are required."
+}
+
+$keys = $SSHKeys | jq -r '.[]'
+$knownHosts = $keys -replace '^', 'github.com '
 Write-Output "Adding github SSH keys to known_hosts..."
 if (-not (Test-Path "$HOME\.ssh")) {
   New-Item -ItemType Directory -Path "$HOME\.ssh" > $null
 }
-
-$metaResponse = (Invoke-WebRequest -UseBasicParsing "https://api.github.com/meta").Content
-$keys = $metaResponse | jq -r '.ssh_keys[]'
-$knownHosts = $keys -replace '^', 'github.com '
 
 $KnownHostsPath = "$HOME\.ssh\known_hosts"
 if (-not (Test-Path $KnownHostsPath)) {

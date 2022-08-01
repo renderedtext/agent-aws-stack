@@ -7,6 +7,43 @@ function Set-InstanceHealth {
     --health-status Unhealthy
 }
 
+#
+# Retry a command for a fixed amount of times, with a fixed delay between each failure.
+#
+function Retry-Command {
+  [CmdletBinding()]
+  Param(
+    [Parameter(Mandatory=$true)]
+    [scriptblock]$ScriptBlock,
+
+    [Parameter(Mandatory=$false)]
+    [int]$MaxAttempts = 30,
+
+    [Parameter(Mandatory=$false)]
+    [int]$DelayInSeconds = 1
+  )
+
+  Begin {
+    $currentAttempt = 0
+  }
+
+  Process {
+    do {
+      $currentAttempt++
+      try {
+        $ScriptBlock.Invoke()
+        return
+      } catch {
+        Write-Error $_.Exception.InnerException.Message -ErrorAction Continue
+        Start-Sleep -Seconds $DelayInSeconds
+      }
+    } while ($currentAttempt -lt $MaxAttempts)
+
+    # Throw an error if we have exhausted our attempts.
+    throw "Execution failed after $currentAttempt attempts."
+  }
+}
+
 # Do not show any progress bars when downloading things
 $ProgressPreference = 'SilentlyContinue'
 
@@ -26,6 +63,13 @@ $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-m
 $Region = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/placement/region).Content
 $RoleName = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/iam/security-credentials).Content
 $AccountId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/dynamic/instance-identity/document).Content | jq -r '.accountId'
+
+# We grab the agent configuration and token from the SSM parameters
+# and put them into environment variables for the 'install.ps1' script to use.
+Write-Output "Fetching agent params..."
+$agentParams = Retry-Command -ScriptBlock {
+  aws ssm get-parameter --region "$Region" --name "$AgentConfigParamName" --query Parameter.Value --output text
+}
 
 # Create semaphore password and user
 # This is the user we will use to run the nssm service for the agent
@@ -47,19 +91,24 @@ winrm quickconfig -quiet
 # These scripts need to be run by the semaphore user
 # because they use the $HOME variable to properly configure
 # the '$HOME/.ssh' and '$HOME/.aws' folders.
-Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock { C:\semaphore-agent\configure-github-ssh-keys.ps1 }
+$SSHKeysParamName = $agentParams | jq -r '.sshKeysParameterName'
+$SSHKeys = Retry-Command -ScriptBlock {
+  aws ssm get-parameter --region "$Region" --name "$SSHKeysParamName" --query Parameter.Value --output text
+}
+
+Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
+  C:\semaphore-agent\configure-github-ssh-keys.ps1 $using:SSHKeys
+}
+
 Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
   C:\semaphore-agent\configure-aws-region.ps1 $using:Region $using:AccountId $using:RoleName
 }
 
-# We grab the agent configuration and token from the SSM parameters
-# and put them into environment variables for the 'install.ps1' script to use.
-Write-Output "Fetching agent params..."
-$agentParams = aws ssm get-parameter --region "$Region" --name "$AgentConfigParamName" --query Parameter.Value --output text
-
 Write-Output "Fetching agent token..."
 $agentTokenParamName = $agentParams | jq -r '.agentTokenParameterName'
-$agentToken = aws ssm get-parameter --region "$Region" --name "$agentTokenParamName" --query Parameter.Value --output text --with-decryption
+$agentToken = Retry-Command -ScriptBlock {
+  aws ssm get-parameter --region "$Region" --name "$agentTokenParamName" --query Parameter.Value --output text --with-decryption
+}
 
 # The installation script needs to be run by the semaphore user
 # because it downloads and sets up the toolbox at '$HOME/.toolbox'
