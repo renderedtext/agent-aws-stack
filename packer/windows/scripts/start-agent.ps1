@@ -17,7 +17,7 @@ function Retry-Command {
     [scriptblock]$ScriptBlock,
 
     [Parameter(Mandatory=$false)]
-    [int]$MaxAttempts = 30,
+    [int]$MaxAttempts = 30
   )
 
   Begin {
