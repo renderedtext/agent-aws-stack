@@ -1,6 +1,7 @@
 const https = require('https');
 const { SSMClient, GetParameterCommand } = require("@aws-sdk/client-ssm");
 const { AutoScalingClient, DescribeAutoScalingGroupsCommand, SetDesiredCapacityCommand } = require("@aws-sdk/client-auto-scaling");
+const { CloudWatchClient, PutMetricDataCommand } = require("@aws-sdk/client-cloudwatch");
 
 function getAgentTypeToken(tokenParameterName) {
   const ssmClient = new SSMClient();
@@ -81,6 +82,36 @@ function setAsgDesiredCapacity(autoScalingClient, asgName, desiredCapacity) {
   });
 }
 
+function publishOccupancyMetrics(occupancy) {
+  const cloudwatchClient = new CloudWatchClient();
+  const metricData = Object.keys(occupancy)
+    .map((count, state) => {
+      return {
+        MetricName: `semaphore.jobs`,
+        Value: count,
+        Unit: "Count",
+        Timestamp: new Date(),
+        Dimensions: [
+          {Name: "State", Value: state}
+        ]
+      }
+    });
+
+  console.log(`Publishing metrics to CloudWatch: ${metricData}`);
+
+  return new Promise(function(resolve, reject) {
+    const command = new PutMetricDataCommand({ MetricData: metricData, Namespace: "Semaphore" });
+    cloudwatchClient.send(command, function(err, data) {
+      if (err) {
+        console.log("Error publishing metrics: ", err);
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+}
+
 function getAgentTypeOccupancy(token, semaphoreEndpoint) {
   const options = {
     hostname: semaphoreEndpoint,
@@ -141,6 +172,7 @@ const tick = async (agentTokenParameterName, stackName, autoScalingClient, semap
   try {
     const agentTypeToken = await getAgentTypeToken(agentTokenParameterName);
     const occupancy = await getAgentTypeOccupancy(agentTypeToken, semaphoreEndpoint);
+    await publishOccupancyMetrics(occupancy);
     const asg = await describeAsg(autoScalingClient, stackName);
     await scaleUpIfNeeded(autoScalingClient, asg.name, occupancy, asg);
   } catch (e) {

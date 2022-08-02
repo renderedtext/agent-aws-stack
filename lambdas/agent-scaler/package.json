@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-auto-scaling": "^3.49.0",
+    "@aws-sdk/client-cloudwatch": "^3.49.0",
     "@aws-sdk/client-ssm": "^3.49.0"
   },
   "devDependencies": {
