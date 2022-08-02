@@ -18,7 +18,16 @@ on_failure() {
 }
 
 #
-# Retry a command for a while.
+# Generates a random number of seconds between 0.750s - 5s.
+#
+random_sleep() {
+  random_number=$(shuf -i 750-5000 -n 1)
+  delay=$(echo "$random_number / 1000.0" | bc -l)
+  echo "$delay"
+}
+
+#
+# Retry a command for a while, with random sleeps after failures.
 #
 retry_cmd() {
   local __cmd__=$1
@@ -38,6 +47,7 @@ retry_cmd() {
     if [[ $__i__ == $__max_retries__ ]]; then
       return $__result__
     else
+      __sleep__=$(random_sleep)
       sleep $__sleep__
     fi
   done

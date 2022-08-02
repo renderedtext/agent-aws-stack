@@ -18,9 +18,6 @@ function Retry-Command {
 
     [Parameter(Mandatory=$false)]
     [int]$MaxAttempts = 30,
-
-    [Parameter(Mandatory=$false)]
-    [int]$DelayInSeconds = 1
   )
 
   Begin {
@@ -35,7 +32,8 @@ function Retry-Command {
         return
       } catch {
         Write-Error $_.Exception.InnerException.Message -ErrorAction Continue
-        Start-Sleep -Seconds $DelayInSeconds
+        $delay = Get-Random -Minimum 750 -Maximum 5000
+        Start-Sleep -Milliseconds $delay
       }
     } while ($currentAttempt -lt $MaxAttempts)
 
