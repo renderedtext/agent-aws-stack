@@ -1,4 +1,5 @@
 const https = require('https');
+const utils = require("util");
 const { SSMClient, GetParameterCommand } = require("@aws-sdk/client-ssm");
 const { AutoScalingClient, DescribeAutoScalingGroupsCommand, SetDesiredCapacityCommand } = require("@aws-sdk/client-auto-scaling");
 const { CloudWatchClient, PutMetricDataCommand } = require("@aws-sdk/client-cloudwatch");
@@ -85,19 +86,19 @@ function setAsgDesiredCapacity(autoScalingClient, asgName, desiredCapacity) {
 function publishOccupancyMetrics(occupancy) {
   const cloudwatchClient = new CloudWatchClient();
   const metricData = Object.keys(occupancy)
-    .map((count, state) => {
+    .map(state => {
       return {
-        MetricName: `semaphore.jobs`,
-        Value: count,
+        MetricName: `JobCount`,
+        Value: occupancy[state],
         Unit: "Count",
         Timestamp: new Date(),
         Dimensions: [
-          {Name: "State", Value: state}
+          {Name: "JobState", Value: state}
         ]
       }
     });
 
-  console.log(`Publishing metrics to CloudWatch: ${metricData}`);
+  console.log(`Publishing metrics to CloudWatch: ${utils.inspect(metricData)}`);
 
   return new Promise(function(resolve, reject) {
     const command = new PutMetricDataCommand({ MetricData: metricData, Namespace: "Semaphore" });
