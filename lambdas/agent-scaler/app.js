@@ -83,7 +83,7 @@ function setAsgDesiredCapacity(autoScalingClient, asgName, desiredCapacity) {
   });
 }
 
-function publishOccupancyMetrics(occupancy) {
+function publishOccupancyMetrics(stackName, occupancy) {
   const cloudwatchClient = new CloudWatchClient();
   const metricData = Object.keys(occupancy)
     .map(state => {
@@ -93,12 +93,13 @@ function publishOccupancyMetrics(occupancy) {
         Unit: "Count",
         Timestamp: new Date(),
         Dimensions: [
+          {Name: "StackName", Value: stackName},
           {Name: "JobState", Value: state}
         ]
       }
     });
 
-  console.log(`Publishing metrics to CloudWatch: ${utils.inspect(metricData)}`);
+  console.log(`Publishing metrics to CloudWatch: ${utils.inspect(metricData, {depth: 3})}`);
 
   return new Promise(function(resolve, reject) {
     const command = new PutMetricDataCommand({ MetricData: metricData, Namespace: "Semaphore" });
@@ -173,7 +174,7 @@ const tick = async (agentTokenParameterName, stackName, autoScalingClient, semap
   try {
     const agentTypeToken = await getAgentTypeToken(agentTokenParameterName);
     const occupancy = await getAgentTypeOccupancy(agentTypeToken, semaphoreEndpoint);
-    await publishOccupancyMetrics(occupancy);
+    await publishOccupancyMetrics(stackName, occupancy);
     const asg = await describeAsg(autoScalingClient, stackName);
     await scaleUpIfNeeded(autoScalingClient, asg.name, occupancy, asg);
   } catch (e) {
