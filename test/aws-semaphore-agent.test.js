@@ -6,7 +6,7 @@ const { App } = require("aws-cdk-lib");
 const { ParameterTier } = require("aws-cdk-lib/aws-ssm");
 const { Template, Match } = require("aws-cdk-lib/assertions");
 
-describe("SSM parameter", () => {
+describe("SSM parameter for agent configuration", () => {
   test("name is prefixed with stack name", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::SSM::Parameter", {
@@ -23,6 +23,7 @@ describe("SSM parameter", () => {
       Value: JSON.stringify({
         endpoint: "test.semaphoreci.com",
         agentTokenParameterName: "test-token",
+        sshKeysParameterName: "test-stack-ssh-public-keys",
         disconnectAfterJob: "true",
         disconnectAfterIdleTimeout: "300",
         envVars: []
@@ -39,6 +40,7 @@ describe("SSM parameter", () => {
       Value: JSON.stringify({
         endpoint: "someother.endpoint",
         agentTokenParameterName: "test-token",
+        sshKeysParameterName: "test-stack-ssh-public-keys",
         disconnectAfterJob: "true",
         disconnectAfterIdleTimeout: "300",
         envVars: []
@@ -56,6 +58,7 @@ describe("SSM parameter", () => {
       Value: JSON.stringify({
         endpoint: "test.semaphoreci.com",
         agentTokenParameterName: "test-token",
+        sshKeysParameterName: "test-stack-ssh-public-keys",
         disconnectAfterJob: "false",
         disconnectAfterIdleTimeout: "120",
         envVars: []
@@ -72,6 +75,7 @@ describe("SSM parameter", () => {
       Value: JSON.stringify({
         endpoint: "test.semaphoreci.com",
         agentTokenParameterName: "test-token",
+        sshKeysParameterName: "test-stack-ssh-public-keys",
         disconnectAfterJob: "true",
         disconnectAfterIdleTimeout: "300",
         envVars: [
@@ -82,6 +86,19 @@ describe("SSM parameter", () => {
       })
     });
   });
+})
+
+describe("SSM parameter for SSH keys", () => {
+  test("name is prefixed with stack name", () => {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::SSM::Parameter", {
+      Type: "String",
+      Name: "test-stack-ssh-public-keys",
+      Description: "GitHub SSH public keys.",
+      Tier: ParameterTier.STANDARD,
+      Value: '["ssh-key1","ssh-key2"]'
+    });
+  })
 })
 
 describe("instance profile", () => {
@@ -167,6 +184,7 @@ describe("instance profile", () => {
             Effect: "Allow",
             Resource: [
               "arn:aws:ssm:*:*:parameter/test-stack-config",
+              "arn:aws:ssm:*:*:parameter/test-stack-ssh-public-keys",
               "arn:aws:ssm:*:*:parameter/test-token"
             ]
           },
@@ -221,6 +239,7 @@ describe("instance profile", () => {
             Effect: "Allow",
             Resource: [
               "arn:aws:ssm:*:*:parameter/test-stack-config",
+              "arn:aws:ssm:*:*:parameter/test-stack-ssh-public-keys",
               "arn:aws:ssm:*:*:parameter/test-token"
             ]
           },
@@ -561,6 +580,59 @@ describe("scaler lambda", () => {
   })
 })
 
+describe("SSH keys updater lambda", () => {
+  test("all needed properties are set", () => {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::Lambda::Function", {
+      Description: "Check if GitHub SSH public keys have changed.",
+      Runtime: "nodejs14.x",
+      Timeout: 10,
+      Code: Match.anyValue(),
+      Handler: "app.handler",
+      Environment: {
+        Variables: {
+          SSM_PARAMETER: "test-stack-ssh-public-keys"
+        }
+      },
+      Role: Match.anyValue()
+    });
+  })
+
+  test("rule to schedule lambda execution is created", () => {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::Events::Rule", {
+      Description: "Rule to dynamically invoke lambda function to check GitHub public SSH keys.",
+      ScheduleExpression: "rate(1 hour)",
+      State: "ENABLED",
+      Targets: Match.anyValue()
+    });
+  })
+
+  test("proper permissions created", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_TOKEN_KMS_KEY", "dummy-kms-key-id");
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::IAM::Policy", {
+      PolicyName: "sshKeysUpdater-policy",
+      PolicyDocument: {
+        Statement: [
+          {
+            Action: [
+              "ssm:GetParameter",
+              "ssm:PutParameter"
+            ],
+            Effect: "Allow",
+            Resource: "arn:aws:ssm:*:*:parameter/test-stack-ssh-public-keys"
+          }
+        ],
+        Version: Match.anyValue()
+      },
+      Roles: Match.anyValue(),
+    });
+  })
+})
+
 describe("vpc and subnets", () => {
   test("uses default vpc if none is given", () => {
     const template = createTemplate(basicArgumentStore());
@@ -668,6 +740,7 @@ function createTemplateWithOS(argumentStore, os) {
 
   const stack = new AwsSemaphoreAgentStack(app, 'MyTestStack', {
     argumentStore,
+    sshKeys: ["ssh-key1", "ssh-key2"],
     stackName: "test-stack",
     env: { account, region }
   });
