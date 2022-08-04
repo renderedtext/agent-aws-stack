@@ -559,6 +559,11 @@ describe("scaler lambda", () => {
             Action: "kms:Decrypt",
             Effect: "Allow",
             Resource: "arn:aws:kms:*:*:key/dummy-kms-key-id"
+          },
+          {
+            Action: "cloudwatch:PutMetricData",
+            Effect: "Allow",
+            Resource: "*"
           }
         ],
         Version: Match.anyValue()
