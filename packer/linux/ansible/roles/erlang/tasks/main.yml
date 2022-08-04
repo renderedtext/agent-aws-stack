@@ -16,4 +16,4 @@
   when: install_erlang | bool
   apt:
     pkg:
-      - erlang
+      - erlang-base=1:24.3.3-1
