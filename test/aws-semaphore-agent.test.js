@@ -444,6 +444,31 @@ describe("auto scaling group", () => {
     });
   })
 
+  test("metrics are not collected", () => {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
+      MetricsCollection: Match.absent()
+    });
+  })
+
+  test("metrics are collected", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_ASG_METRICS", "GroupDesiredCapacity,GroupInServiceInstances,GroupPendingInstances")
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
+      MetricsCollection: [
+        {
+          Granularity: "1Minute",
+          Metrics: [
+            "GroupDesiredCapacity",
+            "GroupInServiceInstances",
+            "GroupPendingInstances"
+          ]
+        }
+      ]
+    });
+  })
+
   test("tags are used", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
