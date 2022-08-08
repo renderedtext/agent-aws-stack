@@ -347,7 +347,7 @@ describe("launch configuration", () => {
         {
           DeviceName: "/dev/sda1",
           Ebs: {
-            VolumeType: "gp3",
+            VolumeType: "gp2",
             VolumeSize: 64
           }
         }
