@@ -330,6 +330,51 @@ describe("launch configuration", () => {
     })
   })
 
+  test("inherits volume from AMI", () => {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
+      BlockDeviceMappings: Match.absent()
+    })
+  })
+
+  test("defines volume, with default size and type", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_VOLUME_NAME", "/dev/sda1");
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
+      BlockDeviceMappings: [
+        {
+          DeviceName: "/dev/sda1",
+          Ebs: {
+            VolumeType: "gp3",
+            VolumeSize: 64
+          }
+        }
+      ]
+    })
+  })
+
+  test("defines volume, with custom size and type", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_VOLUME_NAME", "/dev/sda1");
+    argumentStore.set("SEMAPHORE_AGENT_VOLUME_TYPE", "io1");
+    argumentStore.set("SEMAPHORE_AGENT_VOLUME_SIZE", "3981");
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
+      BlockDeviceMappings: [
+        {
+          DeviceName: "/dev/sda1",
+          Ebs: {
+            VolumeType: "io1",
+            VolumeSize: 3981
+          }
+        }
+      ]
+    })
+  })
+
   test("agent is started using user data for linux", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
