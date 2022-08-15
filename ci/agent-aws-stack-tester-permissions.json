@@ -67,7 +67,12 @@
       "Action": [
         "ecr:DescribeRepositories",
         "ecr:CreateRepository",
-        "ecr:DeleteRepository"
+        "ecr:DeleteRepository",
+        "ecr:SetRepositoryPolicy",
+        "ecr:GetLifecyclePolicy",
+        "ecr:PutImageTagMutability",
+        "ecr:PutImageScanningConfiguration",
+        "ecr:ListTagsForResource"
       ],
       "Resource": "arn:aws:ecr:*:*:repository/cdk*"
     },
