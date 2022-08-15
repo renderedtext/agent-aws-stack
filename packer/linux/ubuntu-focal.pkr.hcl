@@ -36,6 +36,11 @@ variable "install_erlang" {
   default = "true"
 }
 
+variable "custom_ansible_roles" {
+  type    = string
+  default = ""
+}
+
 packer {
   required_plugins {
     amazon = {
@@ -84,12 +89,18 @@ build {
   provisioner "ansible" {
     playbook_file = "ansible/ubuntu-focal.yml"
     user          = "ubuntu"
+
+    ansible_env_vars = [
+      "ANSIBLE_CONFIG=ansible/ansible.cfg"
+    ]
+
     extra_arguments = [
       "--skip-tags",
       "reboot",
       "-e agent_version=${var.agent_version}",
       "-e toolbox_version=${var.toolbox_version}",
-      "-e install_erlang=${var.install_erlang}"
+      "-e install_erlang=${var.install_erlang}",
+      "-e custom_roles=${var.custom_ansible_roles}"
     ]
   }
 }

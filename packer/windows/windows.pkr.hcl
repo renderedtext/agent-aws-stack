@@ -31,11 +31,6 @@ variable "instance_type" {
   default = "t2.micro"
 }
 
-variable "install_erlang" {
-  type    = string
-  default = "true"
-}
-
 packer {
   required_plugins {
     amazon = {

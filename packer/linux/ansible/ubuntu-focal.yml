@@ -15,4 +15,5 @@
     - docker
     - users
     - agent
+    - custom_roles
     - cleanup

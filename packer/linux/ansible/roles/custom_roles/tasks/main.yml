@@ -1,0 +1,4 @@
+- name: Execute custom roles
+  include_role:
+    name: "{{ item }}"
+  loop: "{{ custom_roles.split(',') }}"
