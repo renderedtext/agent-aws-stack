@@ -40,6 +40,7 @@
     SEMAPHORE_AGENT_START: "false"
     SEMAPHORE_REGISTRATION_TOKEN: "DUMMY"
     SEMAPHORE_ORGANIZATION: "DUMMY"
+    SEMAPHORE_AGENT_SYSTEMD_RESTART_SEC: "300"
   command: "{{ agent_root_dir }}/install.sh"
 
 - name: Copy start script
