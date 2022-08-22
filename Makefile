@@ -22,7 +22,7 @@ packer.fmt:
 	cd packer/$(PACKER_OS) && packer fmt . && cd -
 
 packer.validate:
-	@if [[ $(PACKER_OS) == "windows" ]]; then \
+	@if [ $(PACKER_OS) = "windows" ]; then \
 		$(MAKE) packer.validate.windows; \
 	else \
 		$(MAKE) packer.validate.linux; \
@@ -61,7 +61,7 @@ packer.init:
 	$(MAKE) venv.execute COMMAND='cd packer/$(PACKER_OS) && packer init .'
 
 packer.build:
-	@if [[ $(PACKER_OS) == "windows" ]]; then \
+	@if [ $(PACKER_OS) = "windows" ]; then \
 		$(MAKE) packer.build.windows; \
 	else \
 		$(MAKE) packer.build.linux; \
