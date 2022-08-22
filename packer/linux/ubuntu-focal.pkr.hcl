@@ -36,6 +36,11 @@ variable "install_erlang" {
   default = "true"
 }
 
+variable "systemd_restart_seconds" {
+  type    = string
+  default = "300"
+}
+
 packer {
   required_plugins {
     amazon = {
@@ -89,7 +94,8 @@ build {
       "reboot",
       "-e agent_version=${var.agent_version}",
       "-e toolbox_version=${var.toolbox_version}",
-      "-e install_erlang=${var.install_erlang}"
+      "-e install_erlang=${var.install_erlang}",
+      "-e systemd_restart_seconds=${var.systemd_restart_seconds}",
     ]
   }
 }

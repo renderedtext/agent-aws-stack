@@ -12,3 +12,4 @@ yq_url: "https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd6
 cloudwatch_agent_url: https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
 erlang_apt_gpg_key: https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc
 erlang_apt_repository: "deb [arch=amd64] https://packages.erlang-solutions.com/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} contrib"
+systemd_restart_seconds: 300
