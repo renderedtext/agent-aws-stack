@@ -5,7 +5,7 @@ AGENT_VERSION=v2.1.9
 TOOLBOX_VERSION=v1.18.13
 PACKER_OS=linux
 INSTALL_ERLANG=true
-SYSTEMD_RESTART_SECONDS=300
+SYSTEMD_RESTART_SECONDS=1800
 VERSION=$(shell cat package.json | jq -r '.version')
 HASH=$(shell find Makefile packer/$(PACKER_OS) -type f -exec md5sum "{}" + | awk '{print $$1}' | sort | md5sum | awk '{print $$1}')
 
@@ -23,9 +23,9 @@ packer.fmt:
 
 packer.validate:
 	@if [[ $(PACKER_OS) == "windows" ]]; then \
-		$(MAKE) packer.validate.windows \
-	else
-		$(MAKE) packer.validate.linux \
+		$(MAKE) packer.validate.windows; \
+	else \
+		$(MAKE) packer.validate.linux; \
 	fi
 
 packer.validate.linux:
@@ -62,11 +62,10 @@ packer.init:
 
 packer.build:
 	@if [[ $(PACKER_OS) == "windows" ]]; then \
-		$(MAKE) packer.build.windows \
-	else
-		$(MAKE) packer.build.linux \
+		$(MAKE) packer.build.windows; \
+	else \
+		$(MAKE) packer.build.linux; \
 	fi
-
 
 packer.build.linux:
 	$(MAKE) venv.execute COMMAND='\

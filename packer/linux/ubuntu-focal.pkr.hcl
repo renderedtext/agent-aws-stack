@@ -38,7 +38,7 @@ variable "install_erlang" {
 
 variable "systemd_restart_seconds" {
   type    = string
-  default = "300"
+  default = "1800"
 }
 
 packer {
