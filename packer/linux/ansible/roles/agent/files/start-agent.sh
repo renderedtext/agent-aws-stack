@@ -145,6 +145,7 @@ change_agent_config() {
   yq e -i ".token = \"$__agent_token__\"" /opt/semaphore/agent/config.yaml
   yq e -i ".disconnect-after-job = $__disconnect_after_job__" /opt/semaphore/agent/config.yaml
   yq e -i ".disconnect-after-idle-timeout = $__disconnect_after_idle_timeout__" /opt/semaphore/agent/config.yaml
+  yq e -i ".upload-job-logs = \"when-trimmed\"" /opt/semaphore/agent/config.yaml
   echo $__agent_params__ | jq '.envVars[]' | xargs -I {} yq e -P -i '.env-vars = .env-vars + "{}"' /opt/semaphore/agent/config.yaml
 
   # Update agent configuration file permissions
