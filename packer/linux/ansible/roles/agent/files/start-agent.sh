@@ -116,6 +116,13 @@ fetch_agent_token() {
   fi
 }
 
+generate_agent_name() {
+  token$(fetch_idms_token)
+  instance_id=$(curl --fail --silent --show-error -H "X-aws-ec2-metadata-token: $token" --location "http://169.254.169.254/latest/meta-data/instance-id")
+  random_part=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
+  echo "${instance_id}__${random_part}"
+}
+
 #
 # Update the agent configuration YAML,
 # using the agent's configuration parameters and registration token.
@@ -130,8 +137,10 @@ change_agent_config() {
   local __endpoint__=$(echo $__agent_params__ | jq -r '.endpoint')
   local __disconnect_after_job__=$(echo $__agent_params__ | jq -r '.disconnectAfterJob')
   local __disconnect_after_idle_timeout__=$(echo $__agent_params__ | jq -r '.disconnectAfterIdleTimeout')
+  local __agent_name__=$(generate_agent_name)
 
   # Update agent YAML configuration
+  yq e -i ".name = \"$__agent_name__\"" /opt/semaphore/agent/config.yaml
   yq e -i ".endpoint = \"$__endpoint__\"" /opt/semaphore/agent/config.yaml
   yq e -i ".token = \"$__agent_token__\"" /opt/semaphore/agent/config.yaml
   yq e -i ".disconnect-after-job = $__disconnect_after_job__" /opt/semaphore/agent/config.yaml
