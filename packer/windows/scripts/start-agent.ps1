@@ -43,7 +43,8 @@ function Retry-Command {
 }
 
 function Generate-AgentName {
-  $instanceId = (Invoke-WebRequest -UseBasicParsing http://169.254.169.254/latest/meta-data/instance-id).content
+  $idmsToken = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+  $instanceId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $idmsToken} http://169.254.169.254/latest/meta-data/instance-id).content
   $randomPart = -join (1..12 | ForEach {[char]((97..122) + (48..57) | Get-Random)})
   return $instanceId+"__"+$randomPart
 }
