@@ -9,10 +9,9 @@ set -eo pipefail
 on_failure() {
   local exit_code=$1
   if [[ $exit_code != 0 ]] ; then
-    token=$(fetch_idms_token)
-    instance_id=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
+    local __instance_id__=$(curl --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
     aws autoscaling set-instance-health \
-      --instance-id "${instance_id}" \
+      --instance-id "${__instance_id__}" \
       --health-status Unhealthy
   fi
 }
@@ -117,10 +116,9 @@ fetch_agent_token() {
 }
 
 generate_agent_name() {
-  token$(fetch_idms_token)
-  instance_id=$(curl --fail --silent --show-error -H "X-aws-ec2-metadata-token: $token" --location "http://169.254.169.254/latest/meta-data/instance-id")
-  random_part=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
-  echo "${instance_id}__${random_part}"
+  local __instance_id__=$(curl --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
+  local __random_part__=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
+  echo "${__instance_id__}__${__random_part__}"
 }
 
 #
