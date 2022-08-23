@@ -129,7 +129,9 @@ Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
 }
 
 $agentName = Generate-AgentName
-yq e -i ".name = `"$agentName`"" /opt/semaphore/agent/config.yaml
+Write-Output "Using name '$agentName' for agent."
+
+yq e -i ".name = `"$agentName`"" C:\semaphore-agent\config.yaml
 yq e -i ".upload-job-logs = `"when-trimmed`"" C:\semaphore-agent\config.yaml
 $agentParams | jq '.envVars[]' | ForEach-Object -Process {
   yq e -P -i ".env-vars = .env-vars + `"$_`"" C:\semaphore-agent\config.yaml
