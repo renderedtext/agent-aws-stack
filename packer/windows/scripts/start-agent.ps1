@@ -42,6 +42,13 @@ function Retry-Command {
   }
 }
 
+function Generate-AgentName {
+  $idmsToken = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+  $instanceId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $idmsToken} http://169.254.169.254/latest/meta-data/instance-id).content
+  $randomPart = -join (1..12 | ForEach {[char]((97..122) + (48..57) | Get-Random)})
+  return $instanceId+"__"+$randomPart
+}
+
 # Do not show any progress bars when downloading things
 $ProgressPreference = 'SilentlyContinue'
 
@@ -121,6 +128,12 @@ Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
   .\install.ps1
 }
 
+$agentName = Generate-AgentName
+Write-Output "Using name '$agentName' for agent."
+
+$nameExpr = '.name = ""{0}""' -f $agentName
+yq e -i $nameExpr C:\semaphore-agent\config.yaml
+yq e -i '.upload-job-logs = ""when-trimmed""' C:\semaphore-agent\config.yaml
 $agentParams | jq '.envVars[]' | ForEach-Object -Process {
   yq e -P -i ".env-vars = .env-vars + `"$_`"" C:\semaphore-agent\config.yaml
 }

@@ -158,6 +158,7 @@ blocks:
           commands:
             - cache
             - checkout
+            - artifact
             - Write-Output 'hello'
 
 after_pipeline:
