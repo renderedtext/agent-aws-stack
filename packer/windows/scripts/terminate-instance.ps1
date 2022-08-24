@@ -8,7 +8,10 @@ $Region = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-tok
 $env:AWS_ACCESS_KEY_ID = ""
 $env:AWS_SECRET_ACCESS_KEY = ""
 $env:AWS_SESSION_TOKEN = ""
-Remove-Item -Recurse -Force -Path $HOME\.aws\credentials
+
+if (Test-Path "$HOME\.aws\credentials") {
+  Remove-Item -Recurse -Force -Path "$HOME\.aws\credentials"
+}
 
 if ($env:SEMAPHORE_AGENT_SHUTDOWN_REASON -eq "IDLE") {
   aws autoscaling terminate-instance-in-auto-scaling-group `
