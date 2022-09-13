@@ -159,6 +159,7 @@ blocks:
             - cache
             - checkout
             - artifact
+            - test-results
             - Write-Output 'hello'
 
 after_pipeline:
