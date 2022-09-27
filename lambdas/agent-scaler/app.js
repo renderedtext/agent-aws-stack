@@ -83,21 +83,41 @@ function setAsgDesiredCapacity(autoScalingClient, asgName, desiredCapacity) {
   });
 }
 
-function publishOccupancyMetrics(stackName, occupancy) {
-  const cloudwatchClient = new CloudWatchClient();
-  const metricData = Object.keys(occupancy)
-    .map(state => {
-      return {
-        MetricName: `JobCount`,
-        Value: occupancy[state],
-        Unit: "Count",
-        Timestamp: new Date(),
-        Dimensions: [
-          {Name: "StackName", Value: stackName},
-          {Name: "JobState", Value: state}
-        ]
-      }
+function buildMetricData(stackName, metrics) {
+  let metricData = [];
+
+  Object.keys(metrics.jobs).forEach(state => {
+    metricData.push({
+      MetricName: `JobCount`,
+      Value: metrics.jobs[state],
+      Unit: "Count",
+      Timestamp: new Date(),
+      Dimensions: [
+        {Name: "StackName", Value: stackName},
+        {Name: "JobState", Value: state}
+      ]
     });
+  });
+
+  Object.keys(metrics.agents).forEach(state => {
+    metricData.push({
+      MetricName: `AgentCount`,
+      Value: metrics.agents[state],
+      Unit: "Count",
+      Timestamp: new Date(),
+      Dimensions: [
+        {Name: "StackName", Value: stackName},
+        {Name: "AgentState", Value: state}
+      ]
+    });
+  });
+
+  return metricData;
+}
+
+function publishOccupancyMetrics(stackName, metrics) {
+  const cloudwatchClient = new CloudWatchClient();
+  const metricData = buildMetricData(stackName, metrics)
 
   console.log(`Publishing metrics to CloudWatch: ${utils.inspect(metricData, {depth: 3})}`);
 
@@ -114,10 +134,10 @@ function publishOccupancyMetrics(stackName, occupancy) {
   });
 }
 
-function getAgentTypeOccupancy(token, semaphoreEndpoint) {
+function getAgentTypeMetrics(token, semaphoreEndpoint) {
   const options = {
     hostname: semaphoreEndpoint,
-    path: "/api/v1/self_hosted_agents/occupancy",
+    path: "/api/v1/self_hosted_agents/metrics",
     method: 'GET',
     headers: {
       "Content-Type": "application/json",
@@ -173,10 +193,10 @@ function epochSeconds() {
 const tick = async (agentTokenParameterName, stackName, autoScalingClient, semaphoreEndpoint) => {
   try {
     const agentTypeToken = await getAgentTypeToken(agentTokenParameterName);
-    const occupancy = await getAgentTypeOccupancy(agentTypeToken, semaphoreEndpoint);
-    await publishOccupancyMetrics(stackName, occupancy);
+    const metrics = await getAgentTypeMetrics(agentTypeToken, semaphoreEndpoint);
+    await publishOccupancyMetrics(stackName, metrics);
     const asg = await describeAsg(autoScalingClient, stackName);
-    await scaleUpIfNeeded(autoScalingClient, asg.name, occupancy, asg);
+    await scaleUpIfNeeded(autoScalingClient, asg.name, metrics.jobs, asg);
   } catch (e) {
     console.error("Error fetching occupancy", e);
   }
