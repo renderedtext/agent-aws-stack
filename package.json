@@ -1,6 +1,6 @@
 {
   "name": "aws-semaphore-agent",
-  "version": "0.1.25",
+  "version": "0.1.26",
   "bin": {
     "aws-semaphore-agent": "bin/aws-semaphore-agent.js"
   },
