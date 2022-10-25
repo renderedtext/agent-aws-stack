@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { App } = require('aws-cdk-lib');
+const { App, Tags } = require('aws-cdk-lib');
 const { AwsSemaphoreAgentStack } = require('../lib/aws-semaphore-agent-stack');
 const { ArgumentStore } = require('../lib/argument-store');
 const { getKeys } = require('../lib/github-keys');
