@@ -20,6 +20,10 @@ new AwsSemaphoreAgentStack(app, 'AwsSemaphoreAgentStack', {
   },
 });
 
+if (!argumentStore.isEmpty("SEMAPHORE_AGENT_TAG_NAME")) {
+  Tags.of(awsSemaphoreAgentDedicatedHostStack).add('Name', argumentStore.get("SEMAPHORE_AGENT_TAG_NAME"));
+}
+
 function buildArgumentStore() {
   try {
     return ArgumentStore.fromEnv();
