@@ -20,9 +20,9 @@ const awsSemaphoreAgentStack = new AwsSemaphoreAgentStack(app, 'AwsSemaphoreAgen
   },
 });
 
-if (!argumentStore.isEmpty("SEMAPHORE_AGENT_TAG_NAME")) {
-  Tags.of(awsSemaphoreAgentStack).add('Name', argumentStore.get("SEMAPHORE_AGENT_TAG_NAME"));
-}
+argumentStore.getTags().forEach(tag => {
+  Tags.of(awsSemaphoreAgentStack).add(tag.key, tag.value);
+});
 
 function buildArgumentStore() {
   try {
