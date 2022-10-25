@@ -8,7 +8,7 @@ const { getKeys } = require('../lib/github-keys');
 const app = new App();
 const argumentStore = buildArgumentStore();
 
-new AwsSemaphoreAgentStack(app, 'AwsSemaphoreAgentStack', {
+const awsSemaphoreAgentStack = new AwsSemaphoreAgentStack(app, 'AwsSemaphoreAgentStack', {
   stackName: argumentStore.get("SEMAPHORE_AGENT_STACK_NAME"),
   description: "Semaphore agent autoscaling stack",
   argumentStore: argumentStore,
@@ -21,7 +21,7 @@ new AwsSemaphoreAgentStack(app, 'AwsSemaphoreAgentStack', {
 });
 
 if (!argumentStore.isEmpty("SEMAPHORE_AGENT_TAG_NAME")) {
-  Tags.of(awsSemaphoreAgentDedicatedHostStack).add('Name', argumentStore.get("SEMAPHORE_AGENT_TAG_NAME"));
+  Tags.of(awsSemaphoreAgentStack).add('Name', argumentStore.get("SEMAPHORE_AGENT_TAG_NAME"));
 }
 
 function buildArgumentStore() {
