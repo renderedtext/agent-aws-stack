@@ -80,7 +80,8 @@
         "lambda:DeleteFunction",
         "lambda:InvokeFunction",
         "lambda:UpdateFunctionCode",
-        "lambda:UpdateFunctionConfiguration"
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:TagResource"
       ],
       "Resource": "arn:aws:lambda:*:*:function:*"
     },
@@ -101,7 +102,8 @@
         "ssm:GetParameter",
         "ssm:GetParameters",
         "ssm:PutParameter",
-        "ssm:DeleteParameter"
+        "ssm:DeleteParameter",
+        "ssm:AddTagsToResource"
       ],
       "Resource": "*"
     },
