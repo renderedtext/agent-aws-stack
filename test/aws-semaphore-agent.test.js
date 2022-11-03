@@ -80,8 +80,8 @@ describe("SSM parameter for agent configuration", () => {
         disconnectAfterIdleTimeout: "300",
         envVars: [
           "SEMAPHORE_CACHE_BACKEND=s3",
-          "SEMAPHORE_CACHE_USE_EC2_INSTANCE_PROFILE=true",
-          "SEMAPHORE_CACHE_S3_BUCKET=test-cache-bucket"
+          "SEMAPHORE_CACHE_S3_BUCKET=test-cache-bucket",
+          "SEMAPHORE_CACHE_USE_EC2_INSTANCE_PROFILE=true"
         ]
       })
     });
