@@ -105,10 +105,6 @@ Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
   C:\semaphore-agent\configure-github-ssh-keys.ps1 $using:SSHKeys
 }
 
-Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
-  C:\semaphore-agent\configure-aws-region.ps1 $using:Region $using:AccountId $using:RoleName
-}
-
 Write-Output "Fetching agent token..."
 $agentTokenParamName = $agentParams | jq -r '.agentTokenParameterName'
 $agentToken = Retry-Command -ScriptBlock {

@@ -153,56 +153,6 @@ change_agent_config() {
 }
 
 #
-# Configure the .aws folder for the semaphore user.
-#
-configure_aws_folder() {
-  local __region__=$1
-  local __token__=$(fetch_idms_token)
-
-  # Get the name of the role attached to the instance profile.
-  local __role_name__=$(curl \
-    -H "X-aws-ec2-metadata-token: $__token__" \
-    --fail \
-    --silent \
-    --show-error \
-    --location "http://169.254.169.254/latest/meta-data/iam/security-credentials"
-  )
-
-  # Get the account ID
-  local __account_id__=$(curl \
-    -H "X-aws-ec2-metadata-token: $__token__" \
-    --fail \
-    --silent \
-    --show-error \
-    --location "http://169.254.169.254/latest/dynamic/instance-identity/document" \
-    | jq -r '.accountId'
-  )
-
-  # Create the .aws folder for the semaphore user
-  echo "Creating the .aws folder..."
-  sudo mkdir -p /home/semaphore/.aws
-
-  # Create the AWS CLI configuration.
-  # We use a specific semaphore__agent-aws-stack-instance-profile AWS CLI profile,
-  # in order to make sure we are always using the instance profile role's credentials
-  # when calling out to the AWS API in other scripts/CLIs.
-  echo "Creating the .aws/config file..."
-  sudo tee -a /home/semaphore/.aws/config > /dev/null <<EOT
-[default]
-region = $__region__
-
-[profile semaphore__agent-aws-stack-instance-profile]
-region = $__region__
-role_arn = arn:aws:iam::$__account_id__:role/$__role_name__
-credential_source = Ec2InstanceMetadata
-EOT
-
-  # Use the proper permissions for the .aws folder
-  echo "Updating .aws folder's permissions..."
-  sudo chown -R semaphore:semaphore /home/semaphore/.aws
-}
-
-#
 # Fetch the SSH public keys from the SSM parameter store,
 # and place them into the .ssh/known_hosts folder.
 #
@@ -262,10 +212,6 @@ agent_params=$(fetch_agent_params $region $agent_config_param_name)
 # we need to let the instance know about GitHub's public SSH keys.
 ssh_keys_param=$(echo $agent_params | jq -r '.sshKeysParameterName')
 configure_known_hosts $region $ssh_keys_param
-
-# In order for the agent hooks and the cache CLI to work properly,
-# we need to configure the .aws folder.
-configure_aws_folder $region
 
 # Fetch agent token from its SSM parameter,
 # and update the agent configuration YAML.

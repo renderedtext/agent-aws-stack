@@ -80,7 +80,7 @@ describe("SSM parameter for agent configuration", () => {
         disconnectAfterIdleTimeout: "300",
         envVars: [
           "SEMAPHORE_CACHE_BACKEND=s3",
-          "SEMAPHORE_CACHE_AWS_PROFILE=semaphore__agent-aws-stack-instance-profile",
+          "SEMAPHORE_CACHE_USE_EC2_INSTANCE_PROFILE=true",
           "SEMAPHORE_CACHE_S3_BUCKET=test-cache-bucket"
         ]
       })
@@ -201,13 +201,6 @@ describe("instance profile", () => {
             ],
             Effect: "Allow",
             Resource: "arn:aws:logs:*:*:log-group:/semaphore/*"
-          },
-          {
-            "Action": "sts:AssumeRole",
-            "Effect": "Allow",
-            "Resource": {
-              "Fn::GetAtt": [Match.anyValue(), "Arn"]
-            }
           }
         ],
         Version: Match.anyValue()
@@ -269,13 +262,6 @@ describe("instance profile", () => {
               "arn:aws:s3:::test-cache-bucket/*",
               `arn:aws:s3:::test-cache-bucket`
             ]
-          },
-          {
-            "Action": "sts:AssumeRole",
-            "Effect": "Allow",
-            "Resource": {
-              "Fn::GetAtt": [Match.anyValue(), "Arn"]
-            }
           }
         ],
         Version: Match.anyValue()
