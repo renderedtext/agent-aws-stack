@@ -62,7 +62,6 @@ Write-Output "Moving scripts..."
 New-Item -ItemType Directory -Path C:\semaphore-agent\hooks > $null
 Move-Item C:\packer-tmp\terminate-instance.ps1 C:\semaphore-agent\hooks\shutdown.ps1
 Move-Item C:\packer-tmp\start-agent.ps1 C:\semaphore-agent\start.ps1
-Move-Item C:\packer-tmp\configure-aws-region.ps1 C:\semaphore-agent\configure-aws-region.ps1
 Move-Item C:\packer-tmp\configure-github-ssh-keys.ps1 C:\semaphore-agent\configure-github-ssh-keys.ps1
 
 # The agent is installed when the instance starts, but the toolbox version
