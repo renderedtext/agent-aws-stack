@@ -274,8 +274,10 @@ describe("instance profile", () => {
 describe("launch configuration", () => {
   test("uses default linux AMI", () => {
     const template = createTemplate(basicArgumentStore());
-    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      ImageId: "default-ubuntu-focal-ami-id"
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        ImageId: "default-ubuntu-focal-ami-id"
+      }
     });
   })
 
@@ -284,8 +286,10 @@ describe("launch configuration", () => {
     argumentStore.set("SEMAPHORE_AGENT_OS", "windows");
 
     const template = createTemplateWithOS(argumentStore, "windows");
-    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      ImageId: "default-windows-ami-id"
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        ImageId: "default-windows-ami-id"
+      }
     });
   })
 
@@ -294,15 +298,19 @@ describe("launch configuration", () => {
     argumentStore.set("SEMAPHORE_AGENT_AMI", "ami-custom")
 
     const template = createTemplate(argumentStore);
-    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      ImageId: "ami-custom"
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        ImageId: "ami-custom"
+      }
     });
   })
 
   test("uses t2.micro as default", () => {
     const template = createTemplate(basicArgumentStore());
-    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      InstanceType: "t2.micro"
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        InstanceType: "t2.micro"
+      }
     });
   })
 
@@ -311,15 +319,19 @@ describe("launch configuration", () => {
     argumentStore.set("SEMAPHORE_AGENT_INSTANCE_TYPE", "t2.medium");
 
     const template = createTemplate(argumentStore);
-    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      InstanceType: "t2.medium"
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        InstanceType: "t2.medium"
+      }
     })
   })
 
   test("inherits volume from AMI", () => {
     const template = createTemplate(basicArgumentStore());
-    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      BlockDeviceMappings: Match.absent()
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        BlockDeviceMappings: Match.absent()
+      }
     })
   })
 
@@ -328,44 +340,50 @@ describe("launch configuration", () => {
     argumentStore.set("SEMAPHORE_AGENT_VOLUME_NAME", "/dev/sda1");
 
     const template = createTemplate(argumentStore);
-    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      BlockDeviceMappings: [
-        {
-          DeviceName: "/dev/sda1",
-          Ebs: {
-            VolumeType: "gp2",
-            VolumeSize: 64
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        BlockDeviceMappings: [
+          {
+            DeviceName: "/dev/sda1",
+            Ebs: {
+              VolumeType: "gp2",
+              VolumeSize: 64
+            }
           }
-        }
-      ]
+        ]
+      }
     })
   })
 
   test("defines volume, with custom size and type", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_VOLUME_NAME", "/dev/sda1");
-    argumentStore.set("SEMAPHORE_AGENT_VOLUME_TYPE", "io1");
+    argumentStore.set("SEMAPHORE_AGENT_VOLUME_TYPE", "gp3");
     argumentStore.set("SEMAPHORE_AGENT_VOLUME_SIZE", "3981");
 
     const template = createTemplate(argumentStore);
-    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      BlockDeviceMappings: [
-        {
-          DeviceName: "/dev/sda1",
-          Ebs: {
-            VolumeType: "io1",
-            VolumeSize: 3981
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        BlockDeviceMappings: [
+          {
+            DeviceName: "/dev/sda1",
+            Ebs: {
+              VolumeType: "gp3",
+              VolumeSize: 3981
+            }
           }
-        }
-      ]
+        ]
+      }
     })
   })
 
   test("agent is started using user data for linux", () => {
     const template = createTemplate(basicArgumentStore());
-    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      UserData: {
-        "Fn::Base64": "#!/bin/bash\n/opt/semaphore/agent/start.sh test-stack-config"
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        UserData: {
+          "Fn::Base64": "#!/bin/bash\n/opt/semaphore/agent/start.sh test-stack-config"
+        }
       }
     })
   })
@@ -375,9 +393,11 @@ describe("launch configuration", () => {
     argumentStore.set("SEMAPHORE_AGENT_OS", "windows");
 
     const template = createTemplateWithOS(argumentStore, "windows");
-    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      UserData: {
-        "Fn::Base64": "<powershell>C:\\semaphore-agent\\start.ps1 test-stack-config</powershell>"
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        UserData: {
+          "Fn::Base64": "<powershell>C:\\semaphore-agent\\start.ps1 test-stack-config</powershell>"
+        }
       }
     })
   })
@@ -397,12 +417,14 @@ describe("security group", () => {
       SecurityGroupIngress: Match.absent()
     });
 
-    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      SecurityGroups: [
-        {
-          "Fn::GetAtt": [Match.anyValue(), "GroupId"]
-        }
-      ]
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        SecurityGroupIds: [
+          {
+            "Fn::GetAtt": [Match.anyValue(), "GroupId"]
+          }
+        ]
+      }
     });
   })
 
@@ -430,23 +452,27 @@ describe("security group", () => {
       ]
     });
 
-    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      SecurityGroups: [
-        {
-          "Fn::GetAtt": [Match.anyValue(), "GroupId"]
-        }
-      ]
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        SecurityGroupIds: [
+          {
+            "Fn::GetAtt": [Match.anyValue(), "GroupId"]
+          }
+        ]
+      }
     });
   })
 
   test("uses specified security group", () => {
     const argumentStore = basicArgumentStore();
-    argumentStore.set("SEMAPHORE_AGENT_SECURITY_GROUP_ID", "dummy-sg");
+    argumentStore.set("SEMAPHORE_AGENT_SECURITY_GROUP_ID", "custom-security-group-id");
 
     const template = createTemplate(argumentStore);
     template.resourceCountIs("AWS::EC2::SecurityGroup", 0);
-    template.hasResourceProperties("AWS::AutoScaling::LaunchConfiguration", {
-      SecurityGroups: ["dummy-sg"]
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        SecurityGroupIds: ["custom-security-group-id"]
+      }
     });
   })
 })
@@ -732,14 +758,20 @@ function createTemplateWithOS(argumentStore, os) {
   const account = "dummyaccount";
   const region = "us-east-1";
   const customVpcId = "vpc-000000000-custom";
+  const customAmi = "ami-custom";
+  const customSecurityGroupId = "custom-security-group-id";
   const defaultAmiName = `semaphore-agent-v${packageInfo.version}-${os}-x86_64-${hash(os)}`;
   const amiLookupContextKey = `ami:account=${account}:filters.image-type.0=machine:filters.name.0=${defaultAmiName}:filters.state.0=available:owners.0=${account}:region=${region}`;
+  const customAmiLookupContextKey = `ami:account=${account}:filters.image-id.0=${customAmi}:filters.image-type.0=machine:filters.name.0=*:filters.state.0=available:region=${region}`;
   const defaultVpcContextKey = `vpc-provider:account=${account}:filter.isDefault=true:region=${region}:returnAsymmetricSubnets=true`
   const customVpcContextKey = `vpc-provider:account=${account}:filter.vpc-id=${customVpcId}:region=${region}:returnAsymmetricSubnets=true`
+  const customSecurityGroupContextKey = `security-group:account=${account}:region=${region}:securityGroupId=${customSecurityGroupId}`
 
   const app = new App({
     context: {
       [amiLookupContextKey]: `default-${os}-ami-id`,
+      [customAmiLookupContextKey]: customAmi,
+      [customSecurityGroupContextKey]: { "securityGroupId": customSecurityGroupId },
       [defaultVpcContextKey]: {
         "vpcId": "vpc-00000-default",
         "vpcCidrBlock": "172.31.0.0/16",
