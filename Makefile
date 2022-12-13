@@ -57,6 +57,19 @@ packer.validate.windows:
 			-var "install_erlang=$(INSTALL_ERLANG)" \
 			.'
 
+packer.validate.macos:
+	$(MAKE) venv.execute COMMAND='\
+		cd packer/macos && \
+		packer validate \
+			-var "stack_version=v$(VERSION)" \
+			-var "agent_version=$(AGENT_VERSION)" \
+			-var "toolbox_version=$(TOOLBOX_VERSION)" \
+			-var "hash=$(HASH)" \
+			-var "region=$(AWS_REGION)" \
+			-var "ami_prefix=$(AMI_PREFIX)" \
+			-var "arch=$(AMI_ARCH)" \
+			.'
+
 packer.init:
 	$(MAKE) venv.execute COMMAND='cd packer/$(PACKER_OS) && packer init .'
 
@@ -94,6 +107,21 @@ packer.build.windows:
 			-var "ami_prefix=$(AMI_PREFIX)" \
 			-var "arch=$(AMI_ARCH)" \
 			-var "install_erlang=$(INSTALL_ERLANG)" \
+			.'
+
+# In order to run this, you need to make sure you have an available dedicated host.
+# Otherwise, you will get a "UnavailableHostRequirements: A Dedicated host for the specified launch parameters could not be found" error
+packer.build.macos:
+	$(MAKE) venv.execute COMMAND='\
+		cd packer/macos && \
+		packer build \
+			-var "stack_version=v$(VERSION)" \
+			-var "agent_version=$(AGENT_VERSION)" \
+			-var "toolbox_version=$(TOOLBOX_VERSION)" \
+			-var "hash=$(HASH)" \
+			-var "region=$(AWS_REGION)" \
+			-var "ami_prefix=$(AMI_PREFIX)" \
+			-var "arch=$(AMI_ARCH)" \
 			.'
 
 ansible.lint:
