@@ -18,15 +18,30 @@ sudo diskutil apfs resizeContainer $APFS_CONTAINER_ID 0
 # See: https://github.com/aws/ec2-macos-init#clean
 sudo /usr/local/bin/ec2-macos-init clean --all
 
+# Before updating Homebrew and installing tools,
+# update all the required environment variables.
+if [[ ${ARCH} =~ "arm" || ${ARCH} == "aarch64" ]]; then
+  export HOMEBREW_PREFIX="/opt/homebrew";
+  export HOMEBREW_CELLAR="/opt/homebrew/Cellar";
+  export HOMEBREW_REPOSITORY="/opt/homebrew";
+  export HOMEBREW_SHELLENV_PREFIX="/opt/homebrew";
+  export PATH="/opt/homebrew/bin:/opt/homebrew/sbin${PATH+:$PATH}";
+  export MANPATH="/opt/homebrew/share/man${MANPATH+:$MANPATH}:";
+  export INFOPATH="/opt/homebrew/share/info:${INFOPATH:-}";
+else
+  export PATH="/usr/local/bin${PATH+:$PATH}";
+fi
+
 # Update Homebrew and install some tools
-brew update
+brew update --verbose
 brew upgrade
 brew install coreutils
 brew install jq
 brew install yq
+brew cleanup
 
 # Install cloudwatch agent
-# ARM64 binary is not yet available, so we need to use Rosetta if this is an ARM machine.
+# ARM binary is not yet available, so we need to use Rosetta.
 if [[ ${ARCH} =~ "arm" || ${ARCH} == "aarch64" ]]; then
   /usr/sbin/softwareupdate --install-rosetta --agree-to-license
 fi
