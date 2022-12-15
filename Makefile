@@ -1,6 +1,7 @@
 AWS_REGION=us-east-1
 AMI_ARCH=x86_64
 AMI_PREFIX=semaphore-agent
+AMI_INSTANCE_TYPE=t2.micro
 AGENT_VERSION=v2.1.14
 TOOLBOX_VERSION=v1.19.13
 PACKER_OS=linux
@@ -41,6 +42,7 @@ packer.validate.linux:
 			-var "arch=$(AMI_ARCH)" \
 			-var "install_erlang=$(INSTALL_ERLANG)" \
 			-var "systemd_restart_seconds=$(SYSTEMD_RESTART_SECONDS)" \
+			-var "instance_type=$(AMI_INSTANCE_TYPE)" \
 			.'
 
 packer.validate.windows:
@@ -55,6 +57,7 @@ packer.validate.windows:
 			-var "ami_prefix=$(AMI_PREFIX)" \
 			-var "arch=$(AMI_ARCH)" \
 			-var "install_erlang=$(INSTALL_ERLANG)" \
+			-var "instance_type=$(AMI_INSTANCE_TYPE)" \
 			.'
 
 packer.validate.macos:
@@ -68,6 +71,7 @@ packer.validate.macos:
 			-var "region=$(AWS_REGION)" \
 			-var "ami_prefix=$(AMI_PREFIX)" \
 			-var "arch=$(AMI_ARCH)" \
+			-var "instance_type=$(AMI_INSTANCE_TYPE)" \
 			.'
 
 packer.init:
@@ -93,6 +97,7 @@ packer.build.linux:
 			-var "arch=$(AMI_ARCH)" \
 			-var "install_erlang=$(INSTALL_ERLANG)" \
 			-var "systemd_restart_seconds=$(SYSTEMD_RESTART_SECONDS)" \
+			-var "instance_type=$(AMI_INSTANCE_TYPE)" \
 			.'
 
 packer.build.windows:
@@ -107,10 +112,13 @@ packer.build.windows:
 			-var "ami_prefix=$(AMI_PREFIX)" \
 			-var "arch=$(AMI_ARCH)" \
 			-var "install_erlang=$(INSTALL_ERLANG)" \
+			-var "instance_type=$(AMI_INSTANCE_TYPE)" \
 			.'
 
 # In order to run this, you need to make sure you have an available dedicated host.
-# Otherwise, you will get a "UnavailableHostRequirements: A Dedicated host for the specified launch parameters could not be found" error
+# Otherwise, you will get a UnavailableHostRequirements error
+# For mac1 family AMIs (intel), use AMI_ARCH=x86_64 and AMI_INSTANCE_TYPE=mac1.metal
+# For mac2 family AMIs (ARM), use AMI_ARCH=arm64 and AMI_INSTANCE_TYPE=mac2.metal
 packer.build.macos:
 	$(MAKE) venv.execute COMMAND='\
 		cd packer/macos && \
@@ -122,6 +130,7 @@ packer.build.macos:
 			-var "region=$(AWS_REGION)" \
 			-var "ami_prefix=$(AMI_PREFIX)" \
 			-var "arch=$(AMI_ARCH)" \
+			-var "instance_type=$(AMI_INSTANCE_TYPE)" \
 			.'
 
 ansible.lint:
