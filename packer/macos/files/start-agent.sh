@@ -149,7 +149,7 @@ change_agent_config() {
   echo $__agent_params__ | jq '.envVars[]' | xargs -I {} yq e -P -i '.env-vars = .env-vars + "{}"' /opt/semaphore/agent/config.yaml
 
   # Update agent configuration file permissions
-  sudo chown semaphore:semaphore /opt/semaphore/agent/config.yaml
+  sudo chown semaphore: /opt/semaphore/agent/config.yaml
 }
 
 #
@@ -180,7 +180,7 @@ configure_known_hosts() {
   echo $__keys__ | jq -r '.[]' | sed 's/^/github.com /' | sudo tee -a $HOME/.ssh/known_hosts
 
   echo "Updating permissions on .ssh folder..."
-  sudo chown -R semaphore:semaphore $HOME/.ssh
+  sudo chown -R semaphore: $HOME/.ssh
 }
 
 #
