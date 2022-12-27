@@ -80,6 +80,8 @@ packer.init:
 packer.build:
 	@if [ $(PACKER_OS) = "windows" ]; then \
 		$(MAKE) packer.build.windows; \
+	elif [ $(PACKER_OS) = "macos" ]; then \
+		$(MAKE) packer.build.macos; \
 	else \
 		$(MAKE) packer.build.linux; \
 	fi
