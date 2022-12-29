@@ -70,7 +70,16 @@ source "amazon-ebs" "windows" {
     owners = ["801119661308"]
 
     filters = {
-      name                = "Windows_Server-2019-English-Full-Containers*"
+      // The new AMIs released in 2022.12 use EC2 Launch version 1.3.2003961.
+      // See https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/ec2-windows-ami-version-history.html.
+      //
+      // That version has an issue that makes SysprepInstance.ps1 return a bad exit code.
+      // See https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/ec2launch-version-details.html.
+      //
+      // A new EC2 launch version 1.3.2003975 is already available,
+      // but the AMIs provided by AWS were not yet upgraded.
+      // Until AWS provides updated AMIs, we'll use the previous one.
+      name                = "Windows_Server-2019-English-Full-ContainersLatest-2022.11*"
       architecture        = "${var.arch}"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
