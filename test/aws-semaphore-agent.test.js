@@ -750,6 +750,109 @@ describe("vpc and subnets", () => {
   })
 })
 
+describe("host resource group", () => {
+  test("created for mac instances", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_OS", "macos");
+    argumentStore.set("SEMAPHORE_AGENT_LICENSE_CONFIGURATION_ARN", "arn:aws:license-manager:us-east-1:dummyaccount:license-configuration:lic-08ha0s8hd");
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::ResourceGroups::Group", {
+      Name: "test-stack",
+      Resources: [],
+      Configuration: [
+        {
+          Type: "AWS::EC2::HostManagement",
+          Parameters: [
+            {
+              Name: "allowed-host-based-license-configurations",
+              Values: ["arn:aws:license-manager:us-east-1:dummyaccount:license-configuration:lic-08ha0s8hd"]
+            },
+            {
+              Name: "allowed-host-families",
+              Values: ["mac2"]
+            },
+            {
+              Name: "auto-allocate-host",
+              Values: ["true"]
+            },
+            {
+              Name: "auto-release-host",
+              Values: ["true"]
+            }
+          ],
+        },
+        {
+          Type: "AWS::ResourceGroups::Generic",
+          Parameters: [
+            {
+              Name: "allowed-resource-types",
+              Values: ["AWS::EC2::Host"]
+            },
+            {
+              Name: "deletion-protection",
+              Values: ["UNLESS_EMPTY"]
+            }
+          ]
+        }
+      ]
+    });
+  })
+
+  test("initial dedicated hosts are specified", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_OS", "macos");
+    argumentStore.set("SEMAPHORE_AGENT_LICENSE_CONFIGURATION_ARN", "arn:aws:license-manager:us-east-1:dummyaccount:license-configuration:lic-08ha0s8hd");
+    argumentStore.set("SEMAPHORE_AGENT_MAC_DEDICATED_HOSTS", "h-0001,h-0002,h-0003");
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::ResourceGroups::Group", {
+      Name: "test-stack",
+      Resources: [
+        "arn:aws:ec2:us-east-1:dummyaccount:dedicated-host/h-0001",
+        "arn:aws:ec2:us-east-1:dummyaccount:dedicated-host/h-0002",
+        "arn:aws:ec2:us-east-1:dummyaccount:dedicated-host/h-0003"
+      ],
+      Configuration: [
+        {
+          Type: "AWS::EC2::HostManagement",
+          Parameters: [
+            {
+              Name: "allowed-host-based-license-configurations",
+              Values: ["arn:aws:license-manager:us-east-1:dummyaccount:license-configuration:lic-08ha0s8hd"]
+            },
+            {
+              Name: "allowed-host-families",
+              Values: ["mac2"]
+            },
+            {
+              Name: "auto-allocate-host",
+              Values: ["true"]
+            },
+            {
+              Name: "auto-release-host",
+              Values: ["true"]
+            }
+          ],
+        },
+        {
+          Type: "AWS::ResourceGroups::Generic",
+          Parameters: [
+            {
+              Name: "allowed-resource-types",
+              Values: ["AWS::EC2::Host"]
+            },
+            {
+              Name: "deletion-protection",
+              Values: ["UNLESS_EMPTY"]
+            }
+          ]
+        }
+      ]
+    });
+  })
+})
+
 function createTemplate(argumentStore) {
   return createTemplateWithOS(argumentStore, "ubuntu-focal");
 }

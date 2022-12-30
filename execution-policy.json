@@ -50,7 +50,17 @@
     {
       "Sid": "RunEC2InstancesAccess",
       "Effect": "Allow",
-      "Action": "ec2:RunInstances",
+      "Action": [
+        "ec2:AssociateIamInstanceProfile",
+        "ec2:DescribeIamInstanceProfileAssociations",
+        "ec2:DisassociateIamInstanceProfile",
+        "ec2:ModifyInstanceAttribute",
+        "ec2:ReplaceIamInstanceProfileAssociation",
+        "ec2:RunInstances",
+        "ec2:StartInstances",
+        "ec2:StopInstances",
+        "ec2:TerminateInstances"
+      ],
       "Resource": "*"
     },
     {
@@ -99,7 +109,9 @@
       "Action": [
         "logs:CreateLogGroup",
         "logs:PutRetentionPolicy",
-        "logs:DeleteLogGroup"
+        "logs:DeleteLogGroup",
+        "logs:TagLogGroup",
+        "logs:UntagLogGroup"
       ],
       "Resource": "arn:aws:logs:*:*:log-group:*"
     },
@@ -111,7 +123,8 @@
         "ssm:GetParameters",
         "ssm:PutParameter",
         "ssm:DeleteParameter",
-        "ssm:AddTagsToResource"
+        "ssm:AddTagsToResource",
+        "ssm:RemoveTagsFromResource"
       ],
       "Resource": "*"
     },
@@ -220,6 +233,55 @@
         "s3:GetEncryptionConfiguration"
       ],
       "Resource": "arn:aws:s3:::cdk*"
+    },
+    {
+      "Sid": "LaunchTemplateAccess",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateLaunchTemplate",
+        "ec2:CreateLaunchTemplateVersion",
+        "ec2:DeleteLaunchTemplate",
+        "ec2:DeleteLaunchTemplateVersions",
+        "ec2:DescribeLaunchTemplateVersions",
+        "ec2:DescribeLaunchTemplates",
+        "ec2:ModifyLaunchTemplate"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ResourceGroupAccess",
+      "Effect": "Allow",
+      "Action": [
+        "resource-groups:CreateGroup",
+        "resource-groups:DeleteGroup",
+        "resource-groups:GetGroup",
+        "resource-groups:GetGroupConfiguration",
+        "resource-groups:GetGroupQuery",
+        "resource-groups:GetTags",
+        "resource-groups:GroupResources",
+        "resource-groups:ListGroupResources",
+        "resource-groups:ListGroups",
+        "resource-groups:PutGroupConfiguration",
+        "resource-groups:PutGroupPolicy",
+        "resource-groups:SearchResources",
+        "resource-groups:Tag",
+        "resource-groups:UngroupResources",
+        "resource-groups:Untag",
+        "resource-groups:UpdateGroup",
+        "resource-groups:UpdateGroupQuery"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DedicatedHostAccess",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:AllocateHosts",
+        "ec2:DescribeHosts",
+        "ec2:ModifyHosts",
+        "ec2:ReleaseHosts"
+      ],
+      "Resource": "*"
     }
   ]
 }
