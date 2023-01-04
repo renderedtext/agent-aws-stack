@@ -15,6 +15,7 @@
         "ec2:DescribeSubnets",
         "ec2:DescribeVpcs",
         "ec2:CreateTags",
+        "ec2:DeleteTags",
         "ec2:CreateLaunchTemplate",
         "ec2:CreateLaunchTemplateVersion",
         "ec2:DeleteLaunchTemplate",
@@ -99,7 +100,8 @@
         "lambda:InvokeFunction",
         "lambda:UpdateFunctionCode",
         "lambda:UpdateFunctionConfiguration",
-        "lambda:TagResource"
+        "lambda:TagResource",
+        "lambda:UntagResource"
       ],
       "Resource": "arn:aws:lambda:*:*:function:*"
     },
@@ -194,6 +196,7 @@
         "autoscaling:SetInstanceProtection",
         "autoscaling:CreateAutoScalingGroup",
         "autoscaling:EnableMetricsCollection",
+        "autoscaling:DisableMetricsCollection",
         "autoscaling:UpdateAutoScalingGroup",
         "autoscaling:DeleteAutoScalingGroup",
         "autoscaling:PutScalingPolicy",
@@ -207,7 +210,9 @@
         "autoscaling:AttachInstances",
         "autoscaling:DescribeLaunchConfigurations",
         "autoscaling:CreateLaunchConfiguration",
-        "autoscaling:DeleteLaunchConfiguration"
+        "autoscaling:DeleteLaunchConfiguration",
+        "autoscaling:CreateOrUpdateTags",
+        "autoscaling:DeleteTags"
       ],
       "Resource": "*"
     },
