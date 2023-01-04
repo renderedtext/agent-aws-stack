@@ -240,20 +240,6 @@
       "Resource": "arn:aws:s3:::cdk*"
     },
     {
-      "Sid": "LaunchTemplateAccess",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateLaunchTemplate",
-        "ec2:CreateLaunchTemplateVersion",
-        "ec2:DeleteLaunchTemplate",
-        "ec2:DeleteLaunchTemplateVersions",
-        "ec2:DescribeLaunchTemplateVersions",
-        "ec2:DescribeLaunchTemplates",
-        "ec2:ModifyLaunchTemplate"
-      ],
-      "Resource": "*"
-    },
-    {
       "Sid": "ResourceGroupAccess",
       "Effect": "Allow",
       "Action": [
