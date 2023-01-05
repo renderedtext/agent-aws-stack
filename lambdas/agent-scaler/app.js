@@ -235,17 +235,23 @@ exports.handler = async (event, context, callback) => {
   /**
    * The interval between ticks.
    * This is required because the smallest unit for a scheduled lambda is 1 minute.
-   * So, we run a tick every 10s, timing out after 50s
+   * So, we run a tick every 10s, exiting before the 60s lambda timeout is reached.
    */
-  const interval = 10000;
-  const timeout = epochSeconds() + 50;
+  const interval = 10;
+  const timeout = epochSeconds() + 60;
 
   let now = epochSeconds();
-  while (now < timeout) {
+  while (true) {
     await tick(agentTokenParameterName, stackName, autoScalingClient, semaphoreEndpoint);
-    console.log(`Sleeping ${interval}ms...`);
-    await sleep(interval);
+
+    // Check if we will hit the timeout before sleeping...
     now = epochSeconds();
+    if ((now + interval) >= timeout) {
+      break
+    }
+
+    console.log(`Sleeping ${interval}s...`);
+    await sleep(interval * 1000);
   }
 
   return {
