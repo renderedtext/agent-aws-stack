@@ -76,12 +76,16 @@ if [[ ${ARCH} =~ "arm" || ${ARCH} == "aarch64" ]]; then
   AGENT_TARBALL=agent_Darwin_arm64.tar.gz
 fi
 
+# Create installation directory
 sudo mkdir -p /opt/semaphore/agent
-sudo chown $USER: /opt/semaphore/agent/
 cd /opt/semaphore/agent
-curl -L https://github.com/semaphoreci/agent/releases/download/$AGENT_VERSION/$AGENT_TARBALL -o agent.tar.gz
-tar xvf agent.tar.gz
-rm agent.tar.gz
+sudo curl -L https://github.com/semaphoreci/agent/releases/download/$AGENT_VERSION/$AGENT_TARBALL -o agent.tar.gz
+sudo tar xvf agent.tar.gz
+sudo rm agent.tar.gz
+
+# Create hooks directory
+sudo mkdir -p /opt/semaphore/agent/hooks
+sudo cp /tmp/terminate-instance.sh /opt/semaphore/agent/hooks/shutdown
 
 # Install Semaphore agent
 export SEMAPHORE_AGENT_INSTALLATION_USER=semaphore
@@ -89,6 +93,9 @@ export SEMAPHORE_TOOLBOX_VERSION=$TOOLBOX_VERSION
 export SEMAPHORE_AGENT_START=false
 export SEMAPHORE_REGISTRATION_TOKEN=DUMMY
 export SEMAPHORE_ORGANIZATION=DUMMY
+export SEMAPHORE_AGENT_SHUTDOWN_HOOK=/opt/semaphore/agent/hooks/shutdown
 sudo -E ./install.sh
 
-cp /tmp/start-agent.sh /opt/semaphore/agent/start.sh
+# Copy agent startup script and apply folder permissions
+sudo cp /tmp/start-agent.sh /opt/semaphore/agent/start.sh
+sudo chown -R semaphore: /opt/semaphore/agent

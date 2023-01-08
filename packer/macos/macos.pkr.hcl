@@ -95,7 +95,8 @@ build {
     destination = "/tmp/"
     sources = [
       "files/amazon-cloudwatch-agent.json",
-      "files/start-agent.sh"
+      "files/start-agent.sh",
+      "files/terminate-instance.sh"
     ]
   }
 
