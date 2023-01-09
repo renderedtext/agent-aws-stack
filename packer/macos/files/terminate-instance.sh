@@ -2,7 +2,12 @@
 # and launchD has no default built-in mechanism for loading environments
 # like systemD's environment generators, so we need to set the PATH
 # environment variable (and any other variables we might expect) here.
-export PATH=/usr/local/bin:$PATH
+ARCH=$(uname -m)
+if [[ ${ARCH} =~ "arm" || ${ARCH} == "aarch64" ]]; then
+  export PATH="/opt/homebrew/bin:/opt/homebrew/sbin${PATH+:$PATH}";
+else
+  export PATH=/usr/local/bin:$PATH
+fi
 
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
 instance_id=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
