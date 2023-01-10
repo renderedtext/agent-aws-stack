@@ -223,3 +223,7 @@ change_agent_config $agent_params $agent_token
 # After upgrading the agent configuration, start the agent systemd service.
 echo "Starting agent..."
 sudo systemctl start semaphore-agent
+
+# Create cron job to continously check if agent is running
+echo "* * * * * semaphore /opt/semaphore/agent/health-check.sh >> /opt/semaphore/agent/health-check.log" | sudo tee -a /etc/cron.d/semaphore_agent_healthcheck
+sudo /etc/init.d/cron reload
