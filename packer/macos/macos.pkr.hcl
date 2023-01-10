@@ -96,7 +96,8 @@ build {
     sources = [
       "files/amazon-cloudwatch-agent.json",
       "files/start-agent.sh",
-      "files/terminate-instance.sh"
+      "files/terminate-instance.sh",
+      "files/health-check.sh
     ]
   }
 
