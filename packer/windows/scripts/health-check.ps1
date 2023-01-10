@@ -16,10 +16,14 @@ function Set-InstanceHealth {
     --health-status Unhealthy
 }
 
-$proc = Get-Process | Where {$_.Path -Like "C:\semaphore-agent\agent"}
+$proc = Get-Process | Where {$_.Path -Like "C:\semaphore-agent\agent.exe"}
 if ($proc) {
-  Write-Output "[$(Get-Date -Format 'dd/MM/yyyy HH:mm')] Agent is not running - marking instance as unhealthy."
-  Set-InstanceHealth
+  Add-Content `
+    -Path C:\semaphore-agent\health-check.log `
+    -Value "[$(Get-Date -Format 'dd/MM/yyyy HH:mm')] Agent is running."
 } else {
-  Write-Output "[$(Get-Date -Format 'dd/MM/yyyy HH:mm')] Agent is running."
+  Add-Content `
+    -Path C:\semaphore-agent\health-check.log `
+    -Value "[$(Get-Date -Format 'dd/MM/yyyy HH:mm')] Agent is not running - marking instance as unhealthy."
+  Set-InstanceHealth
 }

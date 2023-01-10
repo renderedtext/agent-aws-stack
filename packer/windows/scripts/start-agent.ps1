@@ -148,7 +148,7 @@ nssm start semaphore-agent
 
 # Create a scheduled task to continuosly check the agent's health
 Write-Output "Creating scheduled task for agent health check..."
-$scheduledTaskAction = New-ScheduledTaskAction -Execute 'pwsh.exe' -Argument '-NonInteractive -NoLogo -NoProfile -File "C:\semaphore-agent\health-check.ps1"'
+$scheduledTaskAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NonInteractive -NoLogo -NoProfile -ExecutionPolicy bypass -File "C:\semaphore-agent\health-check.ps1"'
 $scheduledTaskTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1)
 $scheduledTaskSettings = New-ScheduledTaskSettingsSet
 $scheduledTask = New-ScheduledTask -Action $scheduledTaskAction -Trigger $scheduledTaskTrigger -Settings $scheduledTaskSettings
