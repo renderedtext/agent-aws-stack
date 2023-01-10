@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# This script is executed as a cron job, so we need to include a few things in the PATH.
+ARCH=$(uname -m)
+if [[ ${ARCH} =~ "arm" || ${ARCH} == "aarch64" ]]; then
+  export PATH="/opt/homebrew/bin:/opt/homebrew/sbin${PATH+:$PATH}";
+else
+  export PATH=/usr/local/bin:$PATH
+fi
+
 mark_as_unhealthy() {
   local __token__=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
   local __instance_id__=$(curl -H "X-aws-ec2-metadata-token: $__token__" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
