@@ -96,6 +96,7 @@ export SEMAPHORE_ORGANIZATION=DUMMY
 export SEMAPHORE_AGENT_SHUTDOWN_HOOK=/opt/semaphore/agent/hooks/shutdown
 sudo -E ./install.sh
 
-# Copy agent startup script and apply folder permissions
+# Copy agent scripts and apply folder permissions
 sudo cp /tmp/start-agent.sh /opt/semaphore/agent/start.sh
+sudo cp /tmp/health-check.sh /opt/semaphore/agent/health-check.sh
 sudo chown -R semaphore: /opt/semaphore/agent

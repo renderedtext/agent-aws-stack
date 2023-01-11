@@ -50,3 +50,11 @@
     mode: "0755"
     owner: semaphore
     group: semaphore
+
+- name: Copy health check script
+  copy:
+    src: health-check.sh
+    dest: "{{ agent_root_dir }}/health-check.sh"
+    mode: "0755"
+    owner: semaphore
+    group: semaphore

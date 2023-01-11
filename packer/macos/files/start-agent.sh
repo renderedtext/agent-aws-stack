@@ -225,3 +225,8 @@ change_agent_config $agent_params $agent_token
 # After upgrading the agent configuration, start the agent systemd service.
 echo "Starting agent..."
 sudo launchctl start com.semaphoreci.agent
+
+# Create cron job to continously check if agent is running.
+# We just need to create our crontab file in /etc/crontab,
+# and the launchd system/com.vix.cron daemon will take care of the rest.
+echo "* * * * * semaphore /opt/semaphore/agent/health-check.sh >> /opt/semaphore/agent/health-check.log" | sudo tee -a /etc/crontab

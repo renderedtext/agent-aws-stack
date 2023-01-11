@@ -20,6 +20,12 @@
             "log_group_name": "/semaphore/agent",
             "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f",
             "retention_in_days": 30
+          },
+          {
+            "file_path": "C:\\semaphore-agent\\health-check.log",
+            "log_group_name": "/semaphore/agent/health",
+            "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f",
+            "retention_in_days": 30
           }
         ]
       },

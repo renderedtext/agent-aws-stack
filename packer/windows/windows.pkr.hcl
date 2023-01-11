@@ -99,6 +99,7 @@ build {
     sources = [
       "scripts/terminate-instance.ps1",
       "scripts/start-agent.ps1",
+      "scripts/health-check.ps1",
       "scripts/provision-ami.ps1",
       "scripts/configure-github-ssh-keys.ps1",
       "files/amazon-cloudwatch-agent.json"

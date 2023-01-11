@@ -146,6 +146,14 @@ nssm set semaphore-agent AppRestartDelay 10000
 Write-Output "Starting agent service..."
 nssm start semaphore-agent
 
+# Create a scheduled task to continuosly check the agent's health
+Write-Output "Creating scheduled task for agent health check..."
+$scheduledTaskAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NonInteractive -NoLogo -NoProfile -ExecutionPolicy bypass -File "C:\semaphore-agent\health-check.ps1"'
+$scheduledTaskTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1)
+$scheduledTaskSettings = New-ScheduledTaskSettingsSet
+$scheduledTask = New-ScheduledTask -Action $scheduledTaskAction -Trigger $scheduledTaskTrigger -Settings $scheduledTaskSettings
+Register-ScheduledTask -TaskName 'Semaphore agent health check' -InputObject $scheduledTask -User $UserName -Password $Password
+
 Write-Output "Disabling PSRemoting and winRM service..."
 Disable-PSRemoting -Force
 Stop-Service WinRM
