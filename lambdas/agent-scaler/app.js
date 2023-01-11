@@ -3,9 +3,12 @@ const utils = require("util");
 const { SSMClient, GetParameterCommand } = require("@aws-sdk/client-ssm");
 const { AutoScalingClient, DescribeAutoScalingGroupsCommand, SetDesiredCapacityCommand } = require("@aws-sdk/client-auto-scaling");
 const { CloudWatchClient, PutMetricDataCommand } = require("@aws-sdk/client-cloudwatch");
+const { NodeHttpHandler } = require("@aws-sdk/node-http-handler");
 
-function getAgentTypeToken(tokenParameterName) {
-  const ssmClient = new SSMClient();
+const CONNECTION_TIMEOUT = 5000;
+const SOCKET_TIMEOUT = 5000;
+
+function getAgentTypeToken(ssmClient, tokenParameterName) {
   const params = {
     Name: tokenParameterName,
     WithDecryption: true
@@ -115,10 +118,8 @@ function buildMetricData(stackName, metrics) {
   return metricData;
 }
 
-function publishOccupancyMetrics(stackName, metrics) {
-  const cloudwatchClient = new CloudWatchClient();
+function publishOccupancyMetrics(cloudwatchClient, stackName, metrics) {
   const metricData = buildMetricData(stackName, metrics)
-
   console.log(`Publishing metrics to CloudWatch: ${utils.inspect(metricData, {depth: 3})}`);
 
   return new Promise(function(resolve, reject) {
@@ -190,11 +191,11 @@ function epochSeconds() {
   return Math.round(Date.now() / 1000);
 }
 
-const tick = async (agentTokenParameterName, stackName, autoScalingClient, semaphoreEndpoint) => {
+const tick = async (agentTokenParameterName, stackName, autoScalingClient, ssmClient, cloudwatchClient, semaphoreEndpoint) => {
   try {
-    const agentTypeToken = await getAgentTypeToken(agentTokenParameterName);
+    const agentTypeToken = await getAgentTypeToken(ssmClient, agentTokenParameterName);
     const metrics = await getAgentTypeMetrics(agentTypeToken, semaphoreEndpoint);
-    await publishOccupancyMetrics(stackName, metrics);
+    await publishOccupancyMetrics(cloudwatchClient, stackName, metrics);
     const asg = await describeAsg(autoScalingClient, stackName);
     await scaleUpIfNeeded(autoScalingClient, asg.name, metrics.jobs, asg);
   } catch (e) {
@@ -230,7 +231,29 @@ exports.handler = async (event, context, callback) => {
     };
   }
 
-  const autoScalingClient = new AutoScalingClient();
+  const ssmClient = new SSMClient({
+    maxAttempts: 1,
+    requestHandler: new NodeHttpHandler({
+      connectionTimeout: CONNECTION_TIMEOUT,
+      socketTimeout: SOCKET_TIMEOUT
+    }),
+  });
+
+  const cloudwatchClient = new CloudWatchClient({
+    maxAttempts: 1,
+    requestHandler: new NodeHttpHandler({
+      connectionTimeout: CONNECTION_TIMEOUT,
+      socketTimeout: SOCKET_TIMEOUT
+    }),
+  });
+
+  const autoScalingClient = new AutoScalingClient({
+    maxAttempts: 1,
+    requestHandler: new NodeHttpHandler({
+      connectionTimeout: CONNECTION_TIMEOUT,
+      socketTimeout: SOCKET_TIMEOUT
+    }),
+  });
 
   /**
    * The interval between ticks.
@@ -242,7 +265,7 @@ exports.handler = async (event, context, callback) => {
 
   let now = epochSeconds();
   while (true) {
-    await tick(agentTokenParameterName, stackName, autoScalingClient, semaphoreEndpoint);
+    await tick(agentTokenParameterName, stackName, autoScalingClient, ssmClient, cloudwatchClient, semaphoreEndpoint);
 
     // Check if we will hit the timeout before sleeping...
     now = epochSeconds();
