@@ -5,8 +5,8 @@ const { AutoScalingClient, DescribeAutoScalingGroupsCommand, SetDesiredCapacityC
 const { CloudWatchClient, PutMetricDataCommand } = require("@aws-sdk/client-cloudwatch");
 const { NodeHttpHandler } = require("@aws-sdk/node-http-handler");
 
-const CONNECTION_TIMEOUT = 5000;
-const SOCKET_TIMEOUT = 5000;
+const CONNECTION_TIMEOUT = 2500;
+const SOCKET_TIMEOUT = 2500;
 
 function getAgentTypeToken(ssmClient, tokenParameterName) {
   const params = {
