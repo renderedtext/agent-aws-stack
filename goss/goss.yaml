@@ -28,6 +28,11 @@ file:
     filetype: symlink
     linked-to: /home/semaphore/.toolbox/cache
 
+  /usr/local/bin/sem-context:
+    exists: true
+    filetype: symlink
+    linked-to: /home/semaphore/.toolbox/sem-context
+
   /usr/local/bin/artifact:
     exists: true
     filetype: symlink

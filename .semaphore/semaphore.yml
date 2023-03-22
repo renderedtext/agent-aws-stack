@@ -160,6 +160,7 @@ blocks:
             - checkout
             - artifact
             - test-results
+            - sem-context
             - Write-Output 'hello'
 
 after_pipeline:
