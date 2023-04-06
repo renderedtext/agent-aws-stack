@@ -1,12 +1,13 @@
 const https = require('https');
 const utils = require("util");
+const { Agent } = require("https");
 const { SSMClient, GetParameterCommand } = require("@aws-sdk/client-ssm");
 const { AutoScalingClient, DescribeAutoScalingGroupsCommand, SetDesiredCapacityCommand } = require("@aws-sdk/client-auto-scaling");
 const { CloudWatchClient, PutMetricDataCommand } = require("@aws-sdk/client-cloudwatch");
 const { NodeHttpHandler } = require("@aws-sdk/node-http-handler");
 
-const CONNECTION_TIMEOUT = 2500;
-const SOCKET_TIMEOUT = 2500;
+const CONNECTION_TIMEOUT = 1000;
+const SOCKET_TIMEOUT = 1000;
 
 function getAgentTypeToken(ssmClient, tokenParameterName) {
   const params = {
@@ -235,7 +236,10 @@ exports.handler = async (event, context, callback) => {
     maxAttempts: 1,
     requestHandler: new NodeHttpHandler({
       connectionTimeout: CONNECTION_TIMEOUT,
-      socketTimeout: SOCKET_TIMEOUT
+      socketTimeout: SOCKET_TIMEOUT,
+      httpsAgent: new Agent({
+        timeout: SOCKET_TIMEOUT
+      })
     }),
   });
 
@@ -243,7 +247,10 @@ exports.handler = async (event, context, callback) => {
     maxAttempts: 1,
     requestHandler: new NodeHttpHandler({
       connectionTimeout: CONNECTION_TIMEOUT,
-      socketTimeout: SOCKET_TIMEOUT
+      socketTimeout: SOCKET_TIMEOUT,
+      httpsAgent: new Agent({
+        timeout: SOCKET_TIMEOUT
+      })
     }),
   });
 
@@ -251,7 +258,10 @@ exports.handler = async (event, context, callback) => {
     maxAttempts: 1,
     requestHandler: new NodeHttpHandler({
       connectionTimeout: CONNECTION_TIMEOUT,
-      socketTimeout: SOCKET_TIMEOUT
+      socketTimeout: SOCKET_TIMEOUT,
+      httpsAgent: new Agent({
+        timeout: SOCKET_TIMEOUT
+      })
     }),
   });
 
