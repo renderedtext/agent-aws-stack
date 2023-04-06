@@ -12,17 +12,20 @@ function getGitHubSSHKeys() {
   return new Promise((resolve, reject) => {
     let data = '';
     https.request(options, response => {
-      if (response.statusCode !== 200) {
-        reject(`Request to get GitHub SSH keys got ${response.statusCode}`);
-        return;
-      }
-
       response.on('data', function (chunk) {
         data += chunk;
       });
 
       response.on('end', function () {
-        resolve(JSON.parse(data).ssh_keys);
+        if (response.statusCode !== 200) {
+          const errMessage = `Request to get GitHub SSH keys failed with ${response.statusCode}`
+          console.error(errMessage);
+          console.error(`Response: ${data}`);
+          console.error(`Headers: ${JSON.stringify(response.headers)}`);
+          reject(errMessage);
+        } else {
+          resolve(JSON.parse(data).ssh_keys);
+        }
       });
     })
     .on('error', error => reject(error))
