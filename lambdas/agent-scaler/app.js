@@ -192,9 +192,8 @@ function epochSeconds() {
   return Math.round(Date.now() / 1000);
 }
 
-const tick = async (agentTokenParameterName, stackName, autoScalingClient, ssmClient, cloudwatchClient, semaphoreEndpoint) => {
+const tick = async (agentTypeToken, stackName, autoScalingClient, cloudwatchClient, semaphoreEndpoint) => {
   try {
-    const agentTypeToken = await getAgentTypeToken(ssmClient, agentTokenParameterName);
     const metrics = await getAgentTypeMetrics(agentTypeToken, semaphoreEndpoint);
     await publishOccupancyMetrics(cloudwatchClient, stackName, metrics);
     const asg = await describeAsg(autoScalingClient, stackName);
@@ -272,23 +271,33 @@ exports.handler = async (event, context, callback) => {
    */
   const interval = 10;
   const timeout = epochSeconds() + 60;
-
   let now = epochSeconds();
-  while (true) {
-    await tick(agentTokenParameterName, stackName, autoScalingClient, ssmClient, cloudwatchClient, semaphoreEndpoint);
 
-    // Check if we will hit the timeout before sleeping...
-    now = epochSeconds();
-    if ((now + interval) >= timeout) {
-      break
+  try {
+    const agentTypeToken = await getAgentTypeToken(ssmClient, agentTokenParameterName);
+
+    while (true) {
+      await tick(agentTypeToken, stackName, autoScalingClient, cloudwatchClient, semaphoreEndpoint);
+
+      // Check if we will hit the timeout before sleeping...
+      now = epochSeconds();
+      if ((now + interval) >= timeout) {
+        break
+      }
+
+      console.log(`Sleeping ${interval}s...`);
+      await sleep(interval * 1000);
     }
 
-    console.log(`Sleeping ${interval}s...`);
-    await sleep(interval * 1000);
-  }
-
-  return {
-    statusCode: 200,
-    message: "success",
+    return {
+      statusCode: 200,
+      message: "success",
+    }
+  } catch (e) {
+    console.error("Error fetching agent type token", e);
+    return {
+      statusCode: 500,
+      message: "error",
+    }
   }
 };
