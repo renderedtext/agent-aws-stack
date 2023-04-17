@@ -271,6 +271,7 @@ exports.handler = async (event, context, callback) => {
    */
   const interval = 10;
   const timeout = epochSeconds() + 60;
+  const tickDuration = 5;
   let now = epochSeconds();
 
   try {
@@ -279,9 +280,11 @@ exports.handler = async (event, context, callback) => {
     while (true) {
       await tick(agentTypeToken, stackName, autoScalingClient, cloudwatchClient, semaphoreEndpoint);
 
-      // Check if we will hit the timeout before sleeping...
+      // Check if we will hit the timeout before sleeping.
+      // We include a worst-case scenario for the next tick duration (5s) here too,
+      // to avoid hitting the timeout while running the next tick.
       now = epochSeconds();
-      if ((now + interval) >= timeout) {
+      if ((now + interval + tickDuration) >= timeout) {
         break
       }
 
