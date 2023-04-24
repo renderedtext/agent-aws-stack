@@ -689,7 +689,7 @@ describe("SSH keys updater lambda", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::Events::Rule", {
       Description: "Rule to dynamically invoke lambda function to check GitHub public SSH keys.",
-      ScheduleExpression: "rate(1 hour)",
+      ScheduleExpression: "rate(1 day)",
       State: "ENABLED",
       Targets: Match.anyValue()
     });
