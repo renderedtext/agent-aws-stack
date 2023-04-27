@@ -92,6 +92,9 @@
       "Effect": "Allow",
       "Action": [
         "lambda:CreateFunction",
+        "lambda:PutFunctionConcurrency",
+        "lambda:PutFunctionEventInvokeConfig",
+        "lambda:DeleteFunctionEventInvokeConfig",
         "lambda:GetFunction",
         "lambda:GetFunctionCodeSigningConfig",
         "lambda:AddPermission",
