@@ -589,7 +589,7 @@ describe("scaler lambda", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::Lambda::Function", {
       Description: "Dynamically scale Semaphore agents based on jobs demand",
-      Runtime: "nodejs14.x",
+      Runtime: "nodejs18.x",
       Timeout: 60,
       Code: Match.anyValue(),
       Handler: "app.handler",
