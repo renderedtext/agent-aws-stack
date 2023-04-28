@@ -93,6 +93,7 @@
       "Action": [
         "lambda:CreateFunction",
         "lambda:PutFunctionConcurrency",
+        "lambda:DeleteFunctionConcurrency",
         "lambda:PutFunctionEventInvokeConfig",
         "lambda:DeleteFunctionEventInvokeConfig",
         "lambda:GetFunction",
