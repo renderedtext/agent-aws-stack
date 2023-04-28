@@ -104,7 +104,8 @@
         "lambda:UpdateFunctionCode",
         "lambda:UpdateFunctionConfiguration",
         "lambda:TagResource",
-        "lambda:UntagResource"
+        "lambda:UntagResource",
+        "lambda:ListTags"
       ],
       "Resource": "arn:aws:lambda:*:*:function:*"
     },
