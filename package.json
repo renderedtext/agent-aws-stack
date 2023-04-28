@@ -1,26 +1,18 @@
 {
   "name": "aws-semaphore-agent",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "bin": {
     "aws-semaphore-agent": "bin/aws-semaphore-agent.js"
   },
   "scripts": {
-    "prebootstrap": "cd lambdas/agent-scaler && npm i && npm run build && cd -",
     "bootstrap": "cdk bootstrap",
     "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
-    "predeploy": "cd lambdas/agent-scaler && npm i && npm run build && cd -",
     "deploy": "cdk deploy --progress events",
-    "predeploy:ci": "cd lambdas/agent-scaler && npm i && npm run build && cd -",
     "deploy:ci": "cdk deploy --require-approval never --progress events",
-    "predestroy": "cd lambdas/agent-scaler && npm i && npm run build && cd -",
     "destroy": "cdk destroy",
-    "predestroy:ci": "cd lambdas/agent-scaler && npm i && npm run build && cd -",
     "destroy:ci": "cdk destroy --verbose --force",
-    "prediff": "cd lambdas/agent-scaler && npm i && npm run build && cd -",
     "diff": "cdk diff",
-    "presynth": "cd lambdas/agent-scaler && npm i && npm run build && cd -",
     "synth": "cdk synth",
-    "pretest": "cd lambdas/agent-scaler && npm i && npm run build && cd -",
     "test": "jest"
   },
   "devDependencies": {

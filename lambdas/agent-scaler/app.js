@@ -137,10 +137,13 @@ function publishOccupancyMetrics(cloudwatchClient, stackName, metrics) {
 }
 
 function getAgentTypeMetrics(token, semaphoreEndpoint) {
+  console.log("Fetching metrics from Semaphore API...");
+
   const options = {
     hostname: semaphoreEndpoint,
     path: "/api/v1/self_hosted_agents/metrics",
     method: 'GET',
+    timeout: 1000,
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Token ${token}`,
@@ -150,7 +153,7 @@ function getAgentTypeMetrics(token, semaphoreEndpoint) {
 
   return new Promise((resolve, reject) => {
     let data = '';
-    https.request(options, response => {
+    const request = https.request(options, response => {
       if (response.statusCode !== 200) {
         reject(`Request to get occupancy got ${response.statusCode}`);
         return;
@@ -163,9 +166,12 @@ function getAgentTypeMetrics(token, semaphoreEndpoint) {
       response.on('end', function () {
         resolve(JSON.parse(data));
       });
-    })
-    .on('error', error => reject(error))
-    .end();
+    });
+
+    request.on('error', error => reject(error))
+    request.on('timeout', () => request.destroy())
+    request.setTimeout(1000);
+    request.end();
   })
 }
 
