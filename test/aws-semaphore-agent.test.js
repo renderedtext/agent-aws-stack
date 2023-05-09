@@ -928,6 +928,18 @@ function createTemplateWithOS(argumentStore, os) {
                 "routeTableId": "rtb-dummy"
               }
             ]
+          },
+          {
+            "name": "private-subnet-for-testing",
+            "type": "Private",
+            "subnets": [
+              {
+                "subnetId": "subnet-00004",
+                "cidr": "10.0.6.0/24",
+                "availabilityZone": "us-east-1a",
+                "routeTableId": "rtb-dummy"
+              }
+            ]
           }
         ]
       }
