@@ -196,8 +196,11 @@ describe("instance profile", () => {
           {
             Action: [
               "logs:CreateLogGroup",
-              "logs:PutRetentionPolicy",
-              "logs:DeleteLogGroup"
+              "logs:CreateLogStream",
+              "logs:DescribeLogStreams",
+              "logs:DescribeLogGroups",
+              "logs:PutLogEvents",
+              "logs:PutRetentionPolicy"
             ],
             Effect: "Allow",
             Resource: "arn:aws:logs:*:*:log-group:/semaphore/*"
@@ -244,8 +247,11 @@ describe("instance profile", () => {
           {
             Action: [
               "logs:CreateLogGroup",
-              "logs:PutRetentionPolicy",
-              "logs:DeleteLogGroup"
+              "logs:CreateLogStream",
+              "logs:DescribeLogStreams",
+              "logs:DescribeLogGroups",
+              "logs:PutLogEvents",
+              "logs:PutRetentionPolicy"
             ],
             Effect: "Allow",
             Resource: "arn:aws:logs:*:*:log-group:/semaphore/*"
