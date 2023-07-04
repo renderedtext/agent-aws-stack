@@ -41,6 +41,8 @@ blocks:
           value: test
         - name: CI
           value: 'true'
+        - name: DEBIAN_FRONTEND
+          value: noninteractive
       jobs:
         - name: Lint ansible recipes
           commands:
@@ -64,6 +66,9 @@ blocks:
     task:
       secrets:
         - name: agent-aws-stack-tester-credentials
+      env_vars:
+        - name: DEBIAN_FRONTEND
+          value: noninteractive
       prologue:
         commands:
           - checkout
