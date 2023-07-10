@@ -16,7 +16,7 @@ if [[ -z ${procs} ]]; then
   # because this script will only be needed when the agent itself can't terminate the instance
   # using IMDS and the autoscaling API. That can happen because the job messed up with the
   # IMDS setup in the VM or some other weird behavior.
-  poweroff
+  sudo shutdown -h now
 else
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] Agent is running."
 fi
