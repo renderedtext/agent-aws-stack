@@ -59,13 +59,12 @@ $ErrorActionPreference = 'Stop'
 # in case anything goes wrong with this script
 trap {Set-InstanceHealth}
 
-$logFile = "C:\semaphore-agent\userdata.txt"
 $AgentConfigParamName = $args[0]
 if (-not $AgentConfigParamName) {
   throw "No agent config parameter name specified."
 }
 
-Write-Output "Fetching info from IMDS..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Fetching info from IMDS..."
 $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).Content
 $Region = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/placement/region).Content
 $RoleName = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/iam/security-credentials).Content
@@ -73,7 +72,7 @@ $AccountId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-
 
 # We grab the agent configuration and token from the SSM parameters
 # and put them into environment variables for the 'install.ps1' script to use.
-Write-Output "Fetching agent params..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Fetching agent params..."
 $agentParams = Retry-Command -ScriptBlock {
   aws ssm get-parameter --region "$Region" --name "$AgentConfigParamName" --query Parameter.Value --output text
 }
@@ -85,34 +84,34 @@ $UserName = "semaphore"
 $Password = [System.Web.Security.Membership]::GeneratePassword(16, 0)
 $PasswordAsSecureString = $Password | ConvertTo-SecureString -AsPlainText -Force
 $Credentials = New-Object System.Management.Automation.PSCredential -ArgumentList ".\$UserName",$PasswordAsSecureString
-Write-Output "Creating '$UserName' user..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Creating '$UserName' user..."
 New-LocalUser -Name $UserName -PasswordNeverExpires -Password $PasswordAsSecureString | out-null
 Add-LocalGroupMember -Group "Administrators" -Member $UserName | out-null
 
 # In order to use Invoke-Command to run a local command as another local user,
 # these things need to be enabled and running
-Write-Output "Enabling PSRemoting..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Enabling PSRemoting..."
 Enable-PSRemoting
 
-Write-Output "Executing WinRM quickconfig..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Executing WinRM quickconfig..."
 winrm quickconfig -quiet
 
 # Configure GitHub SSH keys and AWS region.
 # These scripts need to be run by the semaphore user
 # because they use the $HOME variable to properly configure
 # the '$HOME/.ssh' and '$HOME/.aws' folders.
-Write-Output "Fetching GH SSH keys..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Fetching GH SSH keys..."
 $SSHKeysParamName = $agentParams | jq -r '.sshKeysParameterName'
 $SSHKeys = Retry-Command -ScriptBlock {
   aws ssm get-parameter --region "$Region" --name "$SSHKeysParamName" --query Parameter.Value --output text
 }
 
-Write-Output "Configuring GH SSH keys..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Configuring GH SSH keys..."
 Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
   C:\semaphore-agent\configure-github-ssh-keys.ps1 $using:SSHKeys
 }
 
-Write-Output "Fetching agent token..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Fetching agent token..."
 $agentTokenParamName = $agentParams | jq -r '.agentTokenParameterName'
 $agentToken = Retry-Command -ScriptBlock {
   aws ssm get-parameter --region "$Region" --name "$agentTokenParamName" --query Parameter.Value --output text --with-decryption
@@ -120,7 +119,7 @@ $agentToken = Retry-Command -ScriptBlock {
 
 # The installation script needs to be run by the semaphore user
 # because it downloads and sets up the toolbox at '$HOME/.toolbox'
-Write-Output "Installing agent..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Installing agent..."
 Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
   Set-Location C:\semaphore-agent
   $env:SemaphoreRegistrationToken = $using:agentToken
@@ -132,9 +131,9 @@ Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
   .\install.ps1
 }
 
-Write-Output "Updating agent configuration..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Updating agent configuration..."
 $agentName = Generate-AgentName
-Write-Output "Using name '$agentName' for agent." | Tee-Object -FilePath $logFile -Append
+Write-Output "Using name '$agentName' for agent."
 
 $nameExpr = '.name = ""{0}""' -f $agentName
 yq e -i $nameExpr C:\semaphore-agent\config.yaml
@@ -144,7 +143,7 @@ $agentParams | jq '.envVars[]' | ForEach-Object -Process {
 }
 
 # Create nssm service for agent
-Write-Output "Creating agent nssm service..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Creating agent nssm service..."
 nssm install semaphore-agent C:\semaphore-agent\agent.exe start --config-file C:\semaphore-agent\config.yaml
 nssm set semaphore-agent ObjectName .\$UserName $Password
 nssm set semaphore-agent AppStdout C:\semaphore-agent\agent.log
@@ -152,20 +151,20 @@ nssm set semaphore-agent AppStderr C:\semaphore-agent\agent.log
 nssm set semaphore-agent AppExit Default Restart
 nssm set semaphore-agent AppRestartDelay 10000
 
-Write-Output "Starting agent service..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Starting agent service..."
 nssm start semaphore-agent
 
 # Create a scheduled task to continuosly check the agent's health
-Write-Output "Creating scheduled task for agent health check..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Creating scheduled task for agent health check..."
 $scheduledTaskAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NonInteractive -NoLogo -NoProfile -ExecutionPolicy bypass -File "C:\semaphore-agent\health-check.ps1"'
 $scheduledTaskTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1)
 $scheduledTaskSettings = New-ScheduledTaskSettingsSet
 $scheduledTask = New-ScheduledTask -Action $scheduledTaskAction -Trigger $scheduledTaskTrigger -Settings $scheduledTaskSettings
 Register-ScheduledTask -TaskName 'Semaphore agent health check' -InputObject $scheduledTask -User $UserName -Password $Password
 
-Write-Output "Disabling PSRemoting and winRM service..." | Tee-Object -FilePath $logFile -Append
+Write-Output "Disabling PSRemoting and winRM service..."
 Disable-PSRemoting -Force
 Stop-Service WinRM
 Set-Service WinRM -StartupType Disabled
 
-Write-Output "Done." | Tee-Object -FilePath $logFile -Append
+Write-Output "Done."
