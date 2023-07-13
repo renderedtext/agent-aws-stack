@@ -402,7 +402,7 @@ describe("launch configuration", () => {
     template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
       LaunchTemplateData: {
         UserData: {
-          "Fn::Base64": "<powershell>C:\\semaphore-agent\\start.ps1 test-stack-config *> C:\\semaphore-agent\\userdata.txt</powershell>"
+          "Fn::Base64": "<powershell>C:\\semaphore-agent\\start.ps1 test-stack-config | Tee-Object -FilePath C:\\semaphore-agent\\userdata.txt</powershell>"
         }
       }
     })
