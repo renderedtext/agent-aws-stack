@@ -1,4 +1,6 @@
 function Set-InstanceHealth {
+  Write-Output "Something went wrong while starting the agent - marking the instance as unhealthy"
+
   $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
   $instance_id=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
 
@@ -47,6 +49,30 @@ function Generate-AgentName {
   $instanceId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $idmsToken} http://169.254.169.254/latest/meta-data/instance-id).content
   $randomPart = -join (1..12 | ForEach {[char]((97..122) + (48..57) | Get-Random)})
   return $instanceId+"__"+$randomPart
+}
+
+# Waits for 60s for the agent to start running.
+# This is needed to make sure we don't configure the agent health check
+# before the agent is actually running.
+function Wait-UntilAgentIsReady {
+  $isRunning = $false
+  $retryCount = 0
+
+  do {
+    $proc = Get-Process | Where {$_.Path -Like "C:\semaphore-agent\agent.exe"}
+    if ($proc) {
+      Write-Output "Agent is running."
+      $isRunning = $true
+    } else {
+      Write-Output "Agent is not running yet..."
+      $retryCount = $retryCount + 1
+      Start-Sleep -Seconds 1
+    }
+  } While (($isRunning -eq $false) -and ($retryCount -lt 60))
+
+  if ($retryCount -eq 60) {
+    throw "Agent did not start"
+  }
 }
 
 # Do not show any progress bars when downloading things
@@ -152,9 +178,11 @@ nssm set semaphore-agent AppExit Default Restart
 nssm set semaphore-agent AppRestartDelay 10000
 
 Write-Output "Starting agent service..."
-nssm start semaphore-agent
+Start-Process -FilePath nssm -ArgumentList "start","semaphore-agent" -Wait
 
 # Create a scheduled task to continuosly check the agent's health
+# We wait until the agent is ready to do it.
+Wait-UntilAgentIsReady
 Write-Output "Creating scheduled task for agent health check..."
 $scheduledTaskAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NonInteractive -NoLogo -NoProfile -ExecutionPolicy bypass -File "C:\semaphore-agent\health-check.ps1"'
 $scheduledTaskTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1)
