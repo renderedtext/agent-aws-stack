@@ -22,20 +22,8 @@
             "retention_in_days": 30
           },
           {
-            "file_path": "C:\\ProgramData\\Amazon\\EC2Launch\\log\\bench.log",
-            "log_group_name": "/semaphore/EC2Launch/bench",
-            "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f",
-            "retention_in_days": 30
-          },
-          {
             "file_path": "C:\\Windows\\system32\\config\\systemprofile\\AppData\\Local\\Temp\\EC2Launch*\\*.tmp",
             "log_group_name": "/semaphore/EC2Launch/output",
-            "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f",
-            "retention_in_days": 30
-          },
-          {
-            "file_path": "C:\\Windows\\System32\\Sysprep\\Panther\\*.log",
-            "log_group_name": "/semaphore/EC2Launch/sysprep",
             "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f",
             "retention_in_days": 30
           },

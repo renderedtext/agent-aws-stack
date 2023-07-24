@@ -70,8 +70,9 @@ function Wait-UntilAgentIsReady {
     }
   } While (($isRunning -eq $false) -and ($retryCount -lt 60))
 
-  if ($retryCount -eq 60) {
-    throw "Agent did not start"
+  if (-not $isRunning) {
+    Write-Output "Agent did not start in time. Failing..."
+    throw
   }
 }
 
@@ -177,12 +178,15 @@ nssm set semaphore-agent AppStderr C:\semaphore-agent\agent.log
 nssm set semaphore-agent AppExit Default Restart
 nssm set semaphore-agent AppRestartDelay 10000
 
+# For some reason, the `nssm start` command started failing without any output
+# after the upgrade to EC2Launch v2, even though the agent service starts just fine.
+# Due to that, we started using `Start-Process` to execute it, and we validate that
+# the agent is running, by not proceeding with the script if it isn't.
 Write-Output "Starting agent service..."
 Start-Process -FilePath nssm -ArgumentList "start","semaphore-agent" -Wait
+Wait-UntilAgentIsReady
 
 # Create a scheduled task to continuosly check the agent's health
-# We wait until the agent is ready to do it.
-Wait-UntilAgentIsReady
 Write-Output "Creating scheduled task for agent health check..."
 $scheduledTaskAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NonInteractive -NoLogo -NoProfile -ExecutionPolicy bypass -File "C:\semaphore-agent\health-check.ps1"'
 $scheduledTaskTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1)
