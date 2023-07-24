@@ -70,7 +70,7 @@ source "amazon-ebs" "windows" {
     owners = ["801119661308"]
 
     filters = {
-      name                = "Windows_Server-2019-English-Full-ContainersLatest*"
+      name                = "EC2LaunchV2-Windows_Server-2019-English-Full-ContainersLatest*"
       architecture        = "${var.arch}"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
@@ -101,8 +101,8 @@ build {
     inline = [
       "C:\\packer-tmp\\provision-ami.ps1 ${var.agent_version} ${var.toolbox_version}",
       "Remove-Item -Path C:\\packer-tmp -Recurse -Force",
-      "C:\\ProgramData\\Amazon\\EC2-Windows\\Launch\\Scripts\\InitializeInstance.ps1 -Schedule",
-      "C:\\ProgramData\\Amazon\\EC2-Windows\\Launch\\Scripts\\SysprepInstance.ps1 -NoShutdown"
+      "& 'C:\\Program Files\\Amazon\\EC2Launch\\EC2Launch.exe' reset --block",
+      "& 'C:\\Program Files\\Amazon\\EC2Launch\\EC2Launch.exe' sysprep --block --shutdown"
     ]
   }
 }

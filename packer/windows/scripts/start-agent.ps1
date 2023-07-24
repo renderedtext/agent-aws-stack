@@ -1,4 +1,6 @@
 function Set-InstanceHealth {
+  Write-Output "Something went wrong while starting the agent - marking the instance as unhealthy"
+
   $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
   $instance_id=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
 
@@ -49,6 +51,31 @@ function Generate-AgentName {
   return $instanceId+"__"+$randomPart
 }
 
+# Waits for 60s for the agent to start running.
+# This is needed to make sure we don't configure the agent health check
+# before the agent is actually running.
+function Wait-UntilAgentIsReady {
+  $isRunning = $false
+  $retryCount = 0
+
+  do {
+    $proc = Get-Process | Where {$_.Path -Like "C:\semaphore-agent\agent.exe"}
+    if ($proc) {
+      Write-Output "Agent is running."
+      $isRunning = $true
+    } else {
+      Write-Output "Agent is not running yet..."
+      $retryCount = $retryCount + 1
+      Start-Sleep -Seconds 1
+    }
+  } While (($isRunning -eq $false) -and ($retryCount -lt 60))
+
+  if (-not $isRunning) {
+    Write-Output "Agent did not start in time. Failing..."
+    throw
+  }
+}
+
 # Do not show any progress bars when downloading things
 $ProgressPreference = 'SilentlyContinue'
 
@@ -64,6 +91,7 @@ if (-not $AgentConfigParamName) {
   throw "No agent config parameter name specified."
 }
 
+Write-Output "Fetching info from IMDS..."
 $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).Content
 $Region = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/placement/region).Content
 $RoleName = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/iam/security-credentials).Content
@@ -89,18 +117,23 @@ Add-LocalGroupMember -Group "Administrators" -Member $UserName | out-null
 
 # In order to use Invoke-Command to run a local command as another local user,
 # these things need to be enabled and running
+Write-Output "Enabling PSRemoting..."
 Enable-PSRemoting
+
+Write-Output "Executing WinRM quickconfig..."
 winrm quickconfig -quiet
 
 # Configure GitHub SSH keys and AWS region.
 # These scripts need to be run by the semaphore user
 # because they use the $HOME variable to properly configure
 # the '$HOME/.ssh' and '$HOME/.aws' folders.
+Write-Output "Fetching GH SSH keys..."
 $SSHKeysParamName = $agentParams | jq -r '.sshKeysParameterName'
 $SSHKeys = Retry-Command -ScriptBlock {
   aws ssm get-parameter --region "$Region" --name "$SSHKeysParamName" --query Parameter.Value --output text
 }
 
+Write-Output "Configuring GH SSH keys..."
 Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
   C:\semaphore-agent\configure-github-ssh-keys.ps1 $using:SSHKeys
 }
@@ -113,6 +146,7 @@ $agentToken = Retry-Command -ScriptBlock {
 
 # The installation script needs to be run by the semaphore user
 # because it downloads and sets up the toolbox at '$HOME/.toolbox'
+Write-Output "Installing agent..."
 Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
   Set-Location C:\semaphore-agent
   $env:SemaphoreRegistrationToken = $using:agentToken
@@ -124,6 +158,7 @@ Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
   .\install.ps1
 }
 
+Write-Output "Updating agent configuration..."
 $agentName = Generate-AgentName
 Write-Output "Using name '$agentName' for agent."
 
@@ -143,8 +178,13 @@ nssm set semaphore-agent AppStderr C:\semaphore-agent\agent.log
 nssm set semaphore-agent AppExit Default Restart
 nssm set semaphore-agent AppRestartDelay 10000
 
+# For some reason, the `nssm start` command started failing without any output
+# after the upgrade to EC2Launch v2, even though the agent service starts just fine.
+# Due to that, we started using `Start-Process` to execute it, and we validate that
+# the agent is running, by not proceeding with the script if it isn't.
 Write-Output "Starting agent service..."
-nssm start semaphore-agent
+Start-Process -FilePath nssm -ArgumentList "start","semaphore-agent" -Wait
+Wait-UntilAgentIsReady
 
 # Create a scheduled task to continuosly check the agent's health
 Write-Output "Creating scheduled task for agent health check..."
