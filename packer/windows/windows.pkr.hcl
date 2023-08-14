@@ -70,7 +70,7 @@ source "amazon-ebs" "windows" {
     owners = ["801119661308"]
 
     filters = {
-      name                = "EC2LaunchV2-Windows_Server-2019-English-Full-ContainersLatest*"
+      name                = "EC2LaunchV2-Windows_Server-2019-English-Full-Base*"
       architecture        = "${var.arch}"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
