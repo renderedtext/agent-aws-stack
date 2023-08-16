@@ -13,6 +13,7 @@
   copy:
     src: cloudwatch-agent-config.json
     dest: /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+    mode: "0755"
 
 - name: Enable cloudwatch agent service
   service:
