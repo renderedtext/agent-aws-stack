@@ -85,6 +85,7 @@ blocks:
   - name: Build
     dependencies:
       - Lint & Test
+      - Security checks
     task:
       secrets:
         - name: agent-aws-stack-tester-credentials
