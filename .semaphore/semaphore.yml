@@ -52,7 +52,7 @@ blocks:
         - name: Unit tests
           commands:
             - checkout
-            - nvm use
+            - nvm install
             - node --version
             - npm --version
             - cache restore
