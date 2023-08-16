@@ -58,7 +58,8 @@
         "s3:PutBucket*",
         "s3:PutObject*",
         "s3:GetEncryptionConfiguration",
-        "s3:PutEncryptionConfiguration"
+        "s3:PutEncryptionConfiguration",
+        "s3:PutLifecycleConfiguration"
       ],
       "Resource": "arn:aws:s3:::cdk*"
     },
@@ -72,7 +73,8 @@
         "ecr:GetLifecyclePolicy",
         "ecr:PutImageTagMutability",
         "ecr:PutImageScanningConfiguration",
-        "ecr:ListTagsForResource"
+        "ecr:ListTagsForResource",
+        "ecr:PutLifecyclePolicy"
       ],
       "Resource": "arn:aws:ecr:*:*:repository/cdk*"
     },
