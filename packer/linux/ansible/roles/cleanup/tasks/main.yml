@@ -1,15 +1,9 @@
 ---
 - name: Remove apt cache
   command: apt clean
-  args:
-    executable: /bin/bash
 
 - name: apt autoremove
   command: apt autoremove -q -y
-  args:
-    executable: /bin/bash
 
 - name: Remove man
   command: apt remove -y --purge man-db
-  args:
-    executable: /bin/bash

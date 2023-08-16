@@ -1,20 +1,14 @@
 ---
 - name: apt update
   command: apt -y update
-  args:
-    executable: /bin/bash
 
 - name: apt dist-upgrade
   command: apt -fuy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade
   environment:
     DEBIAN_FRONTEND: noninteractive
-  args: 
-    executable: /bin/bash
 
 - name: apt autoremove
   command: apt -y autoremove
-  args:
-    executable: /bin/bash
 
 - name: reboot
   reboot:

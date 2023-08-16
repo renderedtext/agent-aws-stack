@@ -8,8 +8,6 @@
 
 - name: Install awscli
   command: /tmp/aws/install -i /usr/local/aws -b /usr/local/bin
-  args:
-    executable: /bin/bash
 
 - name: Cleanup awscli
   file:
