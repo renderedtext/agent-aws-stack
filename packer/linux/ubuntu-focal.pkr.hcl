@@ -89,6 +89,7 @@ build {
   provisioner "ansible" {
     playbook_file = "ansible/ubuntu-focal.yml"
     user          = "ubuntu"
+    use_proxy     = false
     extra_arguments = [
       "--skip-tags",
       "reboot",
