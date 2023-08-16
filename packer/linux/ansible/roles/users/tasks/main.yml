@@ -1,15 +1,15 @@
 ---
 - name: Add semaphore user
-  user:
+  ansible.builtin.user:
     name: semaphore
     shell: /bin/bash
-    create_home: yes
+    create_home: true
     state: present
     groups: docker
-    append: yes
+    append: true
 
 - name: Allow passwordless sudo
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/sudoers
     state: present
     regexp: '^semaphore'

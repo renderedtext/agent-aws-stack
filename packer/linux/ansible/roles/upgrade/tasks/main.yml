@@ -1,17 +1,17 @@
 ---
-- name: apt update
-  command: apt -y update
+- name: Run apt update
+  ansible.builtin.command: apt -y update
 
-- name: apt dist-upgrade
-  command: apt -fuy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade
+- name: Run apt dist-upgrade
+  ansible.builtin.command: apt -fuy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade
   environment:
     DEBIAN_FRONTEND: noninteractive
 
-- name: apt autoremove
-  command: apt -y autoremove
+- name: Run apt autoremove
+  ansible.builtin.command: apt -y autoremove
 
-- name: reboot
-  reboot:
+- name: Reboot
+  ansible.builtin.reboot:
     msg: "Reboot initiated by Ansible for kernel updates"
     connect_timeout: 5
     reboot_timeout: 300

@@ -1,9 +1,9 @@
 ---
 - name: Remove apt cache
-  command: apt clean
+  ansible.builtin.command: apt clean
 
-- name: apt autoremove
-  command: apt autoremove -q -y
+- name: Run apt autoremove
+  ansible.builtin.command: apt autoremove -q -y
 
 - name: Remove man
-  command: apt remove -y --purge man-db
+  ansible.builtin.command: apt remove -y --purge man-db

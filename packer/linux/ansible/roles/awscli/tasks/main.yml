@@ -1,15 +1,15 @@
 ---
 - name: Download awscli
-  unarchive:
+  ansible.builtin.unarchive:
     src: "{{ awscli_url }}"
     dest: /tmp/
     mode: "0755"
-    remote_src: True
+    remote_src: true
 
 - name: Install awscli
-  command: /tmp/aws/install -i /usr/local/aws -b /usr/local/bin
+  ansible.builtin.command: /tmp/aws/install -i /usr/local/aws -b /usr/local/bin
 
 - name: Cleanup awscli
-  file:
+  ansible.builtin.file:
     path: "/tmp/aws"
     state: absent

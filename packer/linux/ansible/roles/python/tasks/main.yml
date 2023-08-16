@@ -1,6 +1,6 @@
 ---
 - name: Create Python 3 symlink
-  file:   
+  ansible.builtin.file:
     src: "/usr/bin/python3"
     path: "/usr/bin/python"
     state: link

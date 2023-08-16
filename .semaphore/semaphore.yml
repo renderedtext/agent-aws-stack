@@ -3,7 +3,7 @@ name: Main pipeline
 agent:
   machine:
     type: e2-standard-2
-    os_image: ubuntu2004
+    os_image: ubuntu2204
 
 # We still don't have a way to programatically create agent types, so we need to share the same agent type.
 # To avoid running into issues where different pipelines might be doing something different things to the
