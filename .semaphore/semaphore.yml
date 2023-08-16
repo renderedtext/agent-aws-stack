@@ -25,7 +25,7 @@ blocks:
         - name: npm install and cache
           commands:
             - checkout
-            - nvm use
+            - nvm install
             - node --version
             - npm --version
             - cache restore
