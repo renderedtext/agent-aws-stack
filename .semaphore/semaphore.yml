@@ -44,7 +44,8 @@ blocks:
       jobs:
         - name: Lint ansible recipes
           commands:
-            - sudo apt-get update && sudo apt-get -y install python3-venv
+            - sudo apt-get update
+            - sudo DEBIAN_FRONTEND=noninteractive apt-get install python3-venv -fuy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
             - checkout
             - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
             - make ansible.lint
@@ -68,7 +69,8 @@ blocks:
         commands:
           - checkout
           - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
-          - sudo apt-get update && sudo apt-get -y install python3-venv
+          - sudo apt-get update
+          - sudo DEBIAN_FRONTEND=noninteractive apt-get install python3-venv -fuy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
           - curl -sL https://releases.hashicorp.com/packer/1.7.9/packer_1.7.9_linux_amd64.zip -o /tmp/packer_1.7.9_linux_amd64.zip
           - unzip /tmp/packer_1.7.9_linux_amd64.zip -d /tmp/
           - sudo mv /tmp/packer /usr/local/bin/
