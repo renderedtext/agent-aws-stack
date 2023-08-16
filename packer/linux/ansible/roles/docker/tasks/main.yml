@@ -1,31 +1,31 @@
 ---
 - name: Add Docker GPG apt Key
-  apt_key:
+  ansible.builtin.apt_key:
     url: "{{ docker_apt_gpg_key }}"
     state: present
 
 - name: Add Docker Repository
-  apt_repository:
+  ansible.builtin.apt_repository:
     repo: "{{ docker_apt_repository }}"
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Install Docker
-  apt:
+  ansible.builtin.apt:
     pkg:
       - docker-ce
       - docker-ce-cli
       - containerd.io
 
 - name: Configure Docker service
-  service:
+  ansible.builtin.service:
     name: docker
     state: started
     enabled: true
 
 - name: Install Docker Compose
-  get_url:
-    url : "{{ docker_compose_url }}"
+  ansible.builtin.get_url:
+    url: "{{ docker_compose_url }}"
     dest: /usr/local/bin/docker-compose
     mode: '0755'
-    force: yes
+    force: true

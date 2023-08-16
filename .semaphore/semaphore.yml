@@ -2,8 +2,8 @@ version: v1.0
 name: Main pipeline
 agent:
   machine:
-    type: e1-standard-2
-    os_image: ubuntu1804
+    type: e2-standard-2
+    os_image: ubuntu2204
 
 # We still don't have a way to programatically create agent types, so we need to share the same agent type.
 # To avoid running into issues where different pipelines might be doing something different things to the
@@ -25,7 +25,7 @@ blocks:
         - name: npm install and cache
           commands:
             - checkout
-            - nvm use
+            - nvm install
             - node --version
             - npm --version
             - cache restore
@@ -44,7 +44,8 @@ blocks:
       jobs:
         - name: Lint ansible recipes
           commands:
-            - sudo apt-get update && sudo apt-get -y install python3-venv
+            - sudo apt-get update
+            - sudo DEBIAN_FRONTEND=noninteractive apt-get install python3-venv -fuy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
             - checkout
             - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
             - make ansible.lint
@@ -52,7 +53,7 @@ blocks:
         - name: Unit tests
           commands:
             - checkout
-            - nvm use
+            - nvm install
             - node --version
             - npm --version
             - cache restore
@@ -68,7 +69,8 @@ blocks:
         commands:
           - checkout
           - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
-          - sudo apt-get update && sudo apt-get -y install python3-venv
+          - sudo apt-get update
+          - sudo DEBIAN_FRONTEND=noninteractive apt-get install python3-venv -fuy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
           - curl -sL https://releases.hashicorp.com/packer/1.7.9/packer_1.7.9_linux_amd64.zip -o /tmp/packer_1.7.9_linux_amd64.zip
           - unzip /tmp/packer_1.7.9_linux_amd64.zip -d /tmp/
           - sudo mv /tmp/packer /usr/local/bin/

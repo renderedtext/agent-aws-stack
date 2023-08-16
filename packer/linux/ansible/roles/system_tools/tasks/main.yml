@@ -1,6 +1,6 @@
 ---
 - name: Install system tools
-  apt:
+  ansible.builtin.apt:
     pkg:
       - apt-transport-https
       - apt-utils
@@ -15,11 +15,11 @@
       - gnupg
       - tree
       - wget
-    update_cache: yes
+    update_cache: true
 
 - name: Install yq
-  get_url:
-    url : "{{ yq_url }}"
+  ansible.builtin.get_url:
+    url: "{{ yq_url }}"
     dest: /usr/local/bin/yq
     mode: '0755'
-    force: yes
+    force: true

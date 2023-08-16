@@ -1,6 +1,6 @@
 ---
 - name: Create agent directory
-  file:
+  ansible.builtin.file:
     path: "{{ agent_root_dir }}"
     state: directory
     mode: '0755'
@@ -8,16 +8,16 @@
     group: semaphore
 
 - name: Download agent
-  unarchive:
+  ansible.builtin.unarchive:
     src: "{{ agent_url }}"
     dest: "{{ agent_root_dir }}"
     mode: "0755"
-    remote_src: True
+    remote_src: true
     owner: semaphore
     group: semaphore
 
 - name: Create hooks directory
-  file:
+  ansible.builtin.file:
     path: "{{ agent_hooks_dir }}"
     state: directory
     mode: '0755'
@@ -25,7 +25,7 @@
     group: semaphore
 
 - name: Copy shutdown hook
-  copy:
+  ansible.builtin.copy:
     src: terminate-instance.sh
     dest: "{{ agent_hooks_dir }}/shutdown"
     mode: "0755"
@@ -41,10 +41,10 @@
     SEMAPHORE_REGISTRATION_TOKEN: "DUMMY"
     SEMAPHORE_ORGANIZATION: "DUMMY"
     SEMAPHORE_AGENT_SYSTEMD_RESTART_SEC: "{{ systemd_restart_seconds }}"
-  command: "{{ agent_root_dir }}/install.sh"
+  ansible.builtin.command: "{{ agent_root_dir }}/install.sh"
 
 - name: Copy start script
-  copy:
+  ansible.builtin.copy:
     src: start-agent.sh
     dest: "{{ agent_root_dir }}/start.sh"
     mode: "0755"
@@ -52,7 +52,7 @@
     group: semaphore
 
 - name: Copy health check script
-  copy:
+  ansible.builtin.copy:
     src: health-check.sh
     dest: "{{ agent_root_dir }}/health-check.sh"
     mode: "0755"
