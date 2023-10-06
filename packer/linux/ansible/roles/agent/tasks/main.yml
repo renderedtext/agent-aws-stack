@@ -58,3 +58,11 @@
     mode: "0755"
     owner: semaphore
     group: semaphore
+
+- name: Copy pre-signed URL generation script
+  ansible.builtin.copy:
+    src: gen-pre-signed-url.py
+    dest: "{{ agent_root_dir }}/gen-pre-signed-url.py"
+    mode: "0755"
+    owner: semaphore
+    group: semaphore

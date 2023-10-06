@@ -4,3 +4,12 @@
     src: "/usr/bin/python3"
     path: "/usr/bin/python"
     state: link
+
+- name: install pip3
+  ansible.builtin.apt: name=python3-pip state=present
+
+- name: Install botocore
+  ansible.builtin.pip:
+    name:
+    - boto3
+    - botocore
