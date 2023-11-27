@@ -26,7 +26,8 @@ describe("SSM parameter for agent configuration", () => {
         sshKeysParameterName: "test-stack-ssh-public-keys",
         disconnectAfterJob: "true",
         disconnectAfterIdleTimeout: "300",
-        envVars: []
+        envVars: [],
+        usePreSignedURL: false
       })
     });
   })
@@ -43,7 +44,8 @@ describe("SSM parameter for agent configuration", () => {
         sshKeysParameterName: "test-stack-ssh-public-keys",
         disconnectAfterJob: "true",
         disconnectAfterIdleTimeout: "300",
-        envVars: []
+        envVars: [],
+        usePreSignedURL: false
       })
     });
   });
@@ -61,7 +63,8 @@ describe("SSM parameter for agent configuration", () => {
         sshKeysParameterName: "test-stack-ssh-public-keys",
         disconnectAfterJob: "false",
         disconnectAfterIdleTimeout: "120",
-        envVars: []
+        envVars: [],
+        usePreSignedURL: false
       })
     });
   });
@@ -82,7 +85,26 @@ describe("SSM parameter for agent configuration", () => {
           "SEMAPHORE_CACHE_BACKEND=s3",
           "SEMAPHORE_CACHE_S3_BUCKET=test-cache-bucket",
           "SEMAPHORE_CACHE_USE_EC2_INSTANCE_PROFILE=true"
-        ]
+        ],
+        usePreSignedURL: false
+      })
+    });
+  });
+
+  test("uses pre-signed URL as agent registration name", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_USE_PRE_SIGNED_URL", "true")
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::SSM::Parameter", {
+      Value: JSON.stringify({
+        endpoint: "test.semaphoreci.com",
+        agentTokenParameterName: "test-token",
+        sshKeysParameterName: "test-stack-ssh-public-keys",
+        disconnectAfterJob: "true",
+        disconnectAfterIdleTimeout: "300",
+        envVars: [],
+        usePreSignedURL: true
       })
     });
   });

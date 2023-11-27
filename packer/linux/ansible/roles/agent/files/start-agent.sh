@@ -117,10 +117,19 @@ fetch_agent_token() {
 }
 
 generate_agent_name() {
-  local __token__=$(fetch_idms_token)
-  local __instance_id__=$(curl --fail --silent --show-error -H "X-aws-ec2-metadata-token: $__token__" --location "http://169.254.169.254/latest/meta-data/instance-id")
-  local __random_part__=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
-  echo "${__instance_id__}__${__random_part__}"
+  local __use_pre_signed_url__=$1
+
+  # If we are using pre-signed AWS STS GetCallerIdentity URLs,
+  # we call the Python script to generate it.
+  # Otherwise, just generate a random one, prefixing it with the instance ID from IMDS.
+  if [[ "${__use_pre_signed_url__}" == "true" ]]; then
+    /opt/semaphore/agent/gen-pre-signed-url.py
+  else
+    local __token__=$(fetch_idms_token)
+    local __instance_id__=$(curl --fail --silent --show-error -H "X-aws-ec2-metadata-token: $__token__" --location "http://169.254.169.254/latest/meta-data/instance-id")
+    local __random_part__=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
+    echo "${__instance_id__}__${__random_part__}"
+  fi
 }
 
 #
@@ -137,7 +146,8 @@ change_agent_config() {
   local __endpoint__=$(echo $__agent_params__ | jq -r '.endpoint')
   local __disconnect_after_job__=$(echo $__agent_params__ | jq -r '.disconnectAfterJob')
   local __disconnect_after_idle_timeout__=$(echo $__agent_params__ | jq -r '.disconnectAfterIdleTimeout')
-  local __agent_name__=$(generate_agent_name)
+  local __use_pre_signed_url__=$(echo $__agent_params__ | jq -r '.usePreSignedURL')
+  local __agent_name__=$(generate_agent_name $__use_pre_signed_url__)
 
   # Update agent YAML configuration
   yq e -i ".name = \"$__agent_name__\"" /opt/semaphore/agent/config.yaml
