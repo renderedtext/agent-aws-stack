@@ -146,7 +146,7 @@ change_agent_config() {
   local __endpoint__=$(echo $__agent_params__ | jq -r '.endpoint')
   local __disconnect_after_job__=$(echo $__agent_params__ | jq -r '.disconnectAfterJob')
   local __disconnect_after_idle_timeout__=$(echo $__agent_params__ | jq -r '.disconnectAfterIdleTimeout')
-  local __use_pre_signed_url__=$(echo $__agent_params__ | jq -r '.disconnectAfterIdleTimeout')
+  local __use_pre_signed_url__=$(echo $__agent_params__ | jq -r '.usePreSignedURL')
   local __agent_name__=$(generate_agent_name $__use_pre_signed_url__)
 
   # Update agent YAML configuration
