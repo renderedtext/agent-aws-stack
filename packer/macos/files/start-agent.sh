@@ -226,7 +226,38 @@ change_agent_config $agent_params $agent_token
 echo "Starting agent..."
 sudo launchctl start com.semaphoreci.agent
 
-# Create cron job to continously check if agent is running.
-# We just need to create our crontab file in /etc/crontab,
-# and the launchd system/com.vix.cron daemon will take care of the rest.
-echo "* * * * * semaphore /opt/semaphore/agent/health-check.sh >> /opt/semaphore/agent/health-check.log" | sudo tee -a /etc/crontab
+# Create cron job to continuously check if agent is running.
+echo "Setting up health check job"
+sudo tee /Library/LaunchDaemons/com.semaphoreci.health-check.plist > /dev/null << EOT
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.semaphoreci.health-check</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/semaphore/agent/health-check.sh</string>
+  </array>
+
+  <key>Nice</key>
+  <integer>1</integer>
+
+  <key>StartInterval</key>
+  <integer>60</integer>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardErrorPath</key>
+  <string>/opt/semaphore/agent/health-check.log</string>
+
+  <key>StandardOutPath</key>
+  <string>/opt/semaphore/agent/health-check.log</string>
+</dict>
+</plist>
+EOT
+sudo launchctl load /Library/LaunchDaemons/com.semaphoreci.health-check.plist
+
+echo "Done."
