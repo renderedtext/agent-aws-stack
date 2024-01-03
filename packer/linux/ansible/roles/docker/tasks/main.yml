@@ -16,16 +16,10 @@
       - docker-ce
       - docker-ce-cli
       - containerd.io
+      - docker-compose-plugin
 
 - name: Configure Docker service
   ansible.builtin.service:
     name: docker
     state: started
     enabled: true
-
-- name: Install Docker Compose
-  ansible.builtin.get_url:
-    url: "{{ docker_compose_url }}"
-    dest: /usr/local/bin/docker-compose
-    mode: '0755'
-    force: true
