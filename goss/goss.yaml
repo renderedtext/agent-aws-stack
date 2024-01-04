@@ -112,9 +112,7 @@ command:
     exec: "docker --version"
   docker-compose:
     exit-status: 0
-    exec: "docker-compose --version"
-    stdout:
-      - "{{ .Vars.docker_compose }}"
+    exec: "docker compose version"
   python:
     exit-status: 0
     exec: "python --version"
