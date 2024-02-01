@@ -57,7 +57,8 @@ function describeAsg(autoScalingClient, stackName) {
           resolve({
             name: asg.AutoScalingGroupName,
             desiredCapacity: asg.DesiredCapacity,
-            maxSize: asg.MaxSize
+            maxSize: asg.MaxSize,
+            minSize: asg.MinSize
           });
         }
       }
@@ -175,15 +176,47 @@ function getAgentTypeMetrics(token, semaphoreEndpoint) {
   })
 }
 
-const scaleUpIfNeeded = async (autoScalingClient, asgName, occupancy, asg) => {
+function determineNewSize(totalJobs, min, max, overprovisionStrategy, overprovisionFactor) {
+  /**
+   * If the number of total jobs is below the minimum size for the stack,
+   * we don't apply any overprovisioning strategies.
+   */
+  if (totalJobs < min) {
+    return min
+  }
+
+  let newSize = totalJobs;
+  switch (overprovisionStrategy) {
+    case "none":
+      console.log(`No overprovision strategy configured - new size is ${newSize}`);
+      break
+    case "number":
+      newSize += overprovisionFactor;
+      console.log(`Overprovision strategy ${overprovisionStrategy} configured (${overprovisionFactor}) - new desired size is ${newSize}`);
+      break
+    case "percentage":
+      newSize += Math.ceil((totalJobs * overprovisionFactor) / 100);
+      console.log(`Overprovision strategy ${overprovisionStrategy} configured (${overprovisionFactor}) - new desired size is ${newSize}`);
+      break
+  }
+
+  if (newSize > max) {
+    console.log(`New desired size is ${newSize}, but maximum is ${max} - new size is ${max}`);
+    return max;
+  }
+
+  return newSize;
+}
+
+const scaleUpIfNeeded = async (autoScalingClient, asgName, occupancy, asg, overprovisionStrategy, overprovisionFactor) => {
   const totalJobs = Object.keys(occupancy).reduce((count, state) => count + occupancy[state], 0);
 
   console.log(`Agent type occupancy: `, occupancy);
   console.log(`Current asg state: `, asg);
 
-  const desired = totalJobs > asg.maxSize ? asg.maxSize : totalJobs;
-  if (desired > asg.desiredCapacity) {
-    await setAsgDesiredCapacity(autoScalingClient, asgName, desired);
+  const newSize = determineNewSize(totalJobs, asg.minSize, asg.maxSize, overprovisionStrategy, overprovisionFactor);
+  if (newSize > asg.desiredCapacity) {
+    await setAsgDesiredCapacity(autoScalingClient, asgName, newSize);
     console.log(`Successfully scaled up '${asg.name}'.`);
   } else {
     console.log(`No need to scale up '${asgName}'.`);
@@ -198,12 +231,12 @@ function epochSeconds() {
   return Math.round(Date.now() / 1000);
 }
 
-const tick = async (agentTypeToken, stackName, autoScalingClient, cloudwatchClient, semaphoreEndpoint) => {
+const tick = async (agentTypeToken, stackName, autoScalingClient, cloudwatchClient, semaphoreEndpoint, overprovisionStrategy, overprovisionFactor) => {
   try {
     const metrics = await getAgentTypeMetrics(agentTypeToken, semaphoreEndpoint);
     await publishOccupancyMetrics(cloudwatchClient, stackName, metrics);
     const asg = await describeAsg(autoScalingClient, stackName);
-    await scaleUpIfNeeded(autoScalingClient, asg.name, metrics.jobs, asg);
+    await scaleUpIfNeeded(autoScalingClient, asg.name, metrics.jobs, asg, overprovisionStrategy, overprovisionFactor);
   } catch (e) {
     console.error("Error fetching occupancy", e);
   }
@@ -236,6 +269,21 @@ exports.handler = async (event, context, callback) => {
       message: "error",
     };
   }
+
+  const overprovisionStrategy = process.env.SEMAPHORE_AGENT_OVERPROVISION_STRATEGY;
+  if (!overprovisionStrategy) {
+    console.error("No SEMAPHORE_AGENT_OVERPROVISION_STRATEGY specified.")
+    return {
+      statusCode: 500,
+      message: "error",
+    };
+  }
+
+  /**
+   * We know that this is valid because we validate it before deploying the stack,
+   * so there's no need to validate it here again.
+   */
+  const overprovisionFactor = parseInt(process.env.SEMAPHORE_AGENT_OVERPROVISION_FACTOR);
 
   const ssmClient = new SSMClient({
     maxAttempts: 1,
@@ -284,7 +332,7 @@ exports.handler = async (event, context, callback) => {
     const agentTypeToken = await getAgentTypeToken(ssmClient, agentTokenParameterName);
 
     while (true) {
-      await tick(agentTypeToken, stackName, autoScalingClient, cloudwatchClient, semaphoreEndpoint);
+      await tick(agentTypeToken, stackName, autoScalingClient, cloudwatchClient, semaphoreEndpoint, overprovisionStrategy, overprovisionFactor);
 
       // Check if we will hit the timeout before sleeping.
       // We include a worst-case scenario for the next tick duration (5s) here too,
