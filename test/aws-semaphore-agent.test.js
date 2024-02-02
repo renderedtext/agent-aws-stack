@@ -622,13 +622,94 @@ describe("scaler lambda", () => {
       Code: Match.anyValue(),
       Handler: "app.handler",
       Environment: {
-        Variables: {
+        Variables: Match.objectEquals({
           SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME: "test-token",
-          SEMAPHORE_AGENT_STACK_NAME: "test-stack"
-        }
+          SEMAPHORE_AGENT_STACK_NAME: "test-stack",
+          SEMAPHORE_ENDPOINT: "test.semaphoreci.com",
+          SEMAPHORE_AGENT_OVERPROVISION_STRATEGY: "none",
+          SEMAPHORE_AGENT_OVERPROVISION_FACTOR: "0"
+        })
       },
       Role: Match.anyValue()
     });
+  })
+
+  test("using number overprovisioning strategy", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_OVERPROVISION_STRATEGY", "number");
+    argumentStore.set("SEMAPHORE_AGENT_OVERPROVISION_FACTOR", "10");
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::Lambda::Function", {
+      Description: "Dynamically scale Semaphore agents based on jobs demand",
+      Runtime: "nodejs18.x",
+      Timeout: 60,
+      Code: Match.anyValue(),
+      Handler: "app.handler",
+      Environment: {
+        Variables: Match.objectEquals({
+          SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME: "test-token",
+          SEMAPHORE_AGENT_STACK_NAME: "test-stack",
+          SEMAPHORE_ENDPOINT: "test.semaphoreci.com",
+          SEMAPHORE_AGENT_OVERPROVISION_STRATEGY: "number",
+          SEMAPHORE_AGENT_OVERPROVISION_FACTOR: "10"
+        })
+      },
+      Role: Match.anyValue()
+    });
+  })
+
+  test("using percentage overprovisioning strategy", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_OVERPROVISION_STRATEGY", "percentage");
+    argumentStore.set("SEMAPHORE_AGENT_OVERPROVISION_FACTOR", "25");
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::Lambda::Function", {
+      Description: "Dynamically scale Semaphore agents based on jobs demand",
+      Runtime: "nodejs18.x",
+      Timeout: 60,
+      Code: Match.anyValue(),
+      Handler: "app.handler",
+      Environment: {
+        Variables: Match.objectEquals({
+          SEMAPHORE_AGENT_TOKEN_PARAMETER_NAME: "test-token",
+          SEMAPHORE_AGENT_STACK_NAME: "test-stack",
+          SEMAPHORE_ENDPOINT: "test.semaphoreci.com",
+          SEMAPHORE_AGENT_OVERPROVISION_STRATEGY: "percentage",
+          SEMAPHORE_AGENT_OVERPROVISION_FACTOR: "25"
+        })
+      },
+      Role: Match.anyValue()
+    });
+  })
+
+  test("using invalid number overprovisioning factor", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_OVERPROVISION_STRATEGY", "number");
+    argumentStore.set("SEMAPHORE_AGENT_OVERPROVISION_FACTOR", "not-a-number");
+    expect(() => argumentStore.validateOverprovisionStrategy()).toThrow("SEMAPHORE_AGENT_OVERPROVISION_FACTOR is invalid")
+  })
+
+  test("using invalid percentage overprovisioning factor", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_OVERPROVISION_STRATEGY", "percentage");
+    argumentStore.set("SEMAPHORE_AGENT_OVERPROVISION_FACTOR", "not-a-number");
+    expect(() => argumentStore.validateOverprovisionStrategy()).toThrow("SEMAPHORE_AGENT_OVERPROVISION_FACTOR is invalid")
+  })
+
+  test("using negative number overprovisioning factor", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_OVERPROVISION_STRATEGY", "number");
+    argumentStore.set("SEMAPHORE_AGENT_OVERPROVISION_FACTOR", "-1");
+    expect(() => argumentStore.validateOverprovisionStrategy()).toThrow("SEMAPHORE_AGENT_OVERPROVISION_FACTOR must be greater than zero")
+  })
+
+  test("using negative percentage overprovisioning factor", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_OVERPROVISION_STRATEGY", "percentage");
+    argumentStore.set("SEMAPHORE_AGENT_OVERPROVISION_FACTOR", "-1");
+    expect(() => argumentStore.validateOverprovisionStrategy()).toThrow("SEMAPHORE_AGENT_OVERPROVISION_FACTOR must be greater than zero")
   })
 
   test("rule to schedule lambda execution is created", () => {
