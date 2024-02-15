@@ -602,7 +602,7 @@ describe("auto scaling group", () => {
 
     template.hasResourceProperties("AWS::Lambda::Function", {
       Description: "Suspend AZRebalance process for auto scaling group",
-      Runtime: "nodejs14.x",
+      Runtime: "nodejs16.x",
       Code: Match.anyValue(),
       Handler: "app.handler",
       Role: Match.anyValue()
@@ -781,7 +781,7 @@ describe("SSH keys updater lambda", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::Lambda::Function", {
       Description: "Check if GitHub SSH public keys have changed.",
-      Runtime: "nodejs14.x",
+      Runtime: "nodejs16.x",
       Timeout: 10,
       Code: Match.anyValue(),
       Handler: "app.handler",
