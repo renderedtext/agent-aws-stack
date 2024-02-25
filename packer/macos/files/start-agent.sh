@@ -204,6 +204,20 @@ region=$(curl \
   --show-error \
   --location "http://169.254.169.254/latest/meta-data/placement/region"
 )
+instance_id=$(curl \
+  -H "X-aws-ec2-metadata-token: $token" \
+  --fail \
+  --silent \
+  --show-error \
+  --location "http://169.254.169.254/latest/meta-data/placement/instance-id"
+)
+
+# If the instance is in "standby" mode (after root volume replacement) we want to exit
+asg_name=$(aws autoscaling describe-auto-scaling-instances --region "$region" --instance-ids "$instance_id" --output text --query 'AutoScalingInstances[?LifecycleState==`Standby`].AutoScalingGroupName | [0]')
+if [[ -n "$asg_name" ]]; then
+  echo "Exiting standby mode for '$instance_id' in '$asg_name'..."
+  aws autoscaling exit-standby --region "$region" --instance-ids "$instance_id" --auto-scaling-group-name "$asg_name"
+fi
 
 # The parameters required for the agent configuration are stored in an SSM parameter.
 # We need to fetch them before proceeding with anything else.
