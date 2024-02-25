@@ -28,7 +28,7 @@ if [[ $SEMAPHORE_AGENT_SHUTDOWN_REASON == "IDLE" ]]; then
     --instance-id "$instance_id" \
     --should-decrement-desired-capacity
 else
-  aws ec2 create-replace-root-volume-task	\
+  aws ec2 create-replace-root-volume-task \
     --region "$region" \
     --instance-id "$instance_id" \
     --image-id "$ami_id" \
