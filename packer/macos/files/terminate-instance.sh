@@ -11,6 +11,7 @@ fi
 
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
 instance_id=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
+ami_id=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/ami-id")
 region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/placement/region")
 
 # We unset all AWS related variables to make sure the instance profile is always used.
@@ -27,8 +28,9 @@ if [[ $SEMAPHORE_AGENT_SHUTDOWN_REASON == "IDLE" ]]; then
     --instance-id "$instance_id" \
     --should-decrement-desired-capacity
 else
-  aws autoscaling terminate-instance-in-auto-scaling-group \
+  aws ec2 create-replace-root-volume-task	\
     --region "$region" \
     --instance-id "$instance_id" \
-    --no-should-decrement-desired-capacity
+    --image-id "$ami_id" \
+    –-delete-replaced-root-volume
 fi
