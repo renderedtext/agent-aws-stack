@@ -30,7 +30,7 @@ else
   # Enter standby LifecycleState because the EC2 health check will fail while we're replacing the root volume
   # We also decrement desired capacity so the ASG doesn't create a new replacement instance in the meantime
   # The instance will exit standby automatically in start-agent.sh after reboot
-  asg_name=$(aws autoscaling describe-auto-scaling-instances --region "$region" --instance-ids "$instance_id" --output text --query "AutoScalingInstances[0].AutoScalingGroupName")
+  asg_name=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/tags/instance/aws:autoscaling:groupName")
   aws autoscaling enter-standby \
     --region "$region" \
     --instance-ids "$instance_id" \
