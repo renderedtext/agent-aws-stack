@@ -93,6 +93,7 @@ build {
       "scripts/health-check.ps1",
       "scripts/provision-ami.ps1",
       "scripts/configure-github-ssh-keys.ps1",
+      "scripts/gen-pre-signed-url.py",
       "files/amazon-cloudwatch-agent.json"
     ]
   }

@@ -45,10 +45,20 @@ function Retry-Command {
 }
 
 function Generate-AgentName {
-  $idmsToken = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
-  $instanceId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $idmsToken} http://169.254.169.254/latest/meta-data/instance-id).content
-  $randomPart = -join (1..12 | ForEach {[char]((97..122) + (48..57) | Get-Random)})
-  return $instanceId+"__"+$randomPart
+  [CmdletBinding()]
+  Param(
+    [Parameter(Mandatory=$true)]
+    [string]$UsePreSignedURL
+  )
+
+  if ($UsePreSignedURL -eq "true") {
+    return python C:\semaphore-agent\gen-pre-signed-url.py
+  } else {
+    $idmsToken = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+    $instanceId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $idmsToken} http://169.254.169.254/latest/meta-data/instance-id).content
+    $randomPart = -join (1..12 | ForEach {[char]((97..122) + (48..57) | Get-Random)})
+    return $instanceId+"__"+$randomPart
+  }
 }
 
 # Waits for 60s for the agent to start running.
@@ -159,7 +169,8 @@ Invoke-Command -ComputerName localhost -Credential $Credentials -ScriptBlock {
 }
 
 Write-Output "Updating agent configuration..."
-$agentName = Generate-AgentName
+$usePreSignedURL = $agentParams | jq -r '.usePreSignedURL'
+$agentName = Generate-AgentName -UsePreSignedURL $usePreSignedURL
 Write-Output "Using name '$agentName' for agent."
 
 $nameExpr = '.name = ""{0}""' -f $agentName
