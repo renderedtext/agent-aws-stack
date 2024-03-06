@@ -23,6 +23,7 @@ choco install -y git --version 2.35.1.2
 choco install -y jq --version 1.6
 choco install -y yq --version 4.21.1
 choco install -y nssm --version 2.24.101.20180116
+choco install -y python --version 3.12.2
 
 # Make `Update-SessionEnvironment` available
 Write-Output "Importing the Chocolatey profile module..."
@@ -33,6 +34,10 @@ Update-SessionEnvironment
 
 # no mismatched line endings
 git config --system core.autocrlf false
+
+# install pip and boto3
+python -m ensurepip --upgrade
+pip install boto3
 
 # Install awscli
 Write-Output "Installing awscli..."
@@ -64,6 +69,7 @@ Move-Item C:\packer-tmp\terminate-instance.ps1 C:\semaphore-agent\hooks\shutdown
 Move-Item C:\packer-tmp\start-agent.ps1 C:\semaphore-agent\start.ps1
 Move-Item C:\packer-tmp\health-check.ps1 C:\semaphore-agent\health-check.ps1
 Move-Item C:\packer-tmp\configure-github-ssh-keys.ps1 C:\semaphore-agent\configure-github-ssh-keys.ps1
+Move-Item C:\packer-tmp\gen-pre-signed-url.py C:\semaphore-agent\gen-pre-signed-url.py
 
 # The agent is installed when the instance starts, but the toolbox version
 # is specified during the AMI provisioning phase. To pass that information
