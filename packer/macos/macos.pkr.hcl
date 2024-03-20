@@ -97,7 +97,8 @@ build {
       "files/amazon-cloudwatch-agent.json",
       "files/start-agent.sh",
       "files/terminate-instance.sh",
-      "files/health-check.sh"
+      "files/health-check.sh",
+      "files/gen-pre-signed-url.py"
     ]
   }
 

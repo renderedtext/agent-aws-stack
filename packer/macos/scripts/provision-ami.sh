@@ -7,12 +7,18 @@ ARCH=$(uname -m)
 DISK_ID=$(diskutil list physical external | head -n1 | cut -d' ' -f1)
 APFS_CONTAINER_ID=$(diskutil list physical external | grep Apple_APFS | tr -s ' ' | cut -d' ' -f8)
 
+echo "Running provisioning script as $(whoami)."
+
 # We use (yes || true) because `yes` can lead to SIGPIPE errors, which we don't care about here.
 echo "Repairing disk $DISK_ID..."
 (yes || true) | sudo diskutil repairDisk $DISK_ID
 
 echo "Resizing APFS container $APFS_CONTAINER_ID..."
-sudo diskutil apfs resizeContainer $APFS_CONTAINER_ID 0
+
+# When the APFS is already at its maximum size,
+# this command returns a non-zero exit code,
+# so we ensure we don't fail it here.
+sudo diskutil apfs resizeContainer $APFS_CONTAINER_ID 0 || true
 
 # Remove all instance history.
 # See: https://github.com/aws/ec2-macos-init#clean
@@ -39,6 +45,10 @@ brew install coreutils
 brew install jq
 brew install yq
 brew cleanup
+
+# We install boto3 with sudo here,
+# because the instance userdata is executed with the root user.
+sudo -H python3 -m pip install boto3
 
 # Install cloudwatch agent
 # ARM binary is not yet available, so we need to use Rosetta.
@@ -99,4 +109,5 @@ sudo -E ./install.sh
 # Copy agent scripts and apply folder permissions
 sudo cp /tmp/start-agent.sh /opt/semaphore/agent/start.sh
 sudo cp /tmp/health-check.sh /opt/semaphore/agent/health-check.sh
+sudo cp /tmp/gen-pre-signed-url.py /opt/semaphore/agent/gen-pre-signed-url.py
 sudo chown -R semaphore: /opt/semaphore/agent
