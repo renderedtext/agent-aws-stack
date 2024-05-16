@@ -1,4 +1,5 @@
 const { Agent } = require("https");
+const { NodeHttpHandler } = require("@aws-sdk/node-http-handler");
 const { AutoScalingClient, SuspendProcessesCommand } = require("@aws-sdk/client-auto-scaling");
 
 const CONNECTION_TIMEOUT = 1000;

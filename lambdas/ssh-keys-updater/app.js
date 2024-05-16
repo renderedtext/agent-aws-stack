@@ -1,4 +1,5 @@
 const { request, Agent } = require('https');
+const { NodeHttpHandler } = require("@aws-sdk/node-http-handler");
 const { SSMClient, GetParameterCommand, PutParameterCommand } = require("@aws-sdk/client-ssm");
 
 const CONNECTION_TIMEOUT = 1000;
