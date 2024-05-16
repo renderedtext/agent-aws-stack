@@ -1,5 +1,8 @@
-const https = require('https');
-const aws = require('aws-sdk');
+const { request, Agent } = require('https');
+const { SSMClient, GetParameterCommand, PutParameterCommand } = require("@aws-sdk/client-ssm");
+
+const CONNECTION_TIMEOUT = 1000;
+const SOCKET_TIMEOUT = 1000;
 
 function getGitHubSSHKeys() {
   const options = {
@@ -11,7 +14,8 @@ function getGitHubSSHKeys() {
 
   return new Promise((resolve, reject) => {
     let data = '';
-    https.request(options, response => {
+
+    request(options, response => {
       response.on('data', function (chunk) {
         data += chunk;
       });
@@ -38,7 +42,8 @@ function getCurrentKeys(ssmClient, parameterName) {
   const params = { Name: parameterName };
 
   return new Promise(function(resolve, reject) {
-    ssmClient.getParameter(params, function(err, data) {
+    const command = new GetParameterCommand(params);
+    ssmClient.send(command, function(err, data) {
       if (err) {
         if (err.name == "ParameterNotFound") {
           console.log("Could not find parameter.");
@@ -65,7 +70,8 @@ function updateKeys(ssmClient, parameterName, newKeys) {
   };
 
   return new Promise(function(resolve, reject) {
-    ssmClient.putParameter(params, function(err, data) {
+    const command = new PutParameterCommand(params)
+    ssmClient.send(command, function(err, data) {
       if (err) {
         console.log("Error updating current keys: ", err);
         reject(err);
@@ -93,8 +99,18 @@ exports.handler = async (event, context, callback) => {
     };
   }
 
+  const ssmClient = new SSMClient({
+    maxAttempts: 1,
+    requestHandler: new NodeHttpHandler({
+      connectionTimeout: CONNECTION_TIMEOUT,
+      socketTimeout: SOCKET_TIMEOUT,
+      httpsAgent: new Agent({
+        timeout: SOCKET_TIMEOUT
+      })
+    }),
+  });
+
   const newKeys = await getGitHubSSHKeys();
-  const ssmClient = new aws.SSM();
   const currentKeys = await getCurrentKeys(ssmClient, parameterName);
   if (!keysAreEqual(currentKeys, newKeys)) {
     console.log("Keys changed. Updating...")
