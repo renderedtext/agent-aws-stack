@@ -23,7 +23,8 @@
         "ec2:DescribeLaunchTemplateVersions",
         "ec2:DescribeLaunchTemplates",
         "ec2:GetLaunchTemplateData",
-        "ec2:ModifyLaunchTemplate"
+        "ec2:ModifyLaunchTemplate",
+        "ec2:DescribeVpnGateways"
       ],
       "Resource": "*"
     },
