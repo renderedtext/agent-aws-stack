@@ -19,8 +19,8 @@
     "jest": "^29.3.1"
   },
   "dependencies": {
-    "aws-cdk": "^2.91.0",
-    "aws-cdk-lib": "^2.91.0",
+    "aws-cdk": "^2.164.1",
+    "aws-cdk-lib": "^2.164.1",
     "constructs": "^10.2.69"
   }
 }
