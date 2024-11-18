@@ -42,7 +42,8 @@
         "iam:UntagPolicy",
         "iam:TagRole",
         "iam:UntagRole",
-        "iam:ListPolicyVersions"
+        "iam:ListPolicyVersions",
+        "iam:UpdateAssumeRolePolicy"
       ],
       "Resource": "*"
     },
