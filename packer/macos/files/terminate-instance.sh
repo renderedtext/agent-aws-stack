@@ -42,5 +42,5 @@ else
     --region "$region" \
     --instance-id "$instance_id" \
     --image-id "$ami_id" \
-    –-delete-replaced-root-volume
+    --delete-replaced-root-volume
 fi
