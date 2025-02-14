@@ -186,8 +186,7 @@ nssm install semaphore-agent C:\semaphore-agent\agent.exe start --config-file C:
 nssm set semaphore-agent ObjectName .\$UserName $Password
 nssm set semaphore-agent AppStdout C:\semaphore-agent\agent.log
 nssm set semaphore-agent AppStderr C:\semaphore-agent\agent.log
-nssm set semaphore-agent AppExit Default Restart
-nssm set semaphore-agent AppRestartDelay 10000
+nssm set semaphore-agent AppExit Default Exit
 
 # For some reason, the `nssm start` command started failing without any output
 # after the upgrade to EC2Launch v2, even though the agent service starts just fine.
