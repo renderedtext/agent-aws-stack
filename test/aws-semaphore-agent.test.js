@@ -962,6 +962,26 @@ describe("host resource group", () => {
   })
 })
 
+describe("ipv6", () => {
+  test("enabled for launch template", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_USE_IPV6", "true");
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        NetworkInterfaces: [
+          {
+            "DeviceIndex": 0,
+            "Groups": [Match.anyValue()],
+            "Ipv6AddressCount": 1
+          }
+        ]
+      }
+    });
+  })
+})
+
 function createTemplate(argumentStore) {
   return createTemplateWithOS(argumentStore, "ubuntu-focal");
 }
