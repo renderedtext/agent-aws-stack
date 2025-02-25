@@ -505,6 +505,26 @@ describe("security group", () => {
   })
 })
 
+describe("ipv6", () => {
+  test("enabled for launch template", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_USE_IPV6", "true");
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
+      LaunchTemplateData: {
+        NetworkInterfaces: [
+          {
+            "DeviceIndex": 0,
+            "Groups": [Match.anyValue()],
+            "Ipv6AddressCount": 1
+          }
+        ]
+      }
+    });
+  })
+})
+
 describe("auto scaling group", () => {
   test("default values are set if nothing is given", () => {
     const template = createTemplate(basicArgumentStore());
