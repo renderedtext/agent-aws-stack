@@ -3,7 +3,7 @@
 const { App, Tags } = require('aws-cdk-lib');
 const { AwsSemaphoreAgentStack } = require('../lib/aws-semaphore-agent-stack');
 const { ArgumentStore } = require('../lib/argument-store');
-const { getKeys } = require('../lib/github-keys');
+const { getKeys, GitHubKeysError } = require('../lib/github-keys');
 
 const app = new App();
 const argumentStore = buildArgumentStore();
@@ -27,7 +27,11 @@ getKeys()
     });
   })
   .catch(e => {
-    console.error("Error fetching GitHub SSH keys", e)
+    if (e instanceof GitHubKeysError) {
+      console.error("Error fetching GitHub SSH keys", e);
+    } else {
+      throw e;
+    }
   })
 
 function buildArgumentStore() {
