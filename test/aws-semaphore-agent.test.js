@@ -654,6 +654,35 @@ describe("scaler lambda", () => {
     });
   })
 
+  test("VPC with subnets", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_USE_IPV6", "true");
+    argumentStore.set("SEMAPHORE_AGENT_VPC_ID", "vpc-1234");
+    argumentStore.set("SEMAPHORE_AGENT_SUBNETS", "subnet-1234,subnet-5678");
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::Lambda::Function", {
+        VpcConfig: {
+            SecurityGroupIds: [Match.anyValue()],
+            SubnetIds: ["subnet-1234", "subnet-5678"]
+        }
+    });
+  })
+
+  test("VPC without subnets", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_USE_IPV6", "true");
+    argumentStore.set("SEMAPHORE_AGENT_VPC_ID", "vpc-1234");
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::Lambda::Function", {
+        VpcConfig: {
+            SecurityGroupIds: [Match.anyValue()],
+            SubnetIds: ["p-12345", "p-67890"]
+        }
+    });
+  })
+
   test("using number overprovisioning strategy", () => {
     const argumentStore = basicArgumentStore();
     argumentStore.set("SEMAPHORE_AGENT_OVERPROVISION_STRATEGY", "number");
