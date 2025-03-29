@@ -531,7 +531,8 @@ describe("auto scaling group", () => {
     template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
       DesiredCapacity: Match.absent(),
       MinSize: "0",
-      MaxSize: "1"
+      MaxSize: "1",
+      MaxInstanceLifetime: 0,
     });
   })
 
@@ -629,6 +630,15 @@ describe("auto scaling group", () => {
     });
 
     template.resourceCountIs("AWS::CloudFormation::CustomResource", 1);
+  })
+
+  test("max instance lifetime is set", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_ASG_MAX_INSTANCE_LIFETIME", 86400);
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
+      MaxInstanceLifetime: 86400,
+    });
   })
 })
 
