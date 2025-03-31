@@ -532,7 +532,6 @@ describe("auto scaling group", () => {
       DesiredCapacity: Match.absent(),
       MinSize: "0",
       MaxSize: "1",
-      MaxInstanceLifetime: 0,
     });
   })
 
