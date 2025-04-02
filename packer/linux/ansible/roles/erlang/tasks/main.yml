@@ -1,19 +1,24 @@
 ---
-- name: Add Erlang GPG apt Key
-  when: install_erlang | bool
-  ansible.builtin.apt_key:
-    url: "{{ erlang_apt_gpg_key }}"
+- name: Download GPG key
+  ansible.builtin.get_url:
+    url: "{{ erlang_gpg_key_url }}"
+    dest: "{{ erlang_gpg_key_path }}"
+    checksum: "sha256:{{ erlang_gpg_key_checksum }}"
+    mode: '0755'
+    force: true
+
+- name: "Add repository to APT sources list"
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by={{ erlang_gpg_key_path }}] https://ppa1.rabbitmq.com/rabbitmq/rabbitmq-erlang/deb/ubuntu focal main"
     state: present
 
-- name: Add Erlang Repository
-  when: install_erlang | bool
+- name: "Add src repository to APT sources list"
   ansible.builtin.apt_repository:
-    repo: "{{ erlang_apt_repository }}"
+    repo: "deb-src [signed-by={{ erlang_gpg_key_path }}] https://ppa1.rabbitmq.com/rabbitmq/rabbitmq-erlang/deb/ubuntu focal main"
     state: present
-    update_cache: true
 
 - name: Install Erlang
   when: install_erlang | bool
   ansible.builtin.apt:
     pkg:
-      - erlang-base=1:24.3.3-1
+      - erlang-base=1:24.3.4.17-1
