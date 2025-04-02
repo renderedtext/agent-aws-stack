@@ -1,17 +1,4 @@
 ---
-- name: Add Erlang GPG apt Key
-  when: install_erlang | bool
-  ansible.builtin.apt_key:
-    url: "{{ erlang_apt_gpg_key }}"
-    state: present
-
-- name: Add Erlang Repository
-  when: install_erlang | bool
-  ansible.builtin.apt_repository:
-    repo: "{{ erlang_apt_repository }}"
-    state: present
-    update_cache: true
-
 - name: Install Erlang
   when: install_erlang | bool
   ansible.builtin.apt:
