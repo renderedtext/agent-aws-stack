@@ -2,16 +2,10 @@
 - name: Download GPG key
   ansible.builtin.get_url:
     url: "{{ erlang_gpg_key_url }}"
-    dest: "{{ erlang_gpg_key_path }}_armored"
+    dest: "{{ erlang_gpg_key_path }}"
     checksum: "sha256:{{ erlang_gpg_key_checksum }}"
     mode: '0755'
     force: true
-
-- name: De-Armor GPG key
-  ansible.builtin.command: gpg --dearmor < {{ erlang_gpg_key_path }}_armored > {{ erlang_gpg_key_path }}
-  no_log: true
-  args:
-    creates: "{{ erlang_gpg_key_path }}"
 
 - name: "Add repository to APT sources list"
   ansible.builtin.apt_repository:
