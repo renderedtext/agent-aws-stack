@@ -17,6 +17,8 @@
   ansible.builtin.apt_repository:
     repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.gpg] https://ppa1.rabbitmq.com/rabbitmq/rabbitmq-erlang/deb/ubuntu focal main"
     state: present
+  tags:
+    - skip_ansible_lint
 
 - name: "Add src repository to APT sources list"
   ansible.builtin.apt_repository:
