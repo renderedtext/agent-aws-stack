@@ -76,7 +76,7 @@ source "amazon-ebs" "macos" {
     owners = ["amazon"]
 
     filters = {
-      name                = "amzn-ec2-macos-12.6*"
+      name                = "amzn-ec2-macos-13.7*"
       architecture        = "${var.arch}*"
       root-device-type    = "ebs"
       virtualization-type = "hvm"

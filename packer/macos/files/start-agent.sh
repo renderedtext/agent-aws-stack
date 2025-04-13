@@ -216,6 +216,24 @@ region=$(curl \
   --show-error \
   --location "http://169.254.169.254/latest/meta-data/placement/region"
 )
+instance_id=$(curl \
+  -H "X-aws-ec2-metadata-token: $token" \
+  --fail \
+  --silent \
+  --show-error \
+  --location "http://169.254.169.254/latest/meta-data/instance-id"
+)
+asg_name=$(curl \
+  -H "X-aws-ec2-metadata-token: $token" \
+  --fail \
+  --silent \
+  --show-error \
+  --location "http://169.254.169.254/latest/meta-data/tags/instance/aws:autoscaling:groupName"
+)
+
+# If the instance is in the "Standby" LifecycleState (after root volume replacement) we want to exit so the health-check runs
+# If it's the first boot the instance may already be in "InService" LifecycleState so we ignore any errors from this command
+aws autoscaling exit-standby --region "$region" --instance-ids "$instance_id" --auto-scaling-group-name "$asg_name" || true
 
 # The parameters required for the agent configuration are stored in an SSM parameter.
 # We need to fetch them before proceeding with anything else.
