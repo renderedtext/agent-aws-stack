@@ -27,8 +27,20 @@ if [[ $SEMAPHORE_AGENT_SHUTDOWN_REASON == "IDLE" ]]; then
     --instance-id "$instance_id" \
     --should-decrement-desired-capacity
 else
-  aws autoscaling terminate-instance-in-auto-scaling-group \
+  # Enter standby LifecycleState because the EC2 health check will fail while we're replacing the root volume
+  # We also decrement desired capacity so the ASG doesn't create a new replacement instance in the meantime
+  # The instance will exit standby automatically in start-agent.sh after reboot
+  asg_name=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/tags/instance/aws:autoscaling:groupName")
+  aws autoscaling enter-standby \
+    --region "$region" \
+    --instance-ids "$instance_id" \
+    --auto-scaling-group-name "$asg_name" \
+    --should-decrement-desired-capacity
+  # https://aws.amazon.com/blogs/compute/new-reset-amazon-ec2-mac-instances-to-a-known-state-using-replace-root-volume-capability/
+  ami_id=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/ami-id")
+  aws ec2 create-replace-root-volume-task \
     --region "$region" \
     --instance-id "$instance_id" \
-    --no-should-decrement-desired-capacity
+    --image-id "$ami_id" \
+    --delete-replaced-root-volume
 fi
