@@ -22,6 +22,11 @@ variable "arch" {
   type = string
 }
 
+variable "ubuntu_version" {
+  type = string
+  default = "ubuntu-focal"
+}
+
 variable "region" {
   type    = string
 }
@@ -51,7 +56,7 @@ packer {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "${var.ami_prefix}-${var.stack_version}-ubuntu-focal-${var.arch}-${var.hash}"
+  ami_name      = "${var.ami_prefix}-${var.stack_version}-${var.ubuntu_version}-${var.arch}-${var.hash}"
   region        = "${var.region}"
   instance_type = "${var.instance_type}"
   ssh_username  = "ubuntu"
@@ -62,6 +67,7 @@ source "amazon-ebs" "ubuntu" {
     Agent_Version = "${var.agent_version}"
     Toolbox_Version = "${var.toolbox_version}"
     Hash = "${var.hash}"
+    Ubuntu_Version = "${var.ubuntu_version}"
   }
 
   source_ami_filter {
@@ -71,7 +77,7 @@ source "amazon-ebs" "ubuntu" {
     owners = ["099720109477"]
 
     filters = {
-      name                = "ubuntu/images/*ubuntu-focal-20.04-*"
+      name                = "ubuntu/images/*${var.ubuntu_version}-*"
       architecture        = "${var.arch}"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
@@ -80,14 +86,14 @@ source "amazon-ebs" "ubuntu" {
 }
 
 build {
-  name = "semaphore-agent-ubuntu-focal"
+  name = "semaphore-agent-${var.ubuntu_version}"
 
   sources = [
     "source.amazon-ebs.ubuntu"
   ]
 
   provisioner "ansible" {
-    playbook_file = "ansible/ubuntu-focal.yml"
+    playbook_file = "ansible/${var.ubuntu_version}.yml"
     user          = "ubuntu"
     use_proxy     = false
     extra_arguments = [
@@ -96,7 +102,8 @@ build {
       "-e agent_version=${var.agent_version}",
       "-e toolbox_version=${var.toolbox_version}",
       "-e install_erlang=${var.install_erlang}",
-      "-e systemd_restart_seconds=${var.systemd_restart_seconds}",
+      "-e architecture=${var.arch}",
+      "-e systemd_restart_seconds=${var.systemd_restart_seconds}"
     ]
   }
 }

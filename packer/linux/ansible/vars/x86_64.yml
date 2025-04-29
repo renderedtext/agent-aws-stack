@@ -1,0 +1,4 @@
+yq_url: "https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd64"
+cloudwatch_agent_url: https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+agent_url: "https://github.com/semaphoreci/agent/releases/download/{{ agent_version }}/agent_Linux_x86_64.tar.gz"
+awscli_url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-{{ awscli_version }}.zip"

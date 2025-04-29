@@ -9,16 +9,16 @@
 
 - name: "Add repository to APT sources list"
   ansible.builtin.apt_repository:
-    repo: "deb [arch=amd64 signed-by={{ erlang_gpg_key_path }}] https://ppa1.rabbitmq.com/rabbitmq/rabbitmq-erlang/deb/ubuntu focal main"
+    repo: "deb [signed-by={{ erlang_gpg_key_path }}] https://ppa.launchpadcontent.net/rabbitmq/rabbitmq-erlang/ubuntu {{ ansible_distribution_release }} main"
     state: present
 
 - name: "Add src repository to APT sources list"
   ansible.builtin.apt_repository:
-    repo: "deb-src [signed-by={{ erlang_gpg_key_path }}] https://ppa1.rabbitmq.com/rabbitmq/rabbitmq-erlang/deb/ubuntu focal main"
+    repo: "deb-src [signed-by={{ erlang_gpg_key_path }}] https://ppa.launchpadcontent.net/rabbitmq/rabbitmq-erlang/ubuntu {{ ansible_distribution_release }} main"
     state: present
 
 - name: Install Erlang
   when: install_erlang | bool
   ansible.builtin.apt:
     pkg:
-      - erlang-base=1:24.3.4.17-1
+      - erlang-base=1:26.*

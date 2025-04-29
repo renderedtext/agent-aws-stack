@@ -1,14 +1,10 @@
 ---
 agent_root_dir: "/opt/semaphore/agent"
 agent_hooks_dir: "{{ agent_root_dir }}/hooks"
-agent_url: "https://github.com/semaphoreci/agent/releases/download/{{ agent_version }}/agent_Linux_x86_64.tar.gz"
 awscli_version: "2.4.9"
-awscli_url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-{{ awscli_version }}.zip"
-docker_apt_repository: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
 docker_apt_gpg_key: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
-yq_url: "https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd64"
-erlang_gpg_key_url: https://github.com/rabbitmq/signing-keys/releases/download/3.0/cloudsmith.rabbitmq-erlang.E495BB49CC4BBE5B.key
-erlang_gpg_key_checksum: "84df2e5fd80d464c3eb9acd2f751b2f6a723438200915dd50fbf12f08698e4ec"
-erlang_gpg_key_path: /usr/share/keyrings/rabbitmq-erlang.E495BB49CC4BBE5B.asc
-cloudwatch_agent_url: https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+docker_apt_repository: "deb https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+erlang_gpg_key_url: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xB279943D2A549531E144B875F77F1EDA57EBB1CC
+erlang_gpg_key_checksum: "fc9dfdbf0083d6eef9d3aea9529eebd3821bfb7b602834c11b0a581865ff17ef"
+erlang_gpg_key_path: /usr/share/keyrings/net.launchpad.ppa.rabbitmq.erlang.asc
 systemd_restart_seconds: 300

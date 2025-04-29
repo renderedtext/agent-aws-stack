@@ -1,5 +1,5 @@
 ---
-- name: Ubuntu Focal 20.04
+- name: Ubuntu Jammy 22.04
   hosts: all
   vars:
     container_user: semaphore

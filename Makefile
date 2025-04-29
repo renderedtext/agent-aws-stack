@@ -3,8 +3,9 @@ AMI_ARCH=x86_64
 AMI_PREFIX=semaphore-agent
 AMI_INSTANCE_TYPE=t2.micro
 AGENT_VERSION=v2.2.16
-TOOLBOX_VERSION=v1.20.5
+TOOLBOX_VERSION=v1.22.6
 PACKER_OS=linux
+UBUNTU_VERSION=ubuntu-focal
 INSTALL_ERLANG=true
 SYSTEMD_RESTART_SECONDS=1800
 VERSION=$(shell cat package.json | jq -r '.version')
@@ -59,6 +60,7 @@ packer.validate.linux:
 			-var "region=$(AWS_REGION)" \
 			-var "ami_prefix=$(AMI_PREFIX)" \
 			-var "arch=$(AMI_ARCH)" \
+			-var "ubuntu_version=$(UBUNTU_VERSION)" \
 			-var "install_erlang=$(INSTALL_ERLANG)" \
 			-var "systemd_restart_seconds=$(SYSTEMD_RESTART_SECONDS)" \
 			-var "instance_type=$(AMI_INSTANCE_TYPE)" \
@@ -116,6 +118,7 @@ packer.build.linux:
 			-var "region=$(AWS_REGION)" \
 			-var "ami_prefix=$(AMI_PREFIX)" \
 			-var "arch=$(AMI_ARCH)" \
+			-var "ubuntu_version=$(UBUNTU_VERSION)" \
 			-var "install_erlang=$(INSTALL_ERLANG)" \
 			-var "systemd_restart_seconds=$(SYSTEMD_RESTART_SECONDS)" \
 			-var "instance_type=$(AMI_INSTANCE_TYPE)" \
