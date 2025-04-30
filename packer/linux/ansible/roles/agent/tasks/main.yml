@@ -41,7 +41,10 @@
     SEMAPHORE_REGISTRATION_TOKEN: "DUMMY"
     SEMAPHORE_ORGANIZATION: "DUMMY"
     SEMAPHORE_AGENT_SYSTEMD_RESTART_SEC: "{{ systemd_restart_seconds }}"
+  register: agent_installation_result
   ansible.builtin.command: "{{ agent_root_dir }}/install.sh"
+
+- debug: var=agent_installation_result
 
 - name: Copy start script
   ansible.builtin.copy:

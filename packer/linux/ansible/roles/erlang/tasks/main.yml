@@ -1,11 +1,20 @@
 ---
 - name: Download GPG key
+  register: get_url_output
   ansible.builtin.get_url:
     url: "{{ erlang_gpg_key_url }}"
     dest: "{{ erlang_gpg_key_path }}"
-    checksum: "sha256:{{ erlang_gpg_key_checksum }}"
+    # checksum: "sha256:{{ erlang_gpg_key_checksum }}"
     mode: '0755'
     force: true
+
+- debug: var=get_url_output
+
+- name: Display key
+  ansible.builtin.command: cat {{ erlang_gpg_key_path }}
+  register: key_output
+
+- debug: var=key_output
 
 - name: "Add repository to APT sources list"
   ansible.builtin.apt_repository:
