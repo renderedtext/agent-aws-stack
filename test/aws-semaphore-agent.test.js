@@ -374,8 +374,10 @@ describe("launch configuration", () => {
           {
             DeviceName: "/dev/sda1",
             Ebs: {
-              VolumeType: "gp2",
-              VolumeSize: 64
+              VolumeType: "gp3",
+              VolumeSize: 64,
+              Iops: 3000,
+              Throughput: 125,
             }
           }
         ]
@@ -388,6 +390,8 @@ describe("launch configuration", () => {
     argumentStore.set("SEMAPHORE_AGENT_VOLUME_NAME", "/dev/sda1");
     argumentStore.set("SEMAPHORE_AGENT_VOLUME_TYPE", "gp3");
     argumentStore.set("SEMAPHORE_AGENT_VOLUME_SIZE", "3981");
+    argumentStore.set("SEMAPHORE_AGENT_VOLUME_IOPS", "4500");
+    argumentStore.set("SEMAPHORE_AGENT_VOLUME_THROUGHPUT", "450");
 
     const template = createTemplate(argumentStore);
     template.hasResourceProperties("AWS::EC2::LaunchTemplate", {
@@ -397,7 +401,9 @@ describe("launch configuration", () => {
             DeviceName: "/dev/sda1",
             Ebs: {
               VolumeType: "gp3",
-              VolumeSize: 3981
+              VolumeSize: 3981,
+              Iops: 4500,
+              Throughput: 450,
             }
           }
         ]
