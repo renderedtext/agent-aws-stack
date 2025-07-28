@@ -141,7 +141,7 @@ describe("instance profile", () => {
       },
       ManagedPolicyArns: [{
         'Fn::Join': ['', [
-          'arn:', { Ref: 'AWS::Partition' }, ':iam::aws:policy/service-role/AmazonEC2RoleforSSM'
+          'arn:', { Ref: 'AWS::Partition' }, ':iam::aws:policy/service-role/AmazonSSMManagedInstanceCore'
         ]]
       }]
     });
@@ -167,7 +167,7 @@ describe("instance profile", () => {
       ManagedPolicyArns: [
         {
           'Fn::Join': ['', [
-            'arn:', { Ref: 'AWS::Partition' }, ':iam::aws:policy/service-role/AmazonEC2RoleforSSM'
+            'arn:', { Ref: 'AWS::Partition' }, ':iam::aws:policy/service-role/AmazonSSMManagedInstanceCore'
           ]]
         },
         {
