@@ -8,3 +8,5 @@ cdk.context.json
 
 # GitHub SSH public keys cache
 .gh_ssh_keys_*
+
+build
