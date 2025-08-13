@@ -117,7 +117,7 @@ $agentParams = Retry-Command -ScriptBlock {
 # Create semaphore password and user
 # This is the user we will use to run the nssm service for the agent
 $UserName = "semaphore"
-Log "Creating '$UserName' user..."
+Write-Output "Creating '$UserName' user..."
 Add-Type -AssemblyName 'System.Web'
 $Password = [System.Web.Security.Membership]::GeneratePassword(127, 1)
 $PasswordAsSecureString = $Password | ConvertTo-SecureString -AsPlainText -Force
