@@ -39,7 +39,7 @@ variable "install_erlang" {
 packer {
   required_plugins {
     amazon = {
-      version = ">= 0.0.2"
+      version = "1.3.9"
       source  = "github.com/hashicorp/amazon"
     }
   }
