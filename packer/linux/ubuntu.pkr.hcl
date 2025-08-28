@@ -41,6 +41,16 @@ variable "systemd_restart_seconds" {
   default = "1800"
 }
 
+variable "ubuntu_name" {
+  type    = string
+  default = "focal"
+}
+
+variable "ubuntu_version" {
+  type    = string
+  default = "20.04"
+}
+
 packer {
   required_plugins {
     amazon = {
@@ -51,7 +61,7 @@ packer {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "${var.ami_prefix}-${var.stack_version}-ubuntu-focal-${var.arch}-${var.hash}"
+  ami_name      = "${var.ami_prefix}-${var.stack_version}-ubuntu-${var.ubuntu_name}-${var.arch}-${var.hash}"
   region        = "${var.region}"
   instance_type = "${var.instance_type}"
   ssh_username  = "ubuntu"
@@ -71,7 +81,7 @@ source "amazon-ebs" "ubuntu" {
     owners = ["099720109477"]
 
     filters = {
-      name                = "ubuntu/images/*ubuntu-focal-20.04-*"
+      name                = "ubuntu/images/*ubuntu-${var.ubuntu_name}-${var.ubuntu_version}-*"
       architecture        = "${var.arch}"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
@@ -80,14 +90,14 @@ source "amazon-ebs" "ubuntu" {
 }
 
 build {
-  name = "semaphore-agent-ubuntu-focal"
+  name = "semaphore-agent-ubuntu-${var.ubuntu_name}"
 
   sources = [
     "source.amazon-ebs.ubuntu"
   ]
 
   provisioner "ansible" {
-    playbook_file = "ansible/ubuntu-focal.yml"
+    playbook_file = "ansible/ubuntu-${var.ubuntu_name}.yml"
     user          = "ubuntu"
     use_proxy     = false
     extra_arguments = [

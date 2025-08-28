@@ -5,6 +5,23 @@ AMI_INSTANCE_TYPE=t2.micro
 AGENT_VERSION=v2.2.16
 TOOLBOX_VERSION=v1.20.5
 PACKER_OS=linux
+UBUNTU_VERSION=focal
+
+# Set Ubuntu name and version number based on UBUNTU_VERSION
+ifeq ($(UBUNTU_VERSION),focal)
+  UBUNTU_NAME=focal
+  UBUNTU_VERSION_NUMBER=20.04
+else ifeq ($(UBUNTU_VERSION),noble)
+  UBUNTU_NAME=noble
+  UBUNTU_VERSION_NUMBER=24.04
+else ifeq ($(UBUNTU_VERSION),jammy)
+  UBUNTU_NAME=jammy
+  UBUNTU_VERSION_NUMBER=22.04
+else
+  UBUNTU_NAME=focal
+  UBUNTU_VERSION_NUMBER=20.04
+endif
+
 INSTALL_ERLANG=true
 SYSTEMD_RESTART_SECONDS=1800
 VERSION=$(shell cat package.json | jq -r '.version')
@@ -62,6 +79,8 @@ packer.validate.linux:
 			-var "install_erlang=$(INSTALL_ERLANG)" \
 			-var "systemd_restart_seconds=$(SYSTEMD_RESTART_SECONDS)" \
 			-var "instance_type=$(AMI_INSTANCE_TYPE)" \
+			-var "ubuntu_name=$(UBUNTU_NAME)" \
+			-var "ubuntu_version=$(UBUNTU_VERSION_NUMBER)" \
 			.'
 
 packer.validate.windows:
@@ -119,6 +138,8 @@ packer.build.linux:
 			-var "install_erlang=$(INSTALL_ERLANG)" \
 			-var "systemd_restart_seconds=$(SYSTEMD_RESTART_SECONDS)" \
 			-var "instance_type=$(AMI_INSTANCE_TYPE)" \
+			-var "ubuntu_name=$(UBUNTU_NAME)" \
+			-var "ubuntu_version=$(UBUNTU_VERSION_NUMBER)" \
 			.'
 
 packer.build.windows:

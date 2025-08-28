@@ -99,9 +99,15 @@ blocks:
           - unzip /tmp/packer_1.7.9_linux_amd64.zip -d /tmp/
           - sudo mv /tmp/packer /usr/local/bin/
       jobs:
-        - name: Build Linux AMI
+        - name: Build Linux Focal AMI
           commands:
             - ./ci/build-ami.sh ubuntu-focal x86_64
+        - name: Build Linux Jammy AMI
+          commands:
+            - ./ci/build-ami.sh ubuntu-jammy x86_64
+        - name: Build Linux Noble AMI
+          commands:
+            - ./ci/build-ami.sh ubuntu-noble x86_64
         - name: Build Windows AMI
           commands:
             - ./ci/build-ami.sh windows x86_64
