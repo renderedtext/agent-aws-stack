@@ -125,15 +125,18 @@ blocks:
             - cache restore
             - ./ci/create-execution-policy-and-bootstrap.sh $AWS_ACCOUNT_ID $AWS_DEFAULT_REGION
 
-  - name: Linux launch
+  - name: Linux focal launch
     dependencies:
       - Bootstrap
     task:
+      env_vars:
+        - name: SEMAPHORE_AGENT_OS
+          value: ubuntu-focal
       secrets:
         - name: s1-agent-aws-stack-linux-token
         - name: agent-aws-stack-tester-credentials
       jobs:
-        - name: Launch stack
+        - name: Launch focal stack
           commands:
             - checkout
             - cache restore
@@ -155,9 +158,9 @@ blocks:
             - ./ci/create-ssm-param.sh s1-agent-aws-stack-windows-token $TOKEN
             - SEMAPHORE_AGENT_STACK_CONFIG=./ci/windows-config.json npm run deploy:ci
 
-  - name: Linux tests
+  - name: Linux focal tests
     dependencies:
-      - Linux launch
+      - Linux focal launch
     execution_time_limit:
       minutes: 10
     task:
@@ -169,7 +172,85 @@ blocks:
           commands:
             - if [ -f results.xml ]; then test-results publish results.xml; fi
       jobs:
-        - name: Run goss tests
+        - name: Run goss tests on focal
+          commands:
+            - sudo curl -L https://github.com/aelsabbahy/goss/releases/latest/download/goss-linux-amd64 -o /usr/local/bin/goss
+            - sudo chmod +rx /usr/local/bin/goss
+            - checkout
+            - goss -g goss/goss.yaml --vars goss/vars.yml validate --max-concurrent 1 --format junit > results.xml
+
+  - name: Linux jammy launch
+    dependencies:
+      - Linux focal tests
+    task:
+      env_vars:
+        - name: SEMAPHORE_AGENT_OS
+          value: ubuntu-jammy
+      secrets:
+        - name: s1-agent-aws-stack-linux-token
+        - name: agent-aws-stack-tester-credentials
+      jobs:
+        - name: Launch jammy stack
+          commands:
+            - checkout
+            - cache restore
+            - ./ci/create-ssm-param.sh s1-agent-aws-stack-linux-token $TOKEN
+            - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-config.json npm run deploy:ci
+
+  - name: Linux jammy tests
+    dependencies:
+      - Linux jammy launch
+    execution_time_limit:
+      minutes: 10
+    task:
+      agent:
+        machine:
+          type: s1-agent-aws-stack-linux
+      epilogue:
+        always:
+          commands:
+            - if [ -f results.xml ]; then test-results publish results.xml; fi
+      jobs:
+        - name: Run goss tests on jammy
+          commands:
+            - sudo curl -L https://github.com/aelsabbahy/goss/releases/latest/download/goss-linux-amd64 -o /usr/local/bin/goss
+            - sudo chmod +rx /usr/local/bin/goss
+            - checkout
+            - goss -g goss/goss.yaml --vars goss/vars.yml validate --max-concurrent 1 --format junit > results.xml
+
+  - name: Linux noble launch
+    dependencies:
+      - Linux jammy tests
+    task:
+      env_vars:
+        - name: SEMAPHORE_AGENT_OS
+          value: ubuntu-noble
+      secrets:
+        - name: s1-agent-aws-stack-linux-token
+        - name: agent-aws-stack-tester-credentials
+      jobs:
+        - name: Launch noble stack
+          commands:
+            - checkout
+            - cache restore
+            - ./ci/create-ssm-param.sh s1-agent-aws-stack-linux-token $TOKEN
+            - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-config.json npm run deploy:ci
+
+  - name: Linux noble tests
+    dependencies:
+      - Linux noble launch
+    execution_time_limit:
+      minutes: 10
+    task:
+      agent:
+        machine:
+          type: s1-agent-aws-stack-linux
+      epilogue:
+        always:
+          commands:
+            - if [ -f results.xml ]; then test-results publish results.xml; fi
+      jobs:
+        - name: Run goss tests on noble
           commands:
             - sudo curl -L https://github.com/aelsabbahy/goss/releases/latest/download/goss-linux-amd64 -o /usr/local/bin/goss
             - sudo chmod +rx /usr/local/bin/goss
