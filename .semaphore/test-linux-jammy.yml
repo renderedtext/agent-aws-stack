@@ -1,0 +1,87 @@
+version: v1.0
+name: Test Linux Jammy
+agent:
+  machine:
+    type: e2-standard-2
+    os_image: ubuntu2204
+
+# We still don't have a way to programatically create agent types, so we need to share the same agent type.
+# To avoid running into issues where different pipelines might be doing something different things to the
+# same stack at the same time, we use a queue.
+queue:
+  name: Testing
+  scope: project
+
+blocks:
+  - name: Destroy Linux Stack
+    dependencies: []
+    task:
+      secrets:
+        - name: agent-aws-stack-tester-credentials
+      jobs:
+        - name: Destroy Linux stack
+          commands:
+            - checkout
+            - cache restore
+            - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-config.json npm run destroy:ci
+  - name: Linux Jammy launch
+    dependencies:
+      - Destroy Linux Stack
+    task:
+      secrets:
+        - name: s1-agent-aws-stack-linux-token
+        - name: agent-aws-stack-tester-credentials
+      jobs:
+        - name: Launch stack
+          commands:
+            - checkout
+            - cache restore
+            - export SEMAPHORE_AGENT_OS_NAME=ubuntu-jammy
+            - ./ci/create-ssm-param.sh s1-agent-aws-stack-linux-token $TOKEN
+            - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-config.json npm run deploy:ci
+
+  - name: Linux Jammy tests
+    dependencies:
+      - Linux Jammy launch
+    execution_time_limit:
+      minutes: 10
+    task:
+      agent:
+        machine:
+          type: s1-agent-aws-stack-linux
+      epilogue:
+        always:
+          commands:
+            - if [ -f results.xml ]; then test-results publish results.xml; fi
+      jobs:
+        - name: Run goss tests
+          commands:
+            - if [ "$(cat /etc/os-release | grep VERSION_ID | cut -d= -f2 | cut -d. -f1)" != "22" ]; then exit 1; fi
+            - sudo curl -L https://github.com/aelsabbahy/goss/releases/latest/download/goss-linux-amd64 -o /usr/local/bin/goss
+            - sudo chmod +rx /usr/local/bin/goss
+            - checkout
+            - goss -g goss/goss.yaml --vars goss/vars.yml validate --max-concurrent 1 --format junit > results.xml
+
+after_pipeline:
+  task:
+    secrets:
+      - name: agent-aws-stack-tester-credentials
+    jobs:
+      - name: Submit Reports
+        commands:
+          - test-results gen-pipeline-report
+      - name: Destroy Linux stack
+        commands:
+          - checkout
+          - cache restore
+          - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-config.json npm run destroy:ci
+
+promotions:
+  - name: Test Ubuntu Noble
+    pipeline_file: test-linux-noble.yml
+    auto_promote:
+      when: branch = 'main' AND result = 'passed'
+    parameters:
+      env_vars:
+        - name: SEMAPHORE_AGENT_OS_NAME
+          default_value: ubuntu-noble
