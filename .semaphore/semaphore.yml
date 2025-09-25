@@ -176,7 +176,7 @@ blocks:
             - sudo curl -L https://github.com/aelsabbahy/goss/releases/latest/download/goss-linux-amd64 -o /usr/local/bin/goss
             - sudo chmod +rx /usr/local/bin/goss
             - checkout
-            - goss -g goss/goss.yaml --vars goss/vars.yml validate --max-concurrent 1 --format junit > results.xml
+            - goss -g goss/goss.yaml --vars goss/vars-focal.yml validate --max-concurrent 1 --format junit > results.xml
 
   - name: Windows tests
     dependencies:

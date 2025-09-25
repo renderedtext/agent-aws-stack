@@ -1,0 +1,3 @@
+user: "semaphore"
+awscli: "2.4.9"
+python: "3.12.3"
