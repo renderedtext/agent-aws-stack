@@ -36,7 +36,7 @@ blocks:
           commands:
             - checkout
             - cache restore
-            - export SEMAPHORE_AGENT_OS_NAME=ubuntu-noble
+            - export SEMAPHORE_AGENT_OS=ubuntu-noble
             - ./ci/create-ssm-param.sh s1-agent-aws-stack-linux-token $TOKEN
             - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-config.json npm run deploy:ci
 

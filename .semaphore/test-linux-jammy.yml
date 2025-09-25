@@ -36,7 +36,7 @@ blocks:
           commands:
             - checkout
             - cache restore
-            - export SEMAPHORE_AGENT_OS_NAME=ubuntu-jammy
+            - export SEMAPHORE_AGENT_OS=ubuntu-jammy
             - ./ci/create-ssm-param.sh s1-agent-aws-stack-linux-token $TOKEN
             - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-config.json npm run deploy:ci
 
@@ -83,5 +83,5 @@ promotions:
       when: branch = 'main' AND result = 'passed'
     parameters:
       env_vars:
-        - name: SEMAPHORE_AGENT_OS_NAME
+        - name: SEMAPHORE_AGENT_OS
           default_value: ubuntu-noble
