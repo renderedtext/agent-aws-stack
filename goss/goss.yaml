@@ -113,6 +113,7 @@ command:
   docker-compose:
     exit-status: 0
     exec: "docker compose version"
+    timeout: 30000
   python:
     exit-status: 0
     exec: "python --version"
