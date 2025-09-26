@@ -137,9 +137,38 @@ blocks:
           commands:
             - checkout
             - cache restore
-            - export SEMAPHORE_AGENT_OS=ubuntu-focal
             - ./ci/create-ssm-param.sh s1-agent-aws-stack-linux-token $TOKEN
-            - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-config.json npm run deploy:ci
+            - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-focal-config.json npm run deploy:ci
+
+  - name: Linux Jammy launch
+    dependencies:
+      - Bootstrap
+    task:
+      secrets:
+        - name: s1-agent-aws-stack-linux-token
+        - name: agent-aws-stack-tester-credentials
+      jobs:
+        - name: Launch stack
+          commands:
+            - checkout
+            - cache restore
+            - ./ci/create-ssm-param.sh s1-agent-aws-stack-linux-jammy-token $TOKEN_JAMMY
+            - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-jammy-config.json npm run deploy:ci
+
+  - name: Linux Noble launch
+    dependencies:
+      - Bootstrap
+    task:
+      secrets:
+        - name: s1-agent-aws-stack-linux-token
+        - name: agent-aws-stack-tester-credentials
+      jobs:
+        - name: Launch stack
+          commands:
+            - checkout
+            - cache restore
+            - ./ci/create-ssm-param.sh s1-agent-aws-stack-linux-noble-token $TOKEN_NOBLE
+            - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-noble-config.json npm run deploy:ci
 
   - name: Windows launch
     dependencies:
@@ -178,6 +207,50 @@ blocks:
             - checkout
             - goss -g goss/goss.yaml --vars goss/vars-focal.yml validate --max-concurrent 1 --format junit > results.xml
 
+  - name: Linux Jammy tests
+    dependencies:
+      - Linux Jammy launch
+    execution_time_limit:
+      minutes: 10
+    task:
+      agent:
+        machine:
+          type: s1-agent-aws-stack-linux-jammy
+      epilogue:
+        always:
+          commands:
+            - if [ -f results.xml ]; then test-results publish results.xml; fi
+      jobs:
+        - name: Run goss tests
+          commands:
+            - if [ "$(grep VERSION_ID /etc/os-release | cut -d= -f2 | tr -d '"' | cut -d. -f1-2)" != "22.04" ]; then exit 1; fi
+            - sudo curl -L https://github.com/aelsabbahy/goss/releases/latest/download/goss-linux-amd64 -o /usr/local/bin/goss
+            - sudo chmod +rx /usr/local/bin/goss
+            - checkout
+            - goss -g goss/goss.yaml --vars goss/vars-jammy.yml validate --max-concurrent 1 --format junit > results.xml
+
+  - name: Linux Noble tests
+    dependencies:
+      - Linux Noble launch
+    execution_time_limit:
+      minutes: 10
+    task:
+      agent:
+        machine:
+          type: s1-agent-aws-stack-linux-noble
+      epilogue:
+        always:
+          commands:
+            - if [ -f results.xml ]; then test-results publish results.xml; fi
+      jobs:
+        - name: Run goss tests
+          commands:
+            - if [ "$(grep VERSION_ID /etc/os-release | cut -d= -f2 | tr -d '"' | cut -d. -f1-2)" != "24.04" ]; then exit 1; fi
+            - sudo curl -L https://github.com/aelsabbahy/goss/releases/latest/download/goss-linux-amd64 -o /usr/local/bin/goss
+            - sudo chmod +rx /usr/local/bin/goss
+            - checkout
+            - goss -g goss/goss.yaml --vars goss/vars-noble.yml validate --max-concurrent 1 --format junit > results.xml
+
   - name: Windows tests
     dependencies:
       - Windows launch
@@ -205,25 +278,23 @@ after_pipeline:
       - name: Submit Reports
         commands:
           - test-results gen-pipeline-report
-      - name: Destroy Linux stack
+      - name: Destroy Linux Focal stack
         commands:
           - checkout
           - cache restore
-          - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-config.json npm run destroy:ci
+          - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-focal-config.json npm run destroy:ci
+      - name: Destroy Linux Jammy stack
+        commands:
+          - checkout
+          - cache restore
+          - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-jammy-config.json npm run destroy:ci
+      - name: Destroy Linux Noble stack
+        commands:
+          - checkout
+          - cache restore
+          - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-noble-config.json npm run destroy:ci
       - name: Destroy Windows stack
         commands:
           - checkout
           - cache restore
           - SEMAPHORE_AGENT_STACK_CONFIG=./ci/windows-config.json npm run destroy:ci
-
-promotions:
-  - name: Test Ubuntu Jammy
-    pipeline_file: test-linux-jammy.yml
-    auto_promote:
-      when: branch = 'main' AND result = 'passed'
-    parameters:
-      env_vars:
-        - name: SEMAPHORE_AGENT_OS
-          default_value: ubuntu-jammy
-  - name: Destroy Stacks
-    pipeline_file: destroy-stacks.yml
