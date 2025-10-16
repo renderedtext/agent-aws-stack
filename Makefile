@@ -43,12 +43,14 @@ check.prepare:
 check.static: check.prepare
 	docker run -it -v $$(pwd):/app \
 		-v $(SECURITY_TOOLBOX_TMP_DIR):$(SECURITY_TOOLBOX_TMP_DIR) \
+		-e PIP_BREAK_SYSTEM_PACKAGES=1 \
 		registry.semaphoreci.com/ruby:3 \
 		bash -c 'cd /app && $(SECURITY_TOOLBOX_TMP_DIR)/code --language js -d'
 
 check.deps: check.prepare
 	docker run -it -v $$(pwd):/app \
 		-v $(SECURITY_TOOLBOX_TMP_DIR):$(SECURITY_TOOLBOX_TMP_DIR) \
+		-e PIP_BREAK_SYSTEM_PACKAGES=1 \
 		registry.semaphoreci.com/ruby:3 \
 		bash -c 'cd /app && $(SECURITY_TOOLBOX_TMP_DIR)/dependencies --language js -d'
 
