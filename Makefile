@@ -27,23 +27,31 @@ SYSTEMD_RESTART_SECONDS=1800
 VERSION=$(shell cat package.json | jq -r '.version')
 HASH=$(shell find Makefile packer/$(PACKER_OS) -type f -exec md5sum "{}" + | awk '{print $$1}' | sort | md5sum | awk '{print $$1}')
 
-SECURITY_TOOLBOX_BRANCH ?= master
-SECURITY_TOOLBOX_TMP_DIR ?= /tmp/security-toolbox
+MONOREPO_TMP_DIR ?= /tmp/monorepo
+SECURITY_TOOLBOX_TMP_DIR ?= $(MONOREPO_TMP_DIR)/security-toolbox
+SECURITY_TOOLBOX_BRANCH ?= main
 
 check.prepare:
-	rm -rf $(SECURITY_TOOLBOX_TMP_DIR)
-	git clone git@github.com:renderedtext/security-toolbox.git $(SECURITY_TOOLBOX_TMP_DIR) && (cd $(SECURITY_TOOLBOX_TMP_DIR) && git checkout $(SECURITY_TOOLBOX_BRANCH) && cd -)
+	rm -rf $(MONOREPO_TMP_DIR)
+	git clone --depth 1 --filter=blob:none --sparse https://github.com/semaphoreio/semaphore $(MONOREPO_TMP_DIR) && \
+		cd $(MONOREPO_TMP_DIR) && \
+		git config core.sparseCheckout true && \
+		git sparse-checkout init --cone && \
+		git sparse-checkout set security-toolbox && \
+		git checkout $(SECURITY_TOOLBOX_BRANCH) && cd -
 
 check.static: check.prepare
 	docker run -it -v $$(pwd):/app \
 		-v $(SECURITY_TOOLBOX_TMP_DIR):$(SECURITY_TOOLBOX_TMP_DIR) \
-		registry.semaphoreci.com/ruby:2.7 \
+		-e PIP_BREAK_SYSTEM_PACKAGES=1 \
+		registry.semaphoreci.com/ruby:3 \
 		bash -c 'cd /app && $(SECURITY_TOOLBOX_TMP_DIR)/code --language js -d'
 
 check.deps: check.prepare
 	docker run -it -v $$(pwd):/app \
 		-v $(SECURITY_TOOLBOX_TMP_DIR):$(SECURITY_TOOLBOX_TMP_DIR) \
-		registry.semaphoreci.com/ruby:2.7 \
+		-e PIP_BREAK_SYSTEM_PACKAGES=1 \
+		registry.semaphoreci.com/ruby:3 \
 		bash -c 'cd /app && $(SECURITY_TOOLBOX_TMP_DIR)/dependencies --language js -d'
 
 venv.execute:

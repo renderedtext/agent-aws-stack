@@ -28,7 +28,7 @@ blocks:
             - nvm install
             - node --version
             - npm --version
-            - cache restore
+            - cache restore || echo "Cache restore skipped; continuing without cache"
             - npm install
             - cache store
 
@@ -36,13 +36,9 @@ blocks:
     dependencies:
       - Install dependencies
     task:
-      secrets:
-        - name: security-toolbox-shared-read-access
       prologue:
         commands:
           - checkout
-          - mv ~/.ssh/security-toolbox ~/.ssh/id_rsa
-          - sudo chmod 600 ~/.ssh/id_rsa
       epilogue:
         always:
           commands:
@@ -70,7 +66,7 @@ blocks:
             - sudo apt-get update
             - sudo DEBIAN_FRONTEND=noninteractive apt-get install python3-venv -fuy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
             - checkout
-            - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
+            - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt) || echo "Cache restore skipped; continuing without cache"
             - make ansible.lint
             - cache store venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt) venv
         - name: Unit tests
@@ -79,7 +75,8 @@ blocks:
             - nvm install
             - node --version
             - npm --version
-            - cache restore
+            - cache restore || echo "Cache restore skipped; continuing without cache"
+            - if [ ! -d node_modules ]; then echo "node_modules missing; running npm ci"; npm ci; fi
             - npm test
 
   - name: Build
@@ -92,7 +89,7 @@ blocks:
       prologue:
         commands:
           - checkout
-          - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt)
+          - cache restore venv-$SEMAPHORE_GIT_BRANCH-$(checksum requirements.txt) || echo "Cache restore skipped; continuing without cache"
           - sudo apt-get update
           - sudo DEBIAN_FRONTEND=noninteractive apt-get install python3-venv -fuy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
           - curl -sL https://releases.hashicorp.com/packer/1.7.9/packer_1.7.9_linux_amd64.zip -o /tmp/packer_1.7.9_linux_amd64.zip
@@ -122,7 +119,9 @@ blocks:
         - name: Bootstrap stack
           commands:
             - checkout
-            - cache restore
+            - nvm install
+            - cache restore || echo "Cache restore skipped; continuing without cache"
+            - if [ ! -d node_modules ]; then echo "node_modules missing; running npm ci"; npm ci; fi
             - ./ci/create-execution-policy-and-bootstrap.sh $AWS_ACCOUNT_ID $AWS_DEFAULT_REGION
 
   - name: Linux Focal launch
@@ -136,7 +135,9 @@ blocks:
         - name: Launch stack
           commands:
             - checkout
-            - cache restore
+            - nvm install
+            - cache restore || echo "Cache restore skipped; continuing without cache"
+            - if [ ! -d node_modules ]; then echo "node_modules missing; running npm ci"; npm ci; fi
             - ./ci/create-ssm-param.sh s1-agent-aws-stack-linux-token $TOKEN
             - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-focal-config.json npm run deploy:ci
 
@@ -151,7 +152,9 @@ blocks:
         - name: Launch stack
           commands:
             - checkout
-            - cache restore
+            - nvm install
+            - cache restore || echo "Cache restore skipped; continuing without cache"
+            - if [ ! -d node_modules ]; then echo "node_modules missing; running npm ci"; npm ci; fi
             - ./ci/create-ssm-param.sh s1-agent-aws-stack-linux-jammy-token $TOKEN_JAMMY
             - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-jammy-config.json npm run deploy:ci
 
@@ -166,7 +169,9 @@ blocks:
         - name: Launch stack
           commands:
             - checkout
-            - cache restore
+            - nvm install
+            - cache restore || echo "Cache restore skipped; continuing without cache"
+            - if [ ! -d node_modules ]; then echo "node_modules missing; running npm ci"; npm ci; fi
             - ./ci/create-ssm-param.sh s1-agent-aws-stack-linux-noble-token $TOKEN_NOBLE
             - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-noble-config.json npm run deploy:ci
 
@@ -181,7 +186,9 @@ blocks:
         - name: Launch stack
           commands:
             - checkout
-            - cache restore
+            - nvm install
+            - cache restore || echo "Cache restore skipped; continuing without cache"
+            - if [ ! -d node_modules ]; then echo "node_modules missing; running npm ci"; npm ci; fi
             - ./ci/create-ssm-param.sh s1-agent-aws-stack-windows-token $TOKEN
             - SEMAPHORE_AGENT_STACK_CONFIG=./ci/windows-config.json npm run deploy:ci
 
@@ -281,20 +288,28 @@ after_pipeline:
       - name: Destroy Linux Focal stack
         commands:
           - checkout
-          - cache restore
+          - nvm install
+          - cache restore || echo "Cache restore skipped; continuing without cache"
+          - if [ ! -d node_modules ]; then echo "node_modules missing; running npm ci"; npm ci; fi
           - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-focal-config.json npm run destroy:ci
       - name: Destroy Linux Jammy stack
         commands:
           - checkout
-          - cache restore
+          - nvm install
+          - cache restore || echo "Cache restore skipped; continuing without cache"
+          - if [ ! -d node_modules ]; then echo "node_modules missing; running npm ci"; npm ci; fi
           - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-jammy-config.json npm run destroy:ci
       - name: Destroy Linux Noble stack
         commands:
           - checkout
-          - cache restore
+          - nvm install
+          - cache restore || echo "Cache restore skipped; continuing without cache"
+          - if [ ! -d node_modules ]; then echo "node_modules missing; running npm ci"; npm ci; fi
           - SEMAPHORE_AGENT_STACK_CONFIG=./ci/linux-noble-config.json npm run destroy:ci
       - name: Destroy Windows stack
         commands:
           - checkout
-          - cache restore
+          - nvm install
+          - cache restore || echo "Cache restore skipped; continuing without cache"
+          - if [ ! -d node_modules ]; then echo "node_modules missing; running npm ci"; npm ci; fi
           - SEMAPHORE_AGENT_STACK_CONFIG=./ci/windows-config.json npm run destroy:ci
