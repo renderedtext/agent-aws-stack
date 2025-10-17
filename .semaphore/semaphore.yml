@@ -12,11 +12,6 @@ queue:
   name: Testing
   scope: project
 
-global_job_config:
-  prologue:
-    commands:
-      - unset SEMAPHORE_CACHE_BACKEND
-
 blocks:
   - name: Install dependencies
     dependencies: []
