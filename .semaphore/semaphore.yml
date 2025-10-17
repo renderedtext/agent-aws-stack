@@ -36,13 +36,9 @@ blocks:
     dependencies:
       - Install dependencies
     task:
-      secrets:
-        - name: security-toolbox-shared-read-access
       prologue:
         commands:
           - checkout
-          - mv ~/.ssh/security-toolbox ~/.ssh/id_rsa
-          - sudo chmod 600 ~/.ssh/id_rsa
       epilogue:
         always:
           commands:
