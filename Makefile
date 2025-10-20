@@ -6,6 +6,7 @@ AGENT_VERSION=v2.2.16
 TOOLBOX_VERSION=v1.20.5
 PACKER_OS=linux
 UBUNTU_VERSION=focal
+SOURCE_AMI?=
 
 # Set Ubuntu name and version number based on UBUNTU_VERSION
 ifeq ($(UBUNTU_VERSION),focal)
@@ -89,6 +90,7 @@ packer.validate.linux:
 			-var "instance_type=$(AMI_INSTANCE_TYPE)" \
 			-var "ubuntu_name=$(UBUNTU_NAME)" \
 			-var "ubuntu_version=$(UBUNTU_VERSION_NUMBER)" \
+			-var "source_ami=$(SOURCE_AMI)" \
 			.'
 
 packer.validate.windows:
@@ -148,6 +150,7 @@ packer.build.linux:
 			-var "instance_type=$(AMI_INSTANCE_TYPE)" \
 			-var "ubuntu_name=$(UBUNTU_NAME)" \
 			-var "ubuntu_version=$(UBUNTU_VERSION_NUMBER)" \
+			-var "source_ami=$(SOURCE_AMI)" \
 			.'
 
 packer.build.windows:
