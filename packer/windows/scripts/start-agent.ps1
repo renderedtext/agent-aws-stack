@@ -116,12 +116,12 @@ $agentParams = Retry-Command -ScriptBlock {
 
 # Create semaphore password and user
 # This is the user we will use to run the nssm service for the agent
-Add-Type -AssemblyName 'System.Web'
 $UserName = "semaphore"
-$Password = [System.Web.Security.Membership]::GeneratePassword(16, 0)
+Write-Output "Creating '$UserName' user..."
+Add-Type -AssemblyName 'System.Web'
+$Password = [System.Web.Security.Membership]::GeneratePassword(127, 1)
 $PasswordAsSecureString = $Password | ConvertTo-SecureString -AsPlainText -Force
 $Credentials = New-Object System.Management.Automation.PSCredential -ArgumentList ".\$UserName",$PasswordAsSecureString
-Write-Output "Creating '$UserName' user..."
 New-LocalUser -Name $UserName -PasswordNeverExpires -Password $PasswordAsSecureString | out-null
 Add-LocalGroupMember -Group "Administrators" -Member $UserName | out-null
 
