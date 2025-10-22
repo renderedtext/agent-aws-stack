@@ -15,6 +15,11 @@ if [[ -z "${arch}" ]]; then
   exit 1
 fi
 
+source_ami=$3
+if [[ -n "${source_ami}" ]]; then
+  export SOURCE_AMI=${source_ami}
+fi
+
 packer_os=linux
 ubuntu_version=""
 

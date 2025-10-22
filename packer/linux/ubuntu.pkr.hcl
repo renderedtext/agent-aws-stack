@@ -51,6 +51,15 @@ variable "ubuntu_version" {
   default = "20.04"
 }
 
+variable "source_ami" {
+  type    = string
+  default = null
+}
+
+locals {
+  use_custom_source_ami = var.source_ami != null && var.source_ami != ""
+}
+
 packer {
   required_plugins {
     amazon = {
@@ -74,17 +83,22 @@ source "amazon-ebs" "ubuntu" {
     Hash = "${var.hash}"
   }
 
-  source_ami_filter {
-    most_recent = true
+  source_ami = local.use_custom_source_ami ? var.source_ami : null
 
-    // Canonical's ownerId: https://ubuntu.com/server/docs/cloud-images/amazon-ec2
-    owners = ["099720109477"]
+  dynamic "source_ami_filter" {
+    for_each = local.use_custom_source_ami ? [] : [true]
+    content {
+      most_recent = true
 
-    filters = {
-      name                = "ubuntu/images/*ubuntu-${var.ubuntu_name}-${var.ubuntu_version}-*"
-      architecture        = "${var.arch}"
-      root-device-type    = "ebs"
-      virtualization-type = "hvm"
+      // Canonical's ownerId: https://ubuntu.com/server/docs/cloud-images/amazon-ec2
+      owners = ["099720109477"]
+
+      filters = {
+        name                = "ubuntu/images/*ubuntu-${var.ubuntu_name}-${var.ubuntu_version}-*"
+        architecture        = "${var.arch}"
+        root-device-type    = "ebs"
+        virtualization-type = "hvm"
+      }
     }
   }
 }

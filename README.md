@@ -12,3 +12,17 @@ This project is a CDK application used to deploy a fleet of Semaphore agents in 
 - Control the size of your agent instances and of your agent pool
 
 Check out the [docs](https://docs.semaphoreci.com/ci-cd-environment/aws-support).
+
+## Custom base AMI
+
+Set the `SOURCE_AMI` environment variable when running the Packer targets if you need to pin the build to a specific Ubuntu kernel. For example:
+
+```
+SOURCE_AMI=ami-0123456789abcdef0 make packer.build PACKER_OS=linux UBUNTU_VERSION=noble
+```
+
+The helper script `ci/build-ami.sh` also accepts the desired AMI ID as an optional third argument so it can be used in the same way:
+
+```
+./ci/build-ami.sh ubuntu-noble x86_64 ami-0123456789abcdef0
+```
