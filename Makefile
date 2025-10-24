@@ -7,6 +7,7 @@ TOOLBOX_VERSION=v1.20.5
 PACKER_OS=linux
 UBUNTU_VERSION=focal
 SOURCE_AMI?=
+APT_HOLD_PATTERNS?=
 
 # Set Ubuntu name and version number based on UBUNTU_VERSION
 ifeq ($(UBUNTU_VERSION),focal)
@@ -77,7 +78,9 @@ packer.validate:
 packer.validate.linux:
 	$(MAKE) venv.execute COMMAND='\
 		cd packer/linux && \
-		packer validate \
+		env \
+			ANSIBLE_VERBOSITY=$(ANSIBLE_VERBOSITY) \
+			packer validate \
 			-var "stack_version=v$(VERSION)" \
 			-var "agent_version=$(AGENT_VERSION)" \
 			-var "toolbox_version=$(TOOLBOX_VERSION)" \
@@ -91,6 +94,7 @@ packer.validate.linux:
 			-var "ubuntu_name=$(UBUNTU_NAME)" \
 			-var "ubuntu_version=$(UBUNTU_VERSION_NUMBER)" \
 			-var "source_ami=$(SOURCE_AMI)" \
+			-var "apt_hold_patterns=$$(APT_HOLD_PATTERNS)" \
 			.'
 
 packer.validate.windows:
@@ -137,7 +141,9 @@ packer.build:
 packer.build.linux:
 	$(MAKE) venv.execute COMMAND='\
 		cd packer/linux && \
-		packer build \
+		env \
+			ANSIBLE_VERBOSITY=$(ANSIBLE_VERBOSITY) \
+			packer build \
 			-var "stack_version=v$(VERSION)" \
 			-var "agent_version=$(AGENT_VERSION)" \
 			-var "toolbox_version=$(TOOLBOX_VERSION)" \
@@ -151,6 +157,7 @@ packer.build.linux:
 			-var "ubuntu_name=$(UBUNTU_NAME)" \
 			-var "ubuntu_version=$(UBUNTU_VERSION_NUMBER)" \
 			-var "source_ami=$(SOURCE_AMI)" \
+			-var "apt_hold_patterns=$${APT_HOLD_PATTERNS}" \
 			.'
 
 packer.build.windows:

@@ -21,6 +21,14 @@ Set the `SOURCE_AMI` environment variable when running the Packer targets if you
 SOURCE_AMI=ami-0123456789abcdef0 make packer.build PACKER_OS=linux UBUNTU_VERSION=noble
 ```
 
+To keep specific packages from being upgraded during the image bake, provide one or more glob patterns via `APT_HOLD_PATTERNS`. Patterns can be comma -separated; the following holds every installed `linux-image*` or `linux-headers*` package before the `dist-upgrade` step runs:
+
+```
+APT_HOLD_PATTERNS=linux-image*,linux-headers* make packer.build PACKER_OS=linux UBUNTU_VERSION=noble
+```
+
+Extra Ansible logging can be enabled by exporting `ANSIBLE_VERBOSITY` (0–4). For example, `ANSIBLE_VERBOSITY=1 make packer.build ...` will surface the resolved hold patterns and other informational output from the provisioning playbook.
+
 The helper script `ci/build-ami.sh` also accepts the desired AMI ID as an optional third argument so it can be used in the same way:
 
 ```

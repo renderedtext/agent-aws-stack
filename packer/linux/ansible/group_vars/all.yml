@@ -12,3 +12,4 @@ erlang_gpg_key_checksum: "84df2e5fd80d464c3eb9acd2f751b2f6a723438200915dd50fbf12
 erlang_gpg_key_path: /usr/share/keyrings/rabbitmq-erlang.E495BB49CC4BBE5B.asc
 cloudwatch_agent_url: https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
 systemd_restart_seconds: 300
+apt_hold_patterns: []
