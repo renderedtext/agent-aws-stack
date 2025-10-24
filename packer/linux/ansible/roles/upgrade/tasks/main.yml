@@ -2,6 +2,83 @@
 - name: Run apt update
   ansible.builtin.command: apt -y update
 
+- name: Resolve packages requested for hold
+  ansible.builtin.shell: |
+    python3 - <<'PY'
+    import fnmatch
+    import json
+    import subprocess
+
+    raw = json.loads('''{{ apt_hold_patterns | default([]) | to_json }}''')
+
+    def normalize(value):
+        if isinstance(value, str):
+            stripped = value.strip()
+            if not stripped:
+                return []
+            if stripped.startswith('['):
+                try:
+                    parsed = json.loads(stripped)
+                except json.JSONDecodeError:
+                    pass
+                else:
+                    return [
+                        str(item).strip()
+                        for item in parsed
+                        if str(item).strip()
+                    ]
+            stripped = stripped.replace(',', ' ')
+            return [
+                part for part in (segment.strip() for segment in stripped.split())
+                if part
+            ]
+        if isinstance(value, list):
+            return [
+                str(item).strip()
+                for item in value
+                if str(item).strip()
+            ]
+        return []
+
+    patterns = normalize(raw)
+    packages = []
+    if patterns:
+        installed = subprocess.check_output(
+            ['dpkg-query', '-W', '-f=${Package}\\n'],
+            text=True,
+        ).splitlines()
+        seen = set()
+        for pattern in patterns:
+            for pkg in installed:
+                if fnmatch.fnmatch(pkg, pattern) and pkg not in seen:
+                    packages.append(pkg)
+                    seen.add(pkg)
+    print(json.dumps({"patterns": patterns, "packages": packages}))
+    PY
+  args:
+    executable: /bin/bash
+  register: apt_hold_resolution
+  changed_when: false
+
+- name: Cache package hold data
+  ansible.builtin.set_fact:
+    apt_hold_data: "{{ apt_hold_resolution.stdout | from_json }}"
+
+- name: Show resolved package holds
+  ansible.builtin.debug:
+    msg:
+      patterns: "{{ apt_hold_data.patterns }}"
+      packages: "{{ apt_hold_data.packages }}"
+  when:
+    - (apt_hold_data.patterns | length > 0) or (apt_hold_data.packages | length > 0)
+    - (ansible_verbosity | default(0) | int) >= 1
+
+- name: Hold requested packages prior to upgrade
+  when: apt_hold_data.packages | length > 0
+  ansible.builtin.command:
+    argv: "{{ ['apt-mark', 'hold'] + apt_hold_data.packages }}"
+  register: apt_hold_command
+
 - name: Run apt dist-upgrade
   ansible.builtin.command: apt -fuy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade
   environment:

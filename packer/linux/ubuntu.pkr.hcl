@@ -41,6 +41,11 @@ variable "systemd_restart_seconds" {
   default = "1800"
 }
 
+variable "apt_hold_patterns" {
+  type    = string
+  default = ""
+}
+
 variable "ubuntu_name" {
   type    = string
   default = "focal"
@@ -121,6 +126,7 @@ build {
       "-e toolbox_version=${var.toolbox_version}",
       "-e install_erlang=${var.install_erlang}",
       "-e systemd_restart_seconds=${var.systemd_restart_seconds}",
+      "-e apt_hold_patterns=${var.apt_hold_patterns}",
     ]
   }
 }

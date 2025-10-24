@@ -104,6 +104,10 @@ blocks:
             - ./ci/build-ami.sh ubuntu-jammy x86_64
         - name: Build Linux Noble AMI
           commands:
+            # Enable package hold patterns and extra verbosity for
+            # Ansible during the noble AMI build, for testing purposes.
+            - export APT_HOLD_PATTERNS=linux-image*,linux-headers*
+            - export ANSIBLE_VERBOSITY=1
             - ./ci/build-ami.sh ubuntu-noble x86_64
         - name: Build Windows AMI
           commands:
