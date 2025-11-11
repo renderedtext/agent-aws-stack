@@ -626,7 +626,7 @@ describe("auto scaling group", () => {
 
     template.hasResourceProperties("AWS::Lambda::Function", {
       Description: "Suspend AZRebalance process for auto scaling group",
-      Runtime: "nodejs18.x",
+      Runtime: "nodejs22.x",
       Code: Match.anyValue(),
       Handler: "app.handler",
       Role: Match.anyValue()
@@ -650,7 +650,7 @@ describe("scaler lambda", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::Lambda::Function", {
       Description: "Dynamically scale Semaphore agents based on jobs demand",
-      Runtime: "nodejs18.x",
+      Runtime: "nodejs22.x",
       Timeout: 60,
       Code: Match.anyValue(),
       Handler: "app.handler",
@@ -704,7 +704,7 @@ describe("scaler lambda", () => {
     const template = createTemplate(argumentStore);
     template.hasResourceProperties("AWS::Lambda::Function", {
       Description: "Dynamically scale Semaphore agents based on jobs demand",
-      Runtime: "nodejs18.x",
+      Runtime: "nodejs22.x",
       Timeout: 60,
       Code: Match.anyValue(),
       Handler: "app.handler",
@@ -729,7 +729,7 @@ describe("scaler lambda", () => {
     const template = createTemplate(argumentStore);
     template.hasResourceProperties("AWS::Lambda::Function", {
       Description: "Dynamically scale Semaphore agents based on jobs demand",
-      Runtime: "nodejs18.x",
+      Runtime: "nodejs22.x",
       Timeout: 60,
       Code: Match.anyValue(),
       Handler: "app.handler",
@@ -843,7 +843,7 @@ describe("SSH keys updater lambda", () => {
     const template = createTemplate(basicArgumentStore());
     template.hasResourceProperties("AWS::Lambda::Function", {
       Description: "Check if GitHub SSH public keys have changed.",
-      Runtime: "nodejs18.x",
+      Runtime: "nodejs22.x",
       Timeout: 10,
       Code: Match.anyValue(),
       Handler: "app.handler",
