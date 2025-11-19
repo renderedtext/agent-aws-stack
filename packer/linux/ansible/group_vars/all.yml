@@ -14,6 +14,9 @@ erlang_gpg_key_source_path: "{{ erlang_gpg_key_path }}.asc"
 erlang_repo_mirrors:
   - https://deb1.rabbitmq.com
   - https://deb2.rabbitmq.com
+erlang_package_specs:
+  # Pin Erlang 26.2.5.13 across all Ubuntu releases for consistent builds.
+  default: erlang-base=1:26.2.5.13-1
 cloudwatch_agent_url: https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
 systemd_restart_seconds: 300
 apt_hold_patterns: []
