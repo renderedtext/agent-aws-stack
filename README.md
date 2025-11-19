@@ -34,3 +34,10 @@ The helper script `ci/build-ami.sh` also accepts the desired AMI ID as an option
 ```
 ./ci/build-ami.sh ubuntu-noble x86_64 ami-0123456789abcdef0
 ```
+
+## Release Process
+
+1. Start from an up-to-date `main` branch and run the usual checks (`npm test`, `npm run synth`) so the release is built on a clean state.
+2. Decide the next semantic version (for example `1.4.0`). Update `package.json` and `package-lock.json` by running `npm version --no-git-tag-version 1.4.0` (or edit both files manually if you prefer).
+3. Commit the version bump with a conventional message such as `chore(release): v1.4.0`.
+4. Create a matching annotated tag for the commit: `git tag -a v1.4.0 -m "Release v1.4.0"` and push both the branch and tag (`git push && git push origin v1.4.0`).
