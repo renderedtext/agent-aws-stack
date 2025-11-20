@@ -1,24 +1,36 @@
 ---
 - name: Download GPG key
+  register: erlang_gpg_key_download
   ansible.builtin.get_url:
     url: "{{ erlang_gpg_key_url }}"
-    dest: "{{ erlang_gpg_key_path }}"
+    dest: "{{ erlang_gpg_key_source_path }}"
     checksum: "sha256:{{ erlang_gpg_key_checksum }}"
-    mode: '0755'
+    mode: '0644'
     force: true
+
+- name: Check existing keyring
+  ansible.builtin.stat:
+    path: "{{ erlang_gpg_key_path }}"
+  register: erlang_gpg_keyring
+
+- name: De-Armor GPG key
+  ansible.builtin.command:
+    cmd: "gpg --dearmor --yes --output {{ erlang_gpg_key_path }} {{ erlang_gpg_key_source_path }}"
+  when: erlang_gpg_key_download.changed or not erlang_gpg_keyring.stat.exists
 
 - name: "Add repository to APT sources list"
   ansible.builtin.apt_repository:
-    repo: "deb [arch=amd64 signed-by={{ erlang_gpg_key_path }}] https://ppa1.rabbitmq.com/rabbitmq/rabbitmq-erlang/deb/ubuntu focal main"
+    repo: >-
+      deb [arch=amd64 signed-by={{ erlang_gpg_key_path }}]
+      {{ item }}/rabbitmq-erlang/{{ ansible_distribution | lower }}/{{ ansible_distribution_release }}
+      {{ ansible_distribution_release }} main
     state: present
-
-- name: "Add src repository to APT sources list"
-  ansible.builtin.apt_repository:
-    repo: "deb-src [signed-by={{ erlang_gpg_key_path }}] https://ppa1.rabbitmq.com/rabbitmq/rabbitmq-erlang/deb/ubuntu focal main"
-    state: present
+  loop: "{{ erlang_repo_mirrors }}"
+  loop_control:
+    label: "{{ item }}"
 
 - name: Install Erlang
   when: install_erlang | bool
   ansible.builtin.apt:
     pkg:
-      - erlang-base=1:24.3.4.17-1
+      - "{{ erlang_package_specs.get(ansible_distribution_release, erlang_package_specs.default) }}"
