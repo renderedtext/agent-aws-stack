@@ -8,7 +8,7 @@ docker_apt_repository: "deb [arch=amd64] https://download.docker.com/linux/{{ an
 docker_apt_gpg_key: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
 yq_url: "https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd64"
 erlang_gpg_key_url: https://keys.openpgp.org/vks/v1/by-fingerprint/0A9AF2115F4687BD29803A206B73A36E6026DFCA
-erlang_gpg_key_checksum: "f06ccb0568a012e751e276c15b733494147fbb0663c79ab77f3574def4767f99"
+erlang_gpg_key_checksum: "b78771a394c747e0e72a26a558277edd6869d9cd8a963bdbc57efbe11b59f08d"
 erlang_gpg_key_path: /usr/share/keyrings/com.rabbitmq.team.gpg
 erlang_gpg_key_source_path: "{{ erlang_gpg_key_path }}.asc"
 erlang_repo_mirrors:
