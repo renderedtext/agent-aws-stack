@@ -21,7 +21,7 @@
 - name: "Add repository to APT sources list"
   ansible.builtin.apt_repository:
     repo: >-
-      deb [arch=amd64 signed-by={{ erlang_gpg_key_path }}]
+      deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }} signed-by={{ erlang_gpg_key_path }}]
       {{ item }}/rabbitmq-erlang/{{ ansible_distribution | lower }}/{{ ansible_distribution_release }}
       {{ ansible_distribution_release }} main
     state: present
