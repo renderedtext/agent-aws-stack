@@ -16,7 +16,10 @@ arch_map_awscli:
 agent_url: "https://github.com/semaphoreci/agent/releases/download/{{ agent_version }}/agent_Linux_{{ arch_map[ansible_architecture] }}.tar.gz"
 awscli_version: "2.4.9"
 awscli_url: "https://awscli.amazonaws.com/awscli-exe-linux-{{ arch_map_awscli[ansible_architecture] }}-{{ awscli_version }}.zip"
-docker_apt_repository: "deb [arch={{ arch_map_deb[ansible_architecture] }}] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+docker_apt_repository: >-
+  deb [arch={{ arch_map_deb[ansible_architecture] }}]
+  https://download.docker.com/linux/{{ ansible_distribution | lower }}
+  {{ ansible_distribution_release }} stable
 docker_apt_gpg_key: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
 yq_url: "https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_{{ arch_map_deb[ansible_architecture] }}"
 erlang_gpg_key_url: https://keys.openpgp.org/vks/v1/by-fingerprint/0A9AF2115F4687BD29803A206B73A36E6026DFCA
