@@ -213,6 +213,7 @@ region=$(curl \
   --location "http://169.254.169.254/latest/meta-data/placement/region"
 )
 
+# Remove unattended-upgrades to prevent mid-job interruptions from automatic updates
 echo "Removing unattended-upgrades package..."
 sudo apt-get remove -y --purge unattended-upgrades || true
 
