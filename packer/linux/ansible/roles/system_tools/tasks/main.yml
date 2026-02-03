@@ -23,3 +23,11 @@
     dest: /usr/local/bin/yq
     mode: '0755'
     force: true
+
+- name: Remove unattended-upgrades package
+  ansible.builtin.apt:
+    name: unattended-upgrades
+    state: absent
+    purge: true
+  tags:
+    - disable_unattended
