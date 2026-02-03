@@ -28,6 +28,6 @@
   ansible.builtin.apt:
     name: unattended-upgrades
     state: absent
-    purge: yes
+    purge: true
   tags:
     - disable_unattended
