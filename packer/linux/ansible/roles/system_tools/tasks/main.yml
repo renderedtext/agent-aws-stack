@@ -24,44 +24,10 @@
     mode: '0755'
     force: true
 
-# ===========================================================
-# Disable unattended-upgrades to prevent job interruptions
-# Unattended-upgrades can trigger systemd service restarts
-# (e.g., libglib2.0 upgrades trigger libc-bin processing)
-# which sends SIGTERM to all services including semaphore-agent
-# ===========================================================
-- name: Stop and disable apt timers
-  ansible.builtin.systemd:
-    name: "{{ item }}"
-    enabled: no
-    state: stopped
-  loop:
-    - apt-daily.timer
-    - apt-daily-upgrade.timer
-  ignore_errors: yes
-
-- name: Stop unattended-upgrades service if running
-  ansible.builtin.systemd:
+- name: Remove unattended-upgrades package
+  ansible.builtin.apt:
     name: unattended-upgrades
-    state: stopped
-  ignore_errors: yes
-
-- name: Configure apt to disable automatic upgrades
-  ansible.builtin.copy:
-    dest: /etc/apt/apt.conf.d/20auto-upgrades
-    content: |
-      APT::Periodic::Update-Package-Lists "0";
-      APT::Periodic::Unattended-Upgrade "0";
-      APT::Periodic::Download-Upgradeable-Packages "0";
-      APT::Periodic::AutocleanInterval "0";
-    mode: '0644'
-
-- name: Add documentation comment for disabled unattended-upgrades
-  ansible.builtin.copy:
-    dest: /etc/apt/apt.conf.d/99-semaphore-ci-note
-    content: |
-      // Unattended upgrades disabled for Semaphore CI agents
-      // to prevent mid-job interruptions from library upgrades
-      // (e.g., libglib2.0) triggering systemd service restarts
-      // which send SIGTERM to semaphore-agent and kill running jobs
-    mode: '0644'
+    state: absent
+    purge: yes
+  tags:
+    - disable_unattended
