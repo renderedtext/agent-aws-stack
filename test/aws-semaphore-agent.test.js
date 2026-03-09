@@ -1030,6 +1030,69 @@ describe("host resource group", () => {
       ]
     });
   })
+
+  test("multiple mac families with launch template overrides", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_OS", "macos");
+    argumentStore.set("SEMAPHORE_AGENT_INSTANCE_TYPE", "mac2.metal");
+    argumentStore.set("SEMAPHORE_AGENT_LICENSE_CONFIGURATION_ARN", "arn:aws:license-manager:us-east-1:dummyaccount:license-configuration:lic-08ha0s8hd");
+    argumentStore.set("SEMAPHORE_AGENT_MAC_FAMILY", "mac2,mac2-m2");
+
+    const template = createTemplate(argumentStore);
+
+    // Verify host resource group allows both families
+    template.hasResourceProperties("AWS::ResourceGroups::Group", {
+      Configuration: Match.arrayWith([
+        Match.objectLike({
+          Type: "AWS::EC2::HostManagement",
+          Parameters: Match.arrayWith([
+            {
+              Name: "allowed-host-families",
+              Values: ["mac2", "mac2-m2"]
+            }
+          ])
+        })
+      ])
+    });
+
+    // Verify ASG has launch template overrides for both instance types
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
+      MixedInstancesPolicy: Match.objectLike({
+        LaunchTemplate: Match.objectLike({
+          Overrides: [
+            { InstanceType: "mac2.metal" },
+            { InstanceType: "mac2-m2.metal" }
+          ]
+        })
+      })
+    });
+  })
+
+  test("multiple mac families with prioritized allocation strategy", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_OS", "macos");
+    argumentStore.set("SEMAPHORE_AGENT_INSTANCE_TYPE", "mac2.metal");
+    argumentStore.set("SEMAPHORE_AGENT_LICENSE_CONFIGURATION_ARN", "arn:aws:license-manager:us-east-1:dummyaccount:license-configuration:lic-08ha0s8hd");
+    argumentStore.set("SEMAPHORE_AGENT_MAC_FAMILY", "mac2,mac2-m2");
+    argumentStore.set("SEMAPHORE_AGENT_ON_DEMAND_ALLOCATION_STRATEGY", "prioritized");
+
+    const template = createTemplate(argumentStore);
+
+    // Verify the ASG uses prioritized allocation with overrides in the correct order
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
+      MixedInstancesPolicy: Match.objectLike({
+        InstancesDistribution: Match.objectLike({
+          OnDemandAllocationStrategy: "prioritized"
+        }),
+        LaunchTemplate: Match.objectLike({
+          Overrides: [
+            { InstanceType: "mac2.metal" },
+            { InstanceType: "mac2-m2.metal" }
+          ]
+        })
+      })
+    });
+  })
 })
 
 function createTemplate(argumentStore) {
