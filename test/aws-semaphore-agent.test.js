@@ -950,6 +950,10 @@ describe("host resource group", () => {
             {
               Name: "auto-release-host",
               Values: ["true"]
+            },
+            {
+              Name: "auto-host-recovery",
+              Values: ["true"]
             }
           ],
         },
@@ -1002,6 +1006,10 @@ describe("host resource group", () => {
             },
             {
               Name: "auto-release-host",
+              Values: ["true"]
+            },
+            {
+              Name: "auto-host-recovery",
               Values: ["true"]
             }
           ],
