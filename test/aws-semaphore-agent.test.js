@@ -1030,6 +1030,27 @@ describe("host resource group", () => {
       ]
     });
   })
+
+  test("auto-allocate-host and auto-release-host can be configured", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_OS", "macos");
+    argumentStore.set("SEMAPHORE_AGENT_LICENSE_CONFIGURATION_ARN", "arn:aws:license-manager:us-east-1:dummyaccount:license-configuration:lic-08ha0s8hd");
+    argumentStore.set("SEMAPHORE_AGENT_AUTO_ALLOCATE_HOST", "false");
+    argumentStore.set("SEMAPHORE_AGENT_AUTO_RELEASE_HOST", "false");
+
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::ResourceGroups::Group", {
+      Configuration: Match.arrayWith([
+        Match.objectLike({
+          Type: "AWS::EC2::HostManagement",
+          Parameters: Match.arrayWith([
+            { Name: "auto-allocate-host", Values: ["false"] },
+            { Name: "auto-release-host", Values: ["false"] }
+          ])
+        })
+      ])
+    });
+  })
 })
 
 function createTemplate(argumentStore) {
