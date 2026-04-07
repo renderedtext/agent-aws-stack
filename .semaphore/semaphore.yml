@@ -42,7 +42,12 @@ blocks:
       epilogue:
         always:
           commands:
-            - if [ -f results.xml ]; then test-results publish results.xml; fi
+            - 'if [ -f results.xml ]; then test-results publish results.xml; fi'
+            - 'if [ -f out/dependency-scan-junit.xml ]; then test-results --name "Dependency scan" --suite-prefix "[$SEMAPHORE_BLOCK_NAME]" publish out/dependency-scan-junit.xml; fi'
+            - 'if [ -f out/test-reports.xml ]; then test-results --name "$SEMAPHORE_BLOCK_NAME" publish out/test-reports.xml; fi'
+            - 'if [ -f out/dependency-scan-trivy.json ]; then artifact push workflow out/dependency-scan-trivy.json -d scans/$SEMAPHORE_JOB_ID-dependency-scan-trivy.json; fi'
+            - 'if [ -f out/dependency-scan-junit.xml ]; then artifact push workflow out/dependency-scan-junit.xml -d scans/$SEMAPHORE_JOB_ID-dependency-scan-junit.xml; fi'
+            - 'if [ -f out/test-reports.xml ]; then artifact push workflow out/test-reports.xml -d scans/$SEMAPHORE_JOB_ID-test-reports.xml; fi'
       jobs:
         - name: Check dependencies
           commands:
