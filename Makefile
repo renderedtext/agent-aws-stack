@@ -57,6 +57,7 @@ check.deps: check.prepare
 		bash -c 'cd /app && $(SECURITY_TOOLBOX_TMP_DIR)/dependencies --language js -d'
 
 venv.execute:
+	[ -d venv ] && chmod -R u+w venv || true && \
 	python3 -m venv venv && \
 	. venv/bin/activate && \
 	pip install --upgrade pip && \
