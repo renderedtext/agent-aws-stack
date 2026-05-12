@@ -3,17 +3,23 @@
 set -eo pipefail
 
 #
-# If anything goes wrong with the instance startup,
-# we make the instance unhealthy, so the auto scaling group can rotate it.
+# If anything goes wrong with the instance startup, mark unhealthy when IMDS returns an
+# instance id; otherwise shut down (AWS calls need IMDS; LT uses terminate on shutdown).
 #
 on_failure() {
   local exit_code=$1
   if [[ $exit_code != 0 ]] ; then
+    set +e
     local __token__=$(fetch_idms_token)
     local __instance_id__=$(curl -H "X-aws-ec2-metadata-token: $__token__" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
-    aws autoscaling set-instance-health \
-      --instance-id "${__instance_id__}" \
-      --health-status Unhealthy
+    if [[ -n "$__instance_id__" ]]; then
+      aws autoscaling set-instance-health \
+        --instance-id "${__instance_id__}" \
+        --health-status Unhealthy
+    else
+      sudo shutdown -h now || sudo poweroff -f || true
+    fi
+    set -e
   fi
 }
 
