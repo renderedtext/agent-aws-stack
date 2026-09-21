@@ -230,7 +230,10 @@
         "events:PutRule",
         "events:PutTargets",
         "events:RemoveTargets",
-        "events:DeleteRule"
+        "events:DeleteRule",
+        "events:TagResource",
+        "events:UntagResource",
+        "events:ListTagsForResource"
       ],
       "Resource": "arn:aws:events:*:*:rule/*"
     },
