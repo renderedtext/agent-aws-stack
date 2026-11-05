@@ -643,6 +643,22 @@ describe("auto scaling group", () => {
       MaxInstanceLifetime: 86400,
     });
   })
+
+  test("health check grace period is not set by default", () => {
+    const template = createTemplate(basicArgumentStore());
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
+      HealthCheckGracePeriod: Match.absent(),
+    });
+  })
+
+  test("health check grace period is set", () => {
+    const argumentStore = basicArgumentStore();
+    argumentStore.set("SEMAPHORE_AGENT_ASG_HEALTH_CHECK_GRACE_PERIOD", "600");
+    const template = createTemplate(argumentStore);
+    template.hasResourceProperties("AWS::AutoScaling::AutoScalingGroup", {
+      HealthCheckGracePeriod: 600,
+    });
+  })
 })
 
 describe("scaler lambda", () => {
