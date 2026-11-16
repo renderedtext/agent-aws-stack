@@ -151,7 +151,6 @@
         "iam:ListInstanceProfilesForRole",
         "iam:GetPolicyVersion",
         "iam:GetPolicy",
-        "iam:GetInstanceProfile",
         "iam:GetRole",
         "iam:GetRolePolicy",
         "iam:TagPolicy",
@@ -165,10 +164,6 @@
         "iam:UpdateRoleDescription",
         "iam:UpdateRole",
         "iam:PassRole",
-        "iam:AddRoleToInstanceProfile",
-        "iam:RemoveRoleFromInstanceProfile",
-        "iam:CreateInstanceProfile",
-        "iam:DeleteInstanceProfile",
         "iam:DetachRolePolicy",
         "iam:SetDefaultPolicyVersion",
         "iam:AttachRolePolicy",
@@ -230,7 +225,10 @@
         "events:PutRule",
         "events:PutTargets",
         "events:RemoveTargets",
-        "events:DeleteRule"
+        "events:DeleteRule",
+        "events:TagResource",
+        "events:UntagResource",
+        "events:ListTagsForResource"
       ],
       "Resource": "arn:aws:events:*:*:rule/*"
     },
